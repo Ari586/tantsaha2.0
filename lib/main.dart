@@ -5843,6 +5843,12 @@ class _FeedScreenState extends State<FeedScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: _showIngredientsInfo,
+                      icon: const Icon(Icons.menu_book, color: AppColors.primary),
+                      label: const Text('LISITRA FENO NY AKORA (Ingrédients)', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
                   ],
                 ),
               ),
@@ -5915,6 +5921,138 @@ class _FeedScreenState extends State<FeedScreen> {
               ]
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showIngredientsInfo() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.menu_book, color: AppColors.primary),
+                  const SizedBox(width: 12),
+                  const Expanded(child: Text('LISITRA FENO NY AKORA', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildIngredientSection('1. IREO FAHANA MITONDRA ANGOVO (Sources d\'Énergie)', 
+                      'Ireo no manome hery ny biby, ary matetika mandrafitra ny ampahany lehibe indrindra (50-70%) amin\'ny fangaro.',
+                      [
+                        {'name': 'Katsaka (Maïs)', 'desc': 'Ny akora fototra tsara indrindra. Izy no manome angovo betsaka indrindra.'},
+                        {'name': 'Vovo-mangahazo (Farine de Manioc)', 'desc': 'Mangahazo maina (cossettes) nototoina. Solon\'ny katsaka tsara indrindra rehefa lafo ny katsaka, saingy tadidio fa kely dia kely ny Protéine ao anatiny (mila ampiana Soja na Trondro ny fatra rehefa mampiasa an\'ity).'},
+                        {'name': 'Tavim-bary (Son de Riz)', 'desc': 'Ilay hoditry ny vary manify (misy vitamina B).\n\n⚠️ Fanamarihana: Ialao ny Akofa (Balle de riz) fa tsy levon\'ny biby io ary mety handratra tsinay.'},
+                        {'name': 'Apombo-bary (Son de Blé)', 'desc': 'Avy amin\'ny orinasa fikosoham-bary (Minoterie). Tsara ho an\'ny fandevonan-kanina.'},
+                      ]
+                    ),
+                    _buildIngredientSection('2. IREO FAHANA MITONDRA PROTÉINE (Sources de Protéines)', 
+                      'Ireo no mampitombo ny nofon\'ny biby sy ny fitomboany.',
+                      [
+                        {'name': 'Faika-labiera (Drêche de Bière)', 'desc': 'Inona izy: Faikany sisa tavela tamin\'ny fanamboarana labiera (Vary orza sy katsaka efa masaka).\n\nTombony: Tena tsara ho an\'ny biby mampinono (kisoa vavy, omby) ary loharano protéine tsara. Azo ampiasaina lena na maina.'},
+                        {'name': 'Faika-lentille na Kary (Sous-produits de Lentilles)', 'desc': 'Inona izy: Ireo faikan\'ny lentille (vaky, madinika, hodiny) avy any amin\'ny faritra Menabe.\n\nTombony: Sady mitondra Protéine no mitondra Angovo. Tena tsara ho an\'ny kisoa sy akoho.'},
+                        {'name': 'Faikan-tsoja (Tourteau de Soja)', 'desc': 'Ny "mpanjaka" amin\'ny protéine zavamaniry. Matetika hafarana (importé) fa misy ihany koa ny vokatra eto an-toerana.'},
+                        {'name': 'Faikam-boanjo (Tourteau d\'Arachide)', 'desc': 'Ny sisa tavela rehefa nalaivon-diloilo ny voanjo.'},
+                        {'name': 'Vovo-trondro (Farine de Poisson)', 'desc': 'Kapalo (crevettes séchées) na trondro madinika nototoina. Tena ilaina ho an\'ny kisoa kely sy akoho kely.'},
+                      ]
+                    ),
+                    _buildIngredientSection('3. IREO FAHANA MITONDRA MINERALY (Sources de Minéraux)', 
+                      'Ireo no manamafy ny taolana sy ny akoran\'atody.',
+                      [
+                        {'name': 'Lao-akorantsely (Farine de Coquille d\'Huître)', 'desc': 'Akorandriaka nototoina ho vovoka. Loharano Calcium fototra.'},
+                        {'name': 'Lao-taolana (Farine d\'Os)', 'desc': 'Taolam-biby nodorana sy nototoina. Loharano Phosphore sy Calcium.'},
+                      ]
+                    ),
+                    _buildIngredientSection('4. IREO FANAMPINY (Additifs)', 
+                      'Tsy maintsy atao raha te hahazo vokatra tsara sy haingana.',
+                      [
+                        {'name': 'CMV (Concentré Minéral Vitaminé)', 'desc': 'Vovoka kely (Prémix) misy ny otrikaina rehetra tsy ampy ao amin\'ny katsaka sy ny soja. Misy karazany io (Pondeuse, Chair, Porc).'},
+                        {'name': 'Sira (Sel)', 'desc': 'Sira an-dakozia, hanokafana ny fahazotoan-komana.'},
+                        {'name': 'Acides Aminés (Lysine / Méthionine)', 'desc': 'Vovoka manokana manampy ny fitomboana (matetika ho an\'ny fiompiana matihanina).'},
+                      ]
+                    ),
+                    const Divider(height: 30, thickness: 2),
+                    const Text('FAMINTINANA NY TENY TEKNIKA', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                    const SizedBox(height: 10),
+                    _buildDefinition('Vovony (Farine)', 'Entina ilazana zavatra maina nototoina ho vovoka (Ex: Lao-mangahazo, Lao-trondro).'),
+                    _buildDefinition('Faikany (Tourteau)', 'Entina ilazana ny sisa tavela rehefa nalaina ny menaka (Ex: faikana soja, faikam-boanjo).'),
+                    _buildDefinition('FAIKANY (Résidu / Drêche)', 'Entina ilazana ny sisa tavela rehefa nalaina ny ranony na ny votoatiny hafa (Ex: Faika-labiera, Faika-lentille).'),
+                    _buildDefinition('Apombo (Son)', 'Entina ilazana ny hodiny (Ex: apombom bary).'),
+                    const SizedBox(height: 30),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIngredientSection(String title, String subtitle, List<Map<String, String>> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.accent)),
+        const SizedBox(height: 4),
+        Text(subtitle, style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: Colors.grey)),
+        const SizedBox(height: 12),
+        ...items.map((item) => Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 5, offset: const Offset(0, 2))],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(item['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              const SizedBox(height: 6),
+              Text(item['desc']!, style: const TextStyle(fontSize: 13, height: 1.4)),
+            ],
+          ),
+        )),
+      ],
+    );
+  }
+
+  Widget _buildDefinition(String term, String def) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(color: Colors.black87, fontSize: 13),
+          children: [
+            TextSpan(text: '• $term: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+            TextSpan(text: def),
+          ],
         ),
       ),
     );
