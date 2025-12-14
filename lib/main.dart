@@ -5341,13 +5341,13 @@ class _FeedScreenState extends State<FeedScreen> {
 
       if (week <= 3) {
         stageLabel = 'Démarrage (0-3 herinandro)';
-        currentFormula = '• Katsaka: 52%\n• Tourteau Soja: 30%\n• Son de Blé: 10%\n• Farine de Poisson: 4%\n• CMV Chair: 4%';
+        currentFormula = '• Katsaka: 52%\n• Faikan-tsoja (Tourteau Soja): 30%\n• Apombo-bary (Son de Blé): 10%\n• Vovo-trondro (Farine de Poisson): 4%\n• CMV Chair: 4%';
       } else if (week <= 5) {
         stageLabel = 'Croissance (4-5 herinandro)';
-        currentFormula = '• Katsaka: 58%\n• Tourteau Soja: 25%\n• Son de Blé: 10%\n• Farine de Poisson: 3%\n• CMV Chair: 4%';
+        currentFormula = '• Katsaka: 58%\n• Faikan-tsoja (Tourteau Soja): 25%\n• Apombo-bary (Son de Blé): 10%\n• Vovo-trondro (Farine de Poisson): 3%\n• CMV Chair: 4%';
       } else {
         stageLabel = 'Finition (6+ herinandro)';
-        currentFormula = '• Katsaka: 62%\n• Tourteau Soja: 20%\n• Son de Blé: 12%\n• Farine de Poisson: 2%\n• CMV Chair: 4%';
+        currentFormula = '• Katsaka: 62%\n• Faikan-tsoja (Tourteau Soja): 20%\n• Apombo-bary (Son de Blé): 12%\n• Vovo-trondro (Farine de Poisson): 2%\n• CMV Chair: 4%';
       }
     } else if (type == 'Pondeuse') {
       if (week <= 8) {
@@ -5361,13 +5361,13 @@ class _FeedScreenState extends State<FeedScreen> {
 
       if (week <= 8) {
         stageLabel = 'Démarrage (0-8 herinandro)';
-        currentFormula = '• Katsaka: 50%\n• Tourteau Soja: 20%\n• Son de Blé: 25%\n• CMV Pondeuse: 5%';
+        currentFormula = '• Katsaka: 50%\n• Faikan-tsoja (Tourteau Soja): 20%\n• Apombo-bary (Son de Blé): 25%\n• CMV Pondeuse: 5%';
       } else if (week <= 18) {
         stageLabel = 'Croissance (9-18 herinandro)';
-        currentFormula = '• Katsaka: 45%\n• Tourteau Soja: 15%\n• Son de Blé: 35%\n• CMV Pondeuse: 5%';
+        currentFormula = '• Katsaka: 45%\n• Faikan-tsoja (Tourteau Soja): 15%\n• Apombo-bary (Son de Blé): 35%\n• CMV Pondeuse: 5%';
       } else {
         stageLabel = 'Ponte (19+ herinandro)';
-        currentFormula = '• Katsaka: 50%\n• Tourteau Soja: 20%\n• Son de Blé: 20%\n• Coquille: 8%\n• CMV Pondeuse: 2%';
+        currentFormula = '• Katsaka: 50%\n• Faikan-tsoja (Tourteau Soja): 20%\n• Apombo-bary (Son de Blé): 20%\n• Lao-akorantsely (Coquille): 8%\n• CMV Pondeuse: 2%';
       }
     } else if (type == 'Mpiady') {
       if (week <= 8) {
@@ -5381,13 +5381,13 @@ class _FeedScreenState extends State<FeedScreen> {
 
       if (week <= 8) {
         stageLabel = 'Démarrage (0-8 herinandro)';
-        currentFormula = '• Katsaka: 48%\n• Tourteau Soja: 28%\n• Son de Blé: 15%\n• Farine de Poisson: 5%\n• CMV: 4%';
+        currentFormula = '• Katsaka: 48%\n• Faikan-tsoja (Tourteau Soja): 28%\n• Apombo-bary (Son de Blé): 15%\n• Vovo-trondro (Farine de Poisson): 5%\n• CMV: 4%';
       } else if (week <= 20) {
         stageLabel = 'Croissance (9-20 herinandro)';
-        currentFormula = '• Katsaka: 52%\n• Tourteau Soja: 25%\n• Son de Blé: 12%\n• Farine de Poisson: 6%\n• CMV: 5%';
+        currentFormula = '• Katsaka: 52%\n• Faikan-tsoja (Tourteau Soja): 25%\n• Apombo-bary (Son de Blé): 12%\n• Vovo-trondro (Farine de Poisson): 6%\n• CMV: 5%';
       } else {
         stageLabel = 'Ady (21+ herinandro)';
-        currentFormula = '• Katsaka: 55%\n• Tourteau Soja: 22%\n• Son de Blé: 10%\n• Farine de Poisson: 8%\n• CMV: 5%\n\n💪 Vitamines E & B12 recommandées';
+        currentFormula = '• Katsaka: 55%\n• Faikan-tsoja (Tourteau Soja): 22%\n• Apombo-bary (Son de Blé): 10%\n• Vovo-trondro (Farine de Poisson): 8%\n• CMV: 5%\n\n💪 Vitamines E & B12 recommandées';
       }
     } else if (type == 'Ornement') {
       if (week <= 8) {
@@ -5401,13 +5401,13 @@ class _FeedScreenState extends State<FeedScreen> {
 
       if (week <= 8) {
         stageLabel = 'Démarrage (0-8 herinandro)';
-        currentFormula = '• Katsaka: 48%\n• Tourteau Soja: 22%\n• Son de Blé: 22%\n• Farine de Poisson: 3%\n• CMV: 5%';
+        currentFormula = '• Katsaka: 48%\n• Faikan-tsoja (Tourteau Soja): 22%\n• Apombo-bary (Son de Blé): 22%\n• Vovo-trondro (Farine de Poisson): 3%\n• CMV: 5%';
       } else if (week <= 18) {
         stageLabel = 'Croissance (9-18 herinandro)';
-        currentFormula = '• Katsaka: 50%\n• Tourteau Soja: 18%\n• Son de Blé: 25%\n• Farine de Poisson: 2%\n• CMV: 5%';
+        currentFormula = '• Katsaka: 50%\n• Faikan-tsoja (Tourteau Soja): 18%\n• Apombo-bary (Son de Blé): 25%\n• Vovo-trondro (Farine de Poisson): 2%\n• CMV: 5%';
       } else {
         stageLabel = 'Adulte (19+ herinandro)';
-        currentFormula = '• Katsaka: 52%\n• Tourteau Soja: 15%\n• Son de Blé: 28%\n• CMV: 5%\n\n🪶 Ajouter huile végétale pour plumage brillant';
+        currentFormula = '• Katsaka: 52%\n• Faikan-tsoja (Tourteau Soja): 15%\n• Apombo-bary (Son de Blé): 28%\n• CMV: 5%\n\n🪶 Ajouter huile végétale pour plumage brillant';
       }
     } else if (type == 'Nain') {
       if (week <= 8) {
@@ -5420,7 +5420,7 @@ class _FeedScreenState extends State<FeedScreen> {
       waterMl = 120;
 
       stageLabel = week <= 18 ? 'Croissance' : 'Adulte';
-      currentFormula = '• Katsaka: 55%\n• Tourteau Soja: 15%\n• Son de Blé: 25%\n• CMV: 5%';
+      currentFormula = '• Katsaka: 55%\n• Faikan-tsoja (Tourteau Soja): 15%\n• Apombo-bary (Son de Blé): 25%\n• CMV: 5%';
     } else if (type == 'Gana') {
       if (week <= 3) {
         gPerBird = 50;
@@ -5432,7 +5432,7 @@ class _FeedScreenState extends State<FeedScreen> {
       waterMl = 400;
 
       stageLabel = week <= 3 ? 'Démarrage' : (week <= 7 ? 'Croissance' : 'Finition');
-      currentFormula = '• 🦆 Katsaka: 50%\n• Tourteau Soja: 20%\n• Son de Blé: 20%\n• Farine de Poisson: 5%\n• CMV Gana: 5%';
+      currentFormula = '• 🦆 Katsaka: 50%\n• Faikan-tsoja (Tourteau Soja): 20%\n• Apombo-bary (Son de Blé): 20%\n• Vovo-trondro (Farine de Poisson): 5%\n• CMV Gana: 5%';
     } else if (type == 'Dokotra') {
       if (week <= 4) {
         gPerBird = 60;
@@ -5444,7 +5444,7 @@ class _FeedScreenState extends State<FeedScreen> {
       waterMl = 450;
 
       stageLabel = week <= 4 ? 'Démarrage' : (week <= 10 ? 'Croissance' : 'Finition');
-      currentFormula = '• 🦆 Katsaka: 52%\n• Tourteau Soja: 22%\n• Son de Blé: 15%\n• Farine de Poisson: 6%\n• CMV: 5%';
+      currentFormula = '• 🦆 Katsaka: 52%\n• Faikan-tsoja (Tourteau Soja): 22%\n• Apombo-bary (Son de Blé): 15%\n• Vovo-trondro (Farine de Poisson): 6%\n• CMV: 5%';
     } else if (type == 'Sarindokotra') {
       // Mulard (Gavage/Foie gras) - Croissance rapide
       if (week <= 4) {
@@ -5472,7 +5472,7 @@ class _FeedScreenState extends State<FeedScreen> {
       waterMl = 600;
 
       stageLabel = week <= 3 ? 'Démarrage' : (week <= 8 ? 'Croissance' : 'Finition');
-      currentFormula = '• 🦢 Katsaka: 45%\n• Tourteau Soja: 15%\n• Son de Blé: 25%\n• Ahitra/Anana: 10%\n• CMV: 5%\n\n🌿 Ahitra ilaina be';
+      currentFormula = '• 🦢 Katsaka: 45%\n• Faikan-tsoja (Tourteau Soja): 15%\n• Apombo-bary (Son de Blé): 25%\n• Ahitra/Anana: 10%\n• CMV: 5%\n\n🌿 Ahitra ilaina be';
     } else if (type == 'Vorontsiloza') {
       if (week <= 4) {
         gPerBird = 60;
@@ -5484,7 +5484,7 @@ class _FeedScreenState extends State<FeedScreen> {
       waterMl = 500;
 
       stageLabel = week <= 4 ? 'Démarrage' : (week <= 12 ? 'Croissance' : 'Finition');
-      currentFormula = '• 🦃 Katsaka: 48%\n• Tourteau Soja: 28%\n• Son de Blé: 12%\n• Farine de Poisson: 7%\n• CMV: 5%\n\n⚠️ Mila protéine be';
+      currentFormula = '• 🦃 Katsaka: 48%\n• Faikan-tsoja (Tourteau Soja): 28%\n• Apombo-bary (Son de Blé): 12%\n• Vovo-trondro (Farine de Poisson): 7%\n• CMV: 5%\n\n⚠️ Mila protéine be';
     } else if (type == 'VorontsilozaChair') {
       // Dinde à chair - Engraissement intensif
       if (week <= 4) {
@@ -5511,7 +5511,7 @@ class _FeedScreenState extends State<FeedScreen> {
       waterMl = 250;
 
       stageLabel = week <= 6 ? 'Démarrage' : (week <= 14 ? 'Croissance' : 'Adulte');
-      currentFormula = '• 🐓 Katsaka: 50%\n• Tourteau Soja: 22%\n• Son de Blé: 18%\n• Farine de Poisson: 5%\n• CMV: 5%';
+      currentFormula = '• 🐓 Katsaka: 50%\n• Faikan-tsoja (Tourteau Soja): 22%\n• Apombo-bary (Son de Blé): 18%\n• Vovo-trondro (Farine de Poisson): 5%\n• CMV: 5%';
     } else if (type == 'Akohonala') {
       if (week <= 6) {
         gPerBird = 30;
@@ -5523,7 +5523,7 @@ class _FeedScreenState extends State<FeedScreen> {
       waterMl = 200;
 
       stageLabel = week <= 6 ? 'Démarrage' : (week <= 16 ? 'Croissance' : 'Adulte');
-      currentFormula = '• 🦚 Katsaka: 45%\n• Tourteau Soja: 25%\n• Son de Blé: 20%\n• Farine de Poisson: 5%\n• CMV: 5%\n\n🪶 Ilaina vitamines ho an\'ny volom-borona';
+      currentFormula = '• 🦚 Katsaka: 45%\n• Faikan-tsoja (Tourteau Soja): 25%\n• Apombo-bary (Son de Blé): 20%\n• Vovo-trondro (Farine de Poisson): 5%\n• CMV: 5%\n\n🪶 Ilaina vitamines ho an\'ny volom-borona';
     } else if (type == 'Papelika') {
       if (week <= 3) {
         gPerBird = 8;
@@ -5535,7 +5535,7 @@ class _FeedScreenState extends State<FeedScreen> {
       waterMl = 50;
 
       stageLabel = week <= 3 ? 'Démarrage' : (week <= 6 ? 'Croissance' : 'Ponte/Adulte');
-      currentFormula = '• 🐦 Katsaka: 48%\n• Tourteau Soja: 30%\n• Son de Blé: 12%\n• Farine de Poisson: 5%\n• CMV: 5%\n\n🥚 Protéine avo ho an\'ny atody';
+      currentFormula = '• 🐦 Katsaka: 48%\n• Faikan-tsoja (Tourteau Soja): 30%\n• Apombo-bary (Son de Blé): 12%\n• Vovo-trondro (Farine de Poisson): 5%\n• CMV: 5%\n\n🥚 Protéine avo ho an\'ny atody';
     } else if (type == 'Bitro') {
       if (week <= 4) {
         gPerBird = 50;
