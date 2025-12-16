@@ -12615,7 +12615,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
         {
           'title': '🐰 TEKNIKA FIOMPIANA (Guide Technique)',
           'elements': [
-            {'type': 'section', 'value': '1. Fifidianana Vejivavy sy Lahy (Sélection)'},
+            {'type': 'section', 'value': '1. Fifidianana Vavy sy Lahy (Sélection)'},
             {'type': 'bullet', 'label': 'Lahy (Mâle)', 'value': 'Vatana matanjaka, testicules hita tsara, mazoto (vif). 1 lahy ho an\'ny vavy 8-10.'},
             {'type': 'bullet', 'label': 'Vavy (Femelle)', 'value': 'Vatana lava, valahana malalaka, nono 8 farafahakeliny.'},
             {'type': 'bullet', 'label': 'Taona fampivadiana', 'value': '5-6 volana (Lahy), 5 volana (Vavy).'},
