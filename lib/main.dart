@@ -15113,32 +15113,123 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
     'Démarrage (10-25kg)': {
       'ration': '0.5 - 1.0 kg/andro',
       'protein': '18-20%',
-      'formula': '• Katsaka: 50%\n• Tourteau Soja: 25%\n• Son de Blé: 15%\n• Farine Poisson: 5%\n• CMV: 5%',
-      'tips': 'Omena sakafo in-3 na in-4 isan\'andro. Rano madio tsy tapaka.',
+      'formulas': [
+        {
+          'name': 'Formule 1: Standard (Katsaka/Soja)',
+          'desc': 'Tsara indrindra ho an\'ny fitomboana haingana',
+          'ingredients': [
+            {'name': 'Katsaka voatoto', 'qty': '50 kg'},
+            {'name': 'Tourteau Soja', 'qty': '25 kg'},
+            {'name': 'Apombo (Son de Riz)', 'qty': '15 kg'},
+            {'name': 'Farine Poisson', 'qty': '5 kg'},
+            {'name': 'CMV 5% (Oli-Porc)', 'qty': '5 kg'},
+          ]
+        },
+        {
+          'name': 'Formule 2: Mora vidy (Mangahazo)',
+          'desc': 'Mampiasa mangahazo maina (Cossette)',
+          'ingredients': [
+            {'name': 'Katsaka', 'qty': '30 kg'},
+            {'name': 'Mangahazo maina', 'qty': '25 kg'},
+            {'name': 'Tourteau Arachide', 'qty': '20 kg'},
+            {'name': 'Apombo', 'qty': '20 kg'},
+            {'name': 'CMV 5%', 'qty': '5 kg'},
+          ]
+        }
+      ],
+      'tips': 'Omena sakafo in-3 na in-4 isan\'andro. Rano madio tsy tapaka. Ny kisoa kely dia mila proteina be dia be.',
     },
-    'Croissance (25-50kg)': {
+    'Croissance (25-60kg)': {
       'ration': '1.0 - 2.0 kg/andro',
       'protein': '16-18%',
-      'formula': '• Katsaka: 55%\n• Tourteau Soja: 20%\n• Son de Blé: 20%\n• CMV: 5%',
-      'tips': 'Azo ampiana mangahazo na vomanga masaka ho solon\'ny katsaka sasany.',
+      'formulas': [
+        {
+          'name': 'Formule 1: Standard',
+          'desc': 'Fifandanjana tsara (Equilibré)',
+          'ingredients': [
+            {'name': 'Katsaka', 'qty': '55 kg'},
+            {'name': 'Tourteau Soja', 'qty': '15 kg'},
+            {'name': 'Apombo (Son)', 'qty': '25 kg'},
+            {'name': 'CMV 5%', 'qty': '5 kg'},
+          ]
+        },
+        {
+          'name': 'Formule 2: Alternatif',
+          'desc': 'Raha lafo ny katsaka',
+          'ingredients': [
+            {'name': 'Katsaka', 'qty': '40 kg'},
+            {'name': 'Mangahazo maina', 'qty': '20 kg'},
+            {'name': 'Tourteau Soja', 'qty': '15 kg'},
+            {'name': 'Apombo', 'qty': '20 kg'},
+            {'name': 'CMV 5%', 'qty': '5 kg'},
+          ]
+        }
+      ],
+      'tips': 'Azo ampiana mangahazo na vomanga masaka ho solon\'ny katsaka sasany. Tandremo ny fahasalamana.',
     },
-    'Finition (50-100kg)': {
+    'Finition (60-100kg)': {
       'ration': '2.0 - 3.0 kg/andro',
       'protein': '14-16%',
-      'formula': '• Katsaka: 60%\n• Tourteau Soja: 15%\n• Son de Blé: 20%\n• CMV: 5%',
-      'tips': 'Tandremo tsy ho matavy loatra (Gras). Ahena ny katsaka raha be tavy.',
+      'formulas': [
+        {
+          'name': 'Formule Finition',
+          'desc': 'Mampitombo hena, mampihena tavy',
+          'ingredients': [
+            {'name': 'Katsaka', 'qty': '60 kg'},
+            {'name': 'Tourteau Soja', 'qty': '10 kg'},
+            {'name': 'Apombo (Son)', 'qty': '25 kg'},
+            {'name': 'CMV 5%', 'qty': '5 kg'},
+          ]
+        },
+        {
+          'name': 'Formule Economique',
+          'desc': 'Ho an\'ny farany (mora vidy)',
+          'ingredients': [
+            {'name': 'Mangahazo maina', 'qty': '40 kg'},
+            {'name': 'Katsaka', 'qty': '20 kg'},
+            {'name': 'Tourteau Arachide', 'qty': '15 kg'},
+            {'name': 'Apombo', 'qty': '20 kg'},
+            {'name': 'CMV 5%', 'qty': '5 kg'},
+          ]
+        }
+      ],
+      'tips': 'Tandremo tsy ho matavy loatra (Gras). Ahena ny katsaka raha be tavy loatra ny kisoa.',
     },
     'Renin-kisoa (Gestante)': {
       'ration': '2.0 - 2.5 kg/andro',
       'protein': '14%',
-      'formula': '• Katsaka: 50%\n• Son de Blé: 30%\n• Tourteau Soja: 15%\n• CMV: 5%',
-      'tips': 'Aza omena be loatra sao sarotra miteraka. Omena anana sy legioma.',
+      'formulas': [
+        {
+          'name': 'Formule Gestation',
+          'desc': 'Mila fibre be dia be (Apombo)',
+          'ingredients': [
+            {'name': 'Apombo (Son de Riz)', 'qty': '40 kg'},
+            {'name': 'Katsaka', 'qty': '40 kg'},
+            {'name': 'Tourteau Soja', 'qty': '10 kg'},
+            {'name': 'CMV 5%', 'qty': '5 kg'},
+            {'name': 'Sira', 'qty': '0.5 kg'},
+          ]
+        }
+      ],
+      'tips': 'Aza omena be loatra sao sarotra miteraka (matavy loatra). Omena anana sy legioma maitso be dia be.',
     },
     'Renin-kisoa (Allaitante)': {
       'ration': 'Ad libitum (Araka izay laniny)',
       'protein': '16-18%',
-      'formula': '• Katsaka: 55%\n• Tourteau Soja: 25%\n• Son de Blé: 15%\n• CMV: 5%',
-      'tips': 'Mila rano be dia be hamokarana ronono (20-30 Litatra/andro).',
+      'formulas': [
+        {
+          'name': 'Formule Lactation',
+          'desc': 'Mila angovo be hamokarana ronono',
+          'ingredients': [
+            {'name': 'Katsaka', 'qty': '60 kg'},
+            {'name': 'Tourteau Soja', 'qty': '20 kg'},
+            {'name': 'Apombo', 'qty': '15 kg'},
+            {'name': 'CMV 5%', 'qty': '5 kg'},
+            {'name': 'Menaka (Huile)', 'qty': '1-2 kg'},
+          ]
+        }
+      ],
+      'tips': 'Mila rano be dia be hamokarana ronono (20-30 Litatra/andro). Omeo sakafo betsaka araka izay laniny.',
     },
   };
 
@@ -15150,40 +15241,89 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
       child: Column(
         children: [
           _buildCard(
-            title: 'Torolalana Sakafo',
+            title: 'Torolalana Sakafo (Pro)',
             icon: Icons.restaurant_menu,
             child: Column(
               children: [
-                DropdownButtonFormField<String>(
-                  key: ValueKey(_stage),
-                  initialValue: _stage,
-                  isExpanded: true,
-                  items: _feedData.keys.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-                  onChanged: (v) => setState(() => _stage = v!),
-                  decoration: const InputDecoration(labelText: 'Dingana (Stade)'),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.pink.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.pink.shade200),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      key: ValueKey(_stage),
+                      value: _stage,
+                      isExpanded: true,
+                      icon: const Icon(Icons.arrow_drop_down_circle, color: Colors.pink),
+                      items: _feedData.keys.map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)))).toList(),
+                      onChanged: (v) => setState(() => _stage = v!),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 _buildInfoRow('🍽️ Fatra isan\'andro', data['ration']),
                 _buildInfoRow('💪 Proteina ilaina', data['protein']),
                 const Divider(),
-                const Text('Fangaro (Formule 100kg):', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.pink)),
+                const Text('🧪 FORMULES (Fangaro 100kg)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.pink, fontSize: 16)),
+                const SizedBox(height: 12),
+                
+                ...(data['formulas'] as List).map((formula) => Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 4))],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.science, color: Colors.pink, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(formula['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
+                        ],
+                      ),
+                      if (formula['desc'] != null)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 28, bottom: 8),
+                          child: Text(formula['desc'], style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic)),
+                        ),
+                      const Divider(),
+                      ...(formula['ingredients'] as List).map((ing) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('• ${ing['name']}', style: const TextStyle(fontSize: 14)),
+                            Text(ing['qty'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.pink)),
+                          ],
+                        ),
+                      )),
+                    ],
+                  ),
+                )),
+
                 const SizedBox(height: 8),
                 Container(
-                  width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.pink.shade50,
+                    color: Colors.amber.shade50,
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.shade200),
                   ),
-                  child: Text(data['formula'], style: const TextStyle(height: 1.5)),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const Icon(Icons.lightbulb, color: Colors.amber),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(data['tips'], style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12))),
-                  ],
+                  child: Row(
+                    children: [
+                      const Icon(Icons.lightbulb, color: Colors.amber),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(data['tips'], style: TextStyle(fontStyle: FontStyle.italic, fontSize: 13, color: Colors.amber.shade900))),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -15193,15 +15333,43 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
             icon: Icons.eco,
             child: Column(
               children: [
-                _buildAltFood('Mangahazo', 'Loharano angovo (Energie). Tetehina ary mainina na andrahoina mba hiala ny poizina (Cyanure).'),
-                _buildAltFood('Vomanga', 'Tsara ho an\'ny kisoa, indrindra ny raviny (Proteina).'),
-                _buildAltFood('Akondro/Taho', 'Omena ho fanampin-tsakafo, misy potasioma sy rano.'),
-                _buildAltFood('Papay', 'Ny voany dia ody kankana voajanahary. Ny nofony dia vitamina.'),
-                _buildAltFood('Drêche de Bière', 'Sisa amin\'ny labiera. Mora vidy ary be proteina. Omena 20-30% amin\'ny sakafo.'),
+                _buildAltFood('Mangahazo (Cassava)', 'Loharano angovo (Energie) mora vidy. Tetehina ary mainina (Cossette) na andrahoina mba hiala ny poizina (Cyanure). Tsara soloina ny katsaka hatramin\'ny 30-40%.'),
+                _buildAltFood('Vomanga (Patate douce)', 'Tsara ho an\'ny kisoa, indrindra ny raviny (Proteina) sy ny vodiny (Energie). Masaka no tsara indrindra.'),
+                _buildAltFood('Akondro/Taho', 'Omena ho fanampin-tsakafo, misy potasioma sy rano. Ny taho dia tsara ho an\'ny renin-kisoa (fibre).'),
+                _buildAltFood('Papay', 'Ny voany dia ody kankana voajanahary. Ny nofony dia vitamina. Ny raviny dia misy proteina.'),
+                _buildAltFood('Drêche de Bière', 'Sisa amin\'ny labiera. Mora vidy ary be proteina (20-25%). Omena 20-30% amin\'ny sakafo. Tandremo fa mora simba (lò).'),
+                _buildAltFood('Lila (Azolla)', 'Zava-maniry anaty rano, be proteina. Azo omena manta na maina.'),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCard({required String title, required Widget child, IconData? icon}) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, color: Colors.pink),
+                  const SizedBox(width: 8),
+                ],
+                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            child,
+          ],
+        ),
       ),
     );
   }
@@ -15355,7 +15523,7 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _generateSchedule();
   }
 
@@ -15447,10 +15615,12 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
           controller: _tabController,
           labelColor: Colors.pink,
           unselectedLabelColor: Colors.grey,
+          isScrollable: true,
           tabs: const [
             Tab(text: 'Tetiandro'),
             Tab(text: 'Kisoa Kely'),
             Tab(text: 'Fahasalamana'),
+            Tab(text: 'Biosecurity (Pro)'),
           ],
         ),
         Expanded(
@@ -15460,10 +15630,75 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
               _buildScheduleTab(),
               _buildPigletCareTab(),
               _buildDiseaseTab(),
+              _buildBiosecurityTab(),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildBiosecurityTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          _buildCard(
+            title: 'Fiarovana (Biosecurity)',
+            icon: Icons.security,
+            child: Column(
+              children: [
+                const Text(
+                  'Ny fiarovana no fanafody tsara indrindra, indrindra amin\'ny Peste Porcine Africaine (PPA) izay tsy misy fanafody.',
+                  style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                _buildBioItem('1. Fefy sy Vavahady', 'Fefena ny toerana mba tsy hidiran\'ny olona na biby hafa (alika, saka). Misy vavahady mihidy.'),
+                _buildBioItem('2. Pédiluve (Fandroan-tongotra)', 'Asio koveta misy fanafody (Virkon, Javel) eo am-pidirana. Tsy maintsy mandalo eo ny rehetra.'),
+                _buildBioItem('3. Akanjo Manokana', 'Manana akanjo sy kiraro manokana ho an\'ny kisoa ihany. Tsy entina mivoaka.'),
+                _buildBioItem('4. Quarantaine', 'Kisoa vaovao = 30-40 andro mitokana lavitra ny hafa. Jerena sao marary vao ampidirina.'),
+                _buildBioItem('5. Tsy misy mpitsidika', 'Aza avela hiditra ny olona avy any ivelany, indrindra ny mpiompy hafa na mpividy kisoa.'),
+                _buildBioItem('6. Ady amin\'ny biby kely', 'Vonoy ny voalavo, lalitra, ary aza avela hiditra ny vorona. Mitondra aretina ireo.'),
+              ],
+            ),
+          ),
+          _buildCard(
+            title: 'Pharmacie de Base (Pro)',
+            icon: Icons.medical_services,
+            child: Column(
+              children: [
+                _buildBioItem('Antibiotique', 'Pénicilline, Oxytétracycline (LA), Sulfamides.'),
+                _buildBioItem('Anti-parasitaire', 'Ivermectine (Tsindrona), Levamisole.'),
+                _buildBioItem('Vitamina & Fer', 'Fer-Dextran (Kely), Vitamine AD3E, Multivitamine.'),
+                _buildBioItem('Fitaovana', 'Seringue (5ml, 10ml, 20ml), Aiguille (maro habe), Thermomètre.'),
+                _buildBioItem('Fidiovana', 'Bétadine, Alcool, Grésil, Virkon (Désinfectant).'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBioItem(String title, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(desc, style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
