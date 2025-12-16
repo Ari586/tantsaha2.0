@@ -15111,56 +15111,82 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
   
   final Map<String, Map<String, dynamic>> _feedData = {
     'Démarrage (10-25kg)': {
+      'age': '4 - 10 Herinandro',
       'ration': '0.5 - 1.0 kg/andro',
-      'protein': '18-20%',
+      'protein': '18 - 20%',
+      'energy': '3200 - 3300 kcal/kg',
       'formulas': [
         {
-          'name': 'Formule 1: Standard (Katsaka/Soja)',
-          'desc': 'Tsara indrindra ho an\'ny fitomboana haingana',
+          'name': 'Premium (Best Quality)',
+          'desc': 'Fitomboana haingana indrindra (GMQ > 400g)',
           'ingredients': [
-            {'name': 'Katsaka voatoto', 'qty': '50 kg'},
+            {'name': 'Katsaka', 'qty': '55 kg'},
             {'name': 'Tourteau Soja', 'qty': '25 kg'},
-            {'name': 'Apombo (Son de Riz)', 'qty': '15 kg'},
-            {'name': 'Farine Poisson', 'qty': '5 kg'},
-            {'name': 'CMV 5% (Oli-Porc)', 'qty': '5 kg'},
+            {'name': 'Farine Poisson (55%)', 'qty': '10 kg'},
+            {'name': 'Menaka (Huile)', 'qty': '2 kg'},
+            {'name': 'CMV 5% (Starter)', 'qty': '5 kg'},
+            {'name': 'Sira + Lysine', 'qty': '3 kg'},
           ]
         },
         {
-          'name': 'Formule 2: Mora vidy (Mangahazo)',
-          'desc': 'Mampiasa mangahazo maina (Cossette)',
+          'name': 'Standard (Mid Range)',
+          'desc': 'Fifandanjana tsara',
           'ingredients': [
-            {'name': 'Katsaka', 'qty': '30 kg'},
-            {'name': 'Mangahazo maina', 'qty': '25 kg'},
+            {'name': 'Katsaka', 'qty': '50 kg'},
+            {'name': 'Apombo (Son)', 'qty': '15 kg'},
+            {'name': 'Tourteau Soja', 'qty': '20 kg'},
+            {'name': 'Farine Poisson', 'qty': '10 kg'},
+            {'name': 'CMV 5%', 'qty': '5 kg'},
+          ]
+        },
+        {
+          'name': 'Low Cost (Mora)',
+          'desc': 'Mampiasa mangahazo sy apombo',
+          'ingredients': [
+            {'name': 'Mangahazo (Cossette)', 'qty': '30 kg'},
+            {'name': 'Katsaka', 'qty': '20 kg'},
+            {'name': 'Apombo (Son)', 'qty': '25 kg'},
             {'name': 'Tourteau Arachide', 'qty': '20 kg'},
-            {'name': 'Apombo', 'qty': '20 kg'},
             {'name': 'CMV 5%', 'qty': '5 kg'},
           ]
         }
       ],
-      'tips': 'Omena sakafo in-3 na in-4 isan\'andro. Rano madio tsy tapaka. Ny kisoa kely dia mila proteina be dia be.',
+      'tips': 'Ny kisoa kely dia mila sakafo mora levonina. Ny Premium dia manome fitomboana haingana be.',
     },
     'Croissance (25-60kg)': {
+      'age': '10 - 18 Herinandro',
       'ration': '1.0 - 2.0 kg/andro',
-      'protein': '16-18%',
+      'protein': '16 - 18%',
+      'energy': '3000 - 3100 kcal/kg',
       'formulas': [
         {
-          'name': 'Formule 1: Standard',
-          'desc': 'Fifandanjana tsara (Equilibré)',
+          'name': 'Premium (Best Quality)',
+          'desc': 'Fitomboana farany ambony',
           'ingredients': [
-            {'name': 'Katsaka', 'qty': '55 kg'},
-            {'name': 'Tourteau Soja', 'qty': '15 kg'},
-            {'name': 'Apombo (Son)', 'qty': '25 kg'},
+            {'name': 'Katsaka', 'qty': '60 kg'},
+            {'name': 'Tourteau Soja', 'qty': '20 kg'},
+            {'name': 'Apombo (Son)', 'qty': '15 kg'},
             {'name': 'CMV 5%', 'qty': '5 kg'},
           ]
         },
         {
-          'name': 'Formule 2: Alternatif',
-          'desc': 'Raha lafo ny katsaka',
+          'name': 'Standard (Mid Range)',
+          'desc': 'Fifandanjana tsara',
           'ingredients': [
-            {'name': 'Katsaka', 'qty': '40 kg'},
-            {'name': 'Mangahazo maina', 'qty': '20 kg'},
+            {'name': 'Katsaka', 'qty': '45 kg'},
+            {'name': 'Mangahazo', 'qty': '15 kg'},
             {'name': 'Tourteau Soja', 'qty': '15 kg'},
             {'name': 'Apombo', 'qty': '20 kg'},
+            {'name': 'CMV 5%', 'qty': '5 kg'},
+          ]
+        },
+        {
+          'name': 'Low Cost (Mora)',
+          'desc': 'Mora vidy nefa mahomby',
+          'ingredients': [
+            {'name': 'Mangahazo', 'qty': '40 kg'},
+            {'name': 'Apombo', 'qty': '30 kg'},
+            {'name': 'Tourteau Arachide', 'qty': '25 kg'},
             {'name': 'CMV 5%', 'qty': '5 kg'},
           ]
         }
@@ -15168,27 +15194,39 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
       'tips': 'Azo ampiana mangahazo na vomanga masaka ho solon\'ny katsaka sasany. Tandremo ny fahasalamana.',
     },
     'Finition (60-100kg)': {
+      'age': '18 - 24 Herinandro',
       'ration': '2.0 - 3.0 kg/andro',
-      'protein': '14-16%',
+      'protein': '14 - 16%',
+      'energy': '2900 - 3000 kcal/kg',
       'formulas': [
         {
-          'name': 'Formule Finition',
+          'name': 'Premium (Best Quality)',
           'desc': 'Mampitombo hena, mampihena tavy',
           'ingredients': [
-            {'name': 'Katsaka', 'qty': '60 kg'},
-            {'name': 'Tourteau Soja', 'qty': '10 kg'},
-            {'name': 'Apombo (Son)', 'qty': '25 kg'},
+            {'name': 'Katsaka', 'qty': '65 kg'},
+            {'name': 'Tourteau Soja', 'qty': '15 kg'},
+            {'name': 'Apombo (Son)', 'qty': '15 kg'},
             {'name': 'CMV 5%', 'qty': '5 kg'},
           ]
         },
         {
-          'name': 'Formule Economique',
+          'name': 'Standard (Mid Range)',
+          'desc': 'Fifandanjana tsara',
+          'ingredients': [
+            {'name': 'Katsaka', 'qty': '40 kg'},
+            {'name': 'Mangahazo', 'qty': '20 kg'},
+            {'name': 'Tourteau Soja', 'qty': '10 kg'},
+            {'name': 'Apombo', 'qty': '25 kg'},
+            {'name': 'CMV 5%', 'qty': '5 kg'},
+          ]
+        },
+        {
+          'name': 'Low Cost (Mora)',
           'desc': 'Ho an\'ny farany (mora vidy)',
           'ingredients': [
-            {'name': 'Mangahazo maina', 'qty': '40 kg'},
-            {'name': 'Katsaka', 'qty': '20 kg'},
+            {'name': 'Mangahazo maina', 'qty': '50 kg'},
+            {'name': 'Apombo', 'qty': '30 kg'},
             {'name': 'Tourteau Arachide', 'qty': '15 kg'},
-            {'name': 'Apombo', 'qty': '20 kg'},
             {'name': 'CMV 5%', 'qty': '5 kg'},
           ]
         }
@@ -15196,8 +15234,10 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
       'tips': 'Tandremo tsy ho matavy loatra (Gras). Ahena ny katsaka raha be tavy loatra ny kisoa.',
     },
     'Renin-kisoa (Gestante)': {
+      'age': 'Vohoka (114 andro)',
       'ration': '2.0 - 2.5 kg/andro',
       'protein': '14%',
+      'energy': '2800 - 2900 kcal/kg',
       'formulas': [
         {
           'name': 'Formule Gestation',
@@ -15214,8 +15254,10 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
       'tips': 'Aza omena be loatra sao sarotra miteraka (matavy loatra). Omena anana sy legioma maitso be dia be.',
     },
     'Renin-kisoa (Allaitante)': {
+      'age': 'Mampinono (21-28 andro)',
       'ration': 'Ad libitum (Araka izay laniny)',
-      'protein': '16-18%',
+      'protein': '16 - 18%',
+      'energy': '3200 - 3300 kcal/kg',
       'formulas': [
         {
           'name': 'Formule Lactation',
@@ -15264,8 +15306,10 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                _buildInfoRow('📅 Salan-taona', data['age']),
                 _buildInfoRow('🍽️ Fatra isan\'andro', data['ration']),
                 _buildInfoRow('💪 Proteina ilaina', data['protein']),
+                _buildInfoRow('⚡ Angovo (Energie)', data['energy']),
                 const Divider(),
                 const Text('🧪 FORMULES (Fangaro 100kg)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.pink, fontSize: 16)),
                 const SizedBox(height: 12),
