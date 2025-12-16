@@ -12530,6 +12530,154 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
 }
 
 // Bitro Health Screen - Fahasalamana Bitro
+class GuideDetailScreen extends StatelessWidget {
+  final Map<String, dynamic> guide;
+  const GuideDetailScreen({super.key, required this.guide});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF3E5F5), // Light Purple
+      appBar: AppBar(
+        backgroundColor: Colors.purple,
+        title: Text(guide['title'], style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Colors.purple, Colors.deepPurple], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [BoxShadow(color: Colors.purple.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.menu_book_rounded, size: 48, color: Colors.white),
+                  const SizedBox(height: 12),
+                  Text(
+                    guide['title'],
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: Colors.purple.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 4))],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: (guide['elements'] as List).map<Widget>((el) {
+                  final type = el['type'] as String;
+                  switch (type) {
+                    case 'section':
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 16, bottom: 8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.purple.shade100),
+                          ),
+                          child: Text(
+                            el['value'] as String,
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.purple.shade800),
+                          ),
+                        ),
+                      );
+                    case 'subtitle':
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 12, bottom: 4),
+                        child: Text(
+                          el['value'] as String,
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                        ),
+                      );
+                    case 'text':
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(el['value'] as String, style: const TextStyle(height: 1.5, fontSize: 14, color: Colors.black87)),
+                      );
+                    case 'bullet':
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6, left: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('• ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple, fontSize: 16)),
+                            Expanded(
+                              child: RichText(
+                                text: TextSpan(
+                                  style: const TextStyle(color: Colors.black87, height: 1.5, fontSize: 14),
+                                  children: [
+                                    if (el.containsKey('label'))
+                                      TextSpan(text: '${el['label']}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    TextSpan(text: el['value'] as String),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    case 'note':
+                      return Container(
+                        margin: const EdgeInsets.only(top: 8, bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.amber.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.info_outline, color: Colors.amber, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(el['value'] as String, style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13, color: Colors.black87))),
+                          ],
+                        ),
+                      );
+                    case 'table':
+                      final headers = el['headers'] as List;
+                      final rows = el['rows'] as List;
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          columnSpacing: 10,
+                          headingRowColor: WidgetStateProperty.all(Colors.purple.shade50),
+                          columns: headers.map((h) => DataColumn(label: Text(h as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)))).toList(),
+                          rows: rows.map((row) {
+                            return DataRow(cells: (row as List).map((cell) => DataCell(Text(cell as String, style: const TextStyle(fontSize: 11)))).toList());
+                          }).toList(),
+                        ),
+                      );
+                    default:
+                      return const SizedBox();
+                  }
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class BitroHealthScreen extends StatefulWidget {
   const BitroHealthScreen({super.key});
 
@@ -13174,111 +13322,81 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          ...(data['guides'] as List).map((guide) => Theme(
-                            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                            child: ExpansionTile(
-                              tilePadding: EdgeInsets.zero,
-                              title: Text(
-                                guide['title'] as String,
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.purple),
-                              ),
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(16),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 0.85,
+                            ),
+                            itemCount: (data['guides'] as List).length,
+                            itemBuilder: (context, index) {
+                              final guide = (data['guides'] as List)[index];
+                              final gradients = [
+                                [const Color(0xFFAB47BC), const Color(0xFFCE93D8)], // Purple
+                                [const Color(0xFF5C6BC0), const Color(0xFF9FA8DA)], // Indigo
+                                [const Color(0xFF42A5F5), const Color(0xFF90CAF9)], // Blue
+                                [const Color(0xFF26A69A), const Color(0xFF80CBC4)], // Teal
+                              ];
+                              final gradient = gradients[index % gradients.length];
+
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => GuideDetailScreen(guide: guide),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))],
+                                    gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(color: gradient[0].withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
+                                    ],
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: (guide['elements'] as List).map<Widget>((el) {
-                                      final type = el['type'] as String;
-                                      switch (type) {
-                                        case 'section':
-                                          return Padding(
-                                            padding: const EdgeInsets.only(top: 16, bottom: 8),
-                                            child: Text(
-                                              el['value'] as String,
-                                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.purple),
-                                            ),
-                                          );
-                                        case 'subtitle':
-                                          return Padding(
-                                            padding: const EdgeInsets.only(top: 12, bottom: 4),
-                                            child: Text(
-                                              el['value'] as String,
-                                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
-                                            ),
-                                          );
-                                        case 'text':
-                                          return Padding(
-                                            padding: const EdgeInsets.only(bottom: 8),
-                                            child: Text(el['value'] as String, style: const TextStyle(height: 1.4)),
-                                          );
-                                        case 'bullet':
-                                          return Padding(
-                                            padding: const EdgeInsets.only(bottom: 6, left: 8),
-                                            child: Row(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text('• ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple)),
-                                                Expanded(
-                                                  child: RichText(
-                                                    text: TextSpan(
-                                                      style: const TextStyle(color: Colors.black87, height: 1.4),
-                                                      children: [
-                                                        if (el.containsKey('label'))
-                                                          TextSpan(text: '${el['label']}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                                        TextSpan(text: el['value'] as String),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        case 'note':
-                                          return Container(
-                                            margin: const EdgeInsets.only(top: 8, bottom: 8),
-                                            padding: const EdgeInsets.all(12),
-                                            decoration: BoxDecoration(
-                                              color: Colors.amber.shade50,
-                                              borderRadius: BorderRadius.circular(8),
-                                              border: Border.all(color: Colors.amber.shade200),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                const Icon(Icons.info_outline, color: Colors.amber, size: 20),
-                                                const SizedBox(width: 8),
-                                                Expanded(child: Text(el['value'] as String, style: const TextStyle(fontStyle: FontStyle.italic))),
-                                              ],
-                                            ),
-                                          );
-                                        case 'table':
-                                          final headers = el['headers'] as List;
-                                          final rows = el['rows'] as List;
-                                          return SingleChildScrollView(
-                                            scrollDirection: Axis.horizontal,
-                                            child: DataTable(
-                                              columnSpacing: 10,
-                                              headingRowColor: WidgetStateProperty.all(Colors.purple.shade50),
-                                              columns: headers.map((h) => DataColumn(label: Text(h as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)))).toList(),
-                                              rows: rows.map((row) {
-                                                return DataRow(cells: (row as List).map((cell) => DataCell(Text(cell as String, style: const TextStyle(fontSize: 11)))).toList());
-                                              }).toList(),
-                                            ),
-                                          );
-                                        default:
-                                          return const SizedBox();
-                                      }
-                                    }).toList(),
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.2),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.menu_book_rounded, color: Colors.white, size: 24),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        guide['title'] as String,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 3,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: const Text(
+                                          'Hamaky',
+                                          style: TextStyle(color: Colors.white, fontSize: 10),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          )),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ) : const Center(child: Text("Tsy misy torolalana manokana")),
