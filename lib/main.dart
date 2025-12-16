@@ -2169,6 +2169,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return [
         const HousingScreen(category: 'vorona'),
         const FeedScreen(category: 'vorona'),
+        TorohayScreen(),
         const HealthScreen(category: 'vorona'),
         const BreedsScreen(category: 'vorona'),
         const EggsScreen(category: 'vorona'),
@@ -2179,6 +2180,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return [
       const HousingScreen(category: 'akoho'),
       const FeedScreen(category: 'akoho'),
+      TorohayScreen(),
       const HealthScreen(category: 'akoho'),
       const BreedsScreen(category: 'akoho'),
       const EggsScreen(category: 'akoho'),
@@ -2204,9 +2206,9 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (widget.category == 'holatra') {
       return ['Karazana', 'Fambolena', 'Fiotazana', 'Tsena', 'Vola'];
     } else if (widget.category == 'vorona') {
-      return ['Trano', 'Sakafo', 'Torohay', 'Races', 'Atody', 'Gavage', 'Vola'];
+      return ['Trano', 'Sakafo', 'Torohay', 'Fahasalamana', 'Races', 'Atody', 'Gavage', 'Vola'];
     }
-    return ['Trano', 'Sakafo', 'Fahasalamana', 'Races', 'Atody', 'Vola'];
+    return ['Trano', 'Sakafo', 'Torohay', 'Fahasalamana', 'Races', 'Atody', 'Vola'];
   }
 
   List<Map<String, dynamic>> get _navItems {
@@ -2280,6 +2282,7 @@ class _HomeScreenState extends State<HomeScreen> {
         {'icon': '🏠', 'label': 'Trano'},
         {'icon': '🌾', 'label': 'Sakafo'},
         {'icon': '📘', 'label': 'Torohay'},
+        {'icon': '💊', 'label': 'Fahasalamana'},
         {'icon': '🦆', 'label': 'Races'},
         {'icon': '🥚', 'label': 'Atody'},
         {'icon': '🍽️', 'label': 'Gavage'},
@@ -2289,6 +2292,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return [
       {'icon': '🏠', 'label': 'Trano'},
       {'icon': '🌾', 'label': 'Sakafo'},
+      {'icon': '📘', 'label': 'Torohay'},
       {'icon': '💊', 'label': 'Aretina'},
       {'icon': '🐔', 'label': 'Races'},
       {'icon': '🥚', 'label': 'Atody'},
@@ -6079,11 +6083,11 @@ class _FeedScreenState extends State<FeedScreen> {
                         {'name': 'Vovo-trondro (Farine de Poisson)', 'desc': 'Kapalo (crevettes séchées) na trondro madinika nototoina. Tena ilaina ho an\'ny kisoa kely sy akoho kely.'},
                       ]
                     ),
-                    _buildIngredientSection('3. IREO FAHANA MITONDRA MINERALY (Sources de Minéraux)', 
+                    _buildIngredientSection('3. IREO AKORA MITONDRA MINERALY (Sources de Minéraux)', 
                       'Ireo no manamafy ny taolana sy ny akoran\'atody.',
                       [
-                        {'name': 'Lao-akorantsely (Farine de Coquille d\'Huître)', 'desc': 'Akorandriaka nototoina ho vovoka. Loharano Calcium fototra.'},
-                        {'name': 'Lao-taolana (Farine d\'Os)', 'desc': 'Taolam-biby nodorana sy nototoina. Loharano Phosphore sy Calcium.'},
+                        {'name': 'vovo-akorandriaka (Farine de Coquille d\'Huître)', 'desc': 'Akorandriaka nototoina ho vovoka. Loharano Calcium fototra.'},
+                        {'name': 'vovo-taolana (Farine d\'Os)', 'desc': 'Taolam-biby nodorana sy nototoina. Loharano Phosphore sy Calcium.'},
                       ]
                     ),
                     _buildIngredientSection('4. IREO FANAMPINY (Additifs)', 
@@ -6259,7 +6263,625 @@ class _FeedScreenState extends State<FeedScreen> {
       ),
     );
   }
-}// --- MODULE 3: FAHASALAMANA (HEALTH) ---
+}
+
+// --- MODULE 3: TOROHAY (GUIDES SPÉCIFIQUES VORONA) ---
+class TorohayScreen extends StatelessWidget {
+  const TorohayScreen({super.key});
+
+  List<Map<String, dynamic>> _buildGuides() {
+    return [
+      {
+        'emoji': '🦆',
+        'title': 'Sarindokotra (Mulard)',
+        'subtitle': 'Hybride Dokotra lahy + Gana vavy. Hena matsiro sy Foie Gras.',
+        'badges': ['4-6 kg (14 sem)', 'Sterile (tsy miteraka)', 'Gavage possible'],
+        'steps': [
+          {
+            'icon': Icons.info_outline,
+            'title': 'Fiaviana & Tombony',
+            'points': [
+              'Vokatry ny fampivadiana Dokotra lahy (Barbarie) sy Gana vavy (Pékin/Nantais).',
+              'Tsy manatody ary tsy miteraka (Sterile) - ompiana ho hena ihany.',
+              'Mitombo haingana kokoa noho ny gana tsotra, hena matsiro, tsy dia matavy loatra.',
+              'Mahazaka aretina sy lafika tsara kokoa noho ny gana.',
+            ],
+          },
+          {
+            'icon': Icons.restaurant_outlined,
+            'title': 'Sakafo',
+            'points': [
+              'Démarrage (0-3 sem): Provende Gana Démarrage 20% protéine, 5-6g/andro.',
+              'Croissance (4-8 sem): Katsaka 55%, Apombo 20%, Soja 20%, CMV 5%.',
+              'Finition (9-12 sem): Katsaka betsaka kokoa mba hahazoana lanja (4-6kg).',
+              'Gavage (12+ sem): Katsaka masaka omena in-2 isan\'andro 21 andro = Foie Gras.',
+            ],
+          },
+          {
+            'icon': Icons.home_outlined,
+            'title': 'Trano & Fikarakarana',
+            'points': [
+              'Hakitroka: 3-4 isa/m². Lavaka rano (dobo) raha misy.',
+              'Tsy mila rano hilomanosana be, fa rano fisotro madio foana.',
+              'Lafika maina (paille/copeaux) mba tsy harary tongotra.',
+              'Tandremo: Mifampipika raha tery loatra ny toerana.',
+            ],
+          },
+          {
+            'icon': Icons.timeline_outlined,
+            'title': 'Dingana fanodinana',
+            'points': [
+              'Fiompiana toy ny gana (0-12 sem).',
+              'Lanja vonjena: 4-6 kg amin\'ny 14-16 herinandro.',
+              'Raha Gavage: Manomboka amin\'ny 12 sem, hatramin\'ny 15-16 sem.',
+              'Hena misy tavy tsara, matsiro, tsara ho an\'ny fivarotana.',
+            ],
+          },
+        ],
+        'feed': [
+          {'label': 'Démarrage', 'value': 'Provende 20% protéine, hafanana 32-35°C.'},
+          {'label': 'Croissance', 'value': 'Katsaka 55%, Apombo 20%, Soja 20%.'},
+          {'label': 'Finition', 'value': 'Katsaka betsaka, lanja 4-6kg.'},
+        ],
+        'timeline': [
+          {'label': 'Fiaviana', 'value': 'Dokotra lahy × Gana vavy.'},
+          {'label': 'Fiompiana', 'value': '14-16 herinandro.'},
+          {'label': 'Gavage (option)', 'value': '12-15 sem, Foie Gras 500-700g.'},
+        ],
+      },
+      {
+        'emoji': '🌊',
+        'title': 'Gana (Canard Pékin)',
+        'subtitle': 'Mpamokatra atody sy hena. Fotsy, vava mavo.',
+        'badges': ['200-250 atody/taona', '3-4 kg (10 sem)', 'Mila rano'],
+        'steps': [
+          {
+            'icon': Icons.waves_outlined,
+            'title': 'Singa Manan-danja',
+            'points': [
+              'Gana fotsy, vava mavo, tongotra mavo (Pékin/Nantais).',
+              'Mila rano hilomanosana sy fisotro (dobo na lavaka).',
+              'Manatody 200-250 isa/taona, hena matsiro 3-4kg.',
+              'Mahazaka hatsiaka kokoa noho ny akoho.',
+            ],
+          },
+          {
+            'icon': Icons.restaurant_outlined,
+            'title': 'Sakafo',
+            'points': [
+              'Démarrage (0-3 sem): Provende 20% protéine.',
+              'Croissance (4-10 sem): Katsaka 50%, Apombo 25%, Soja 20%, CMV 5%.',
+              'Ponte: Proteina 16-18%, Calcium 3.5%, omena coquille huître.',
+              'Azo omena anana, ahitra, voatavo, vary aron-tsakafo.',
+            ],
+          },
+          {
+            'icon': Icons.pool_outlined,
+            'title': 'Trano & Rano',
+            'points': [
+              'Hakitroka: 3-4 isa/m².',
+              'Lavaka rano (dobo) ilaina - 30-40 sm lalina, afaka milomano.',
+              'Trano misy rivotra, tsy maizina loatra.',
+              'Atsipy fasika lavaka mba hitsaroan\'ny gana.',
+            ],
+          },
+          {
+            'icon': Icons.egg_outlined,
+            'title': 'Atody & Fiterahana',
+            'points': [
+              'Manomboka manatody: 20-24 herinandro.',
+              'Ratio: 1 lahy : 5-6 vavy.',
+              'Incubation: 28 andro.',
+              'Atody lehibe noho ny akoho (70-80g).',
+            ],
+          },
+        ],
+        'feed': [
+          {'label': 'Démarrage', 'value': 'Provende 20% protéine.'},
+          {'label': 'Croissance', 'value': 'Katsaka 50%, Apombo 25%, Soja 20%.'},
+          {'label': 'Ponte', 'value': 'Protéine 16-18%, Calcium 3.5%.'},
+        ],
+        'timeline': [
+          {'label': 'Incubation', 'value': '28 andro.'},
+          {'label': 'Chair', 'value': '10-12 herinandro, 3-4kg.'},
+          {'label': 'Ponte', 'value': '200-250 atody/taona.'},
+        ],
+      },
+      {
+        'emoji': '🦆',
+        'title': 'Dokotra (Canard Barbarie)',
+        'subtitle': 'Mafy orina, hena be, tsy manao tabataba.',
+        'badges': ['4-5 kg (lahy)', '100-120 atody/taona', 'Mahery'],
+        'steps': [
+          {
+            'icon': Icons.pets_outlined,
+            'title': 'Toetra',
+            'points': [
+              'Lojika mena eo amin\'ny tava, volo misy fotsy sy mainty.',
+              'Tsy manao tabataba be toy ny gana.',
+              'Lahy lehibe kokoa noho ny vavy (4-5kg vs 2.5-3kg).',
+              'Mafy orina, mahazaka aretina tsara.',
+            ],
+          },
+          {
+            'icon': Icons.restaurant_outlined,
+            'title': 'Sakafo',
+            'points': [
+              'Toy ny gana, fa mila angovo bebe kokoa (lahy lehibe).',
+              'Croissance: Katsaka 55%, Apombo 20%, Soja 20%, CMV 5%.',
+              'Azo omena anana, legioma, vary aron-tsakafo.',
+              'Tsy dia mila rano be toy ny gana.',
+            ],
+          },
+          {
+            'icon': Icons.home_outlined,
+            'title': 'Trano',
+            'points': [
+              'Hakitroka: 2-3 isa/m² (lehibe kokoa).',
+              'Tsy tena mila dobo lehibe, fa rano fisotro foana.',
+              'Perchoir ambony kely - tia miala amin\'ny tany.',
+              'Tandremo ny lahy tsy hifampiady (mifampisokatra).',
+            ],
+          },
+          {
+            'icon': Icons.eco_outlined,
+            'title': 'Fiterahana & Atody',
+            'points': [
+              'Manatody: 100-120 isa/taona.',
+              'Ratio: 1 lahy : 4-5 vavy.',
+              'Incubation: 35 andro (lava kokoa noho ny gana).',
+              'Tsara hampitombo Sarindokotra (lahy Dokotra + vavy Gana).',
+            ],
+          },
+        ],
+        'feed': [
+          {'label': 'Démarrage', 'value': 'Provende 20% protéine.'},
+          {'label': 'Croissance', 'value': 'Katsaka 55%, Apombo 20%, Soja 20%.'},
+          {'label': 'Adulte', 'value': 'Katsaka, vary aron-tsakafo, anana.'},
+        ],
+        'timeline': [
+          {'label': 'Incubation', 'value': '35 andro.'},
+          {'label': 'Chair', 'value': '12-14 herinandro, 4-5kg (lahy).'},
+          {'label': 'Ponte', 'value': '100-120 atody/taona.'},
+        ],
+      },
+      {
+        'emoji': '🦢',
+        'title': 'Gisa (Oie)',
+        'subtitle': 'Lehibe, mafy orina, mihinana ahitra be.',
+        'badges': ['30-50 atody/taona', '5-8 kg', 'Mihinana ahitra'],
+        'steps': [
+          {
+            'icon': Icons.grass_outlined,
+            'title': 'Toetra Manokana',
+            'points': [
+              'Lehibe kokoa noho ny gana/dokotra (5-8kg).',
+              'Mihinana ahitra be dia be - mora fiompiana raha misy tanimboly.',
+              'Mafy orina, mahazaka hatsiaka sy aretina.',
+              'Tendro (duvet) tsara indrindra ho an\'ny ondana.',
+            ],
+          },
+          {
+            'icon': Icons.restaurant_outlined,
+            'title': 'Sakafo',
+            'points': [
+              'Démarrage: Provende 18-20% protéine.',
+              'Adulte: Ahitra 70-80%, Katsaka/vary 20-30%.',
+              'Mila ahitra maitso foana - tanimboly na vohitra.',
+              'Rano madio betsaka (milomano sy misotro).',
+            ],
+          },
+          {
+            'icon': Icons.pool_outlined,
+            'title': 'Trano & Toerana',
+            'points': [
+              'Hakitroka: 1-2 isa/m² (lehibe be).',
+              'Lavaka rano lehibe ilaina (milomano).',
+              'Tanimboly na vohitra maitso (paddock).',
+              'Trano hialofana rivotra sy orana.',
+            ],
+          },
+          {
+            'icon': Icons.egg_outlined,
+            'title': 'Atody & Fiterahana',
+            'points': [
+              'Manatody: 30-50 isa/taona.',
+              'Ratio: 1 lahy : 3-4 vavy.',
+              'Incubation: 28-30 andro.',
+              'Atody lehibe (120-150g), tsara sakafon\'olona.',
+            ],
+          },
+        ],
+        'feed': [
+          {'label': 'Démarrage', 'value': 'Provende 18-20% protéine.'},
+          {'label': 'Adulte', 'value': 'Ahitra 70-80%, Katsaka 20-30%.'},
+          {'label': 'Ponte', 'value': 'Ahitra + Katsaka, Calcium fanampy.'},
+        ],
+        'timeline': [
+          {'label': 'Incubation', 'value': '28-30 andro.'},
+          {'label': 'Chair', 'value': '14-16 herinandro, 5-8kg.'},
+          {'label': 'Ponte', 'value': '30-50 atody/taona.'},
+        ],
+      },
+      {
+        'emoji': '🐦',
+        'title': 'Papelika – Atody & Hena',
+        'subtitle': 'Mini-ferme manome atody 280-320 isa/taona ary hena 180-220g ao anatin\'ny 7-9 herinandro.',
+        'badges': ['280-320 atody/taona', '45 isa / m²', 'Vonjeo 7-9 herinandro'],
+        'steps': [
+          {
+            'icon': Icons.home_work_outlined,
+            'title': 'Trano & Fitaovana',
+            'points': [
+              'Hakitroka: 45-50 isa / m² rehefa fitaizana amin\'ny tranokely misy harato (battery).',
+              'Haavo 30-40 sm, harato 1x1 sm mba tsy hisy vorona hivoaka.',
+              'Atsofohy fasika maina na fibre coco ambony tray mba hitrohana loto.',
+              'Jiro 16-18 ora/andro amin\'ny fotoana fanatodizana mba tsy hitsahatra ny ponte.',
+            ],
+          },
+          {
+            'icon': Icons.egg_alt_outlined,
+            'title': 'Fampifangaroana Lahy/Vavy',
+            'points': [
+              'Ratio 1 lahy : 4-5 vavy ho an\'ny atody vaovao sy voafehy tsara.',
+              'Manomboka manatody amin\'ny 45-50 andro; soloina isaky ny 10-12 volana mba hitazonana vokatra.',
+              'Angony isan\'andro ny atody, tehirizo amin\'ny 16-18°C raha hampidirina ao anaty incubator.',
+            ],
+          },
+          {
+            'icon': Icons.restaurant_outlined,
+            'title': 'Sakafo & Fitomboana',
+            'points': [
+              'Démarrage (0-3 herinandro): 28% protéine, omena 5-6g/isa/andro.',
+              'Croissance (4-6 herinandro): 24% protéine, 12-14g/isa/andro.',
+              'Ponte (7+ herinandro): 20-22% protéine, calcium 3.5% (lao-akorantsely).',
+              'Avela rano madio hatrany satria mora voan\'ny aretin-tsinay ny papelika.',
+            ],
+          },
+          {
+            'icon': Icons.timeline_outlined,
+            'title': 'Dingana fanodinana',
+            'points': [
+              'Andro 1-14: hafanana 36-37°C, jiro 24 ora, sakafo vovony mikitroka.',
+              'Andro 15-35: afaka afindra amin\'ny cage 3-4 sosona, manomboka misaraka ny lahy.',
+              'Andro 40+: fisarahana tarika (ponte, hena, breeder).',
+              'Vonjeo amin\'ny lanja 180-220g raha hena, alohan\'ny 9 herinandro mba tsy hiakatra loatra ny tavy.',
+            ],
+          },
+        ],
+        'feed': [
+          {'label': '0-3 herinandro', 'value': 'Starter 28% protéine + vitamins (Electrolyte, Vit. AD3E).'},
+          {'label': '4-6 herinandro', 'value': 'Croissance 24% protéine, omena grit kely ho an\'ny fandevonan-kanina.'},
+          {'label': '7+ herinandro', 'value': 'Ponte 20-22% protéine, calcium 3.5-4%, omena 18h jiro/andro.'},
+        ],
+        'timeline': [
+          {'label': 'Fiomanana', 'value': 'Incubation 17 andro, mivoaka amin\'ny 80-85% raha atody vaovao.'},
+          {'label': 'Fizarana vondrona', 'value': 'Tazomy 1 lahy : 4-5 vavy, cage misy tray mora diovina.'},
+          {'label': 'Fanodinana atody', 'value': 'Manangona in-droa isan\'andro, atokana ho sakafo/biby fiompy sy ho incubator.'},
+        ],
+      },
+      {
+        'emoji': '🦃',
+        'title': 'Vorontsiloza – Fikatrohana ho Hena',
+        'subtitle': 'Fomba fohy hampitomboana lanja 12-15 kg ao anatin\'ny 16-20 herinandro.',
+        'badges': ['3 isa / m² max', 'Vonjeo 16-20 herinandro', 'Protéine 28% → 18%'],
+        'steps': [
+          {
+            'icon': Icons.house_siding,
+            'title': 'Trano & Fiambenana',
+            'points': [
+              'Hakitroka: 3 isa/m² (zaza) -> 1.5 isa/m² rehefa 12+ herinandro.',
+              'Tafo avo (3m) sy rivotra mivezivezy mba hampihenana dampness sy ammonia.',
+              'Perchoir matanjaka ho an\'ny tanora; esory rehefa miditra dingana chair satria mavesatra.',
+              'Ataovy fefy na paddock 5-10 m²/isa ho an\'ny fanazarana sy ahitra vaovao.',
+            ],
+          },
+          {
+            'icon': Icons.vaccines_outlined,
+            'title': 'Fisorohana aretina',
+            'points': [
+              'Vitamina & Electrolyte mandritra ny 5 andro voalohany sy rehefa miala amin\'ny brooder.',
+              'Vaksiny Newcastle rehefa 10 andro sy repika 35 andro raha misy loza.',
+              'Sasao sy diovy isan-kerinandro ny fanomezam-pisakafoana / fisotroana mba hisorohana coccidiose.',
+            ],
+          },
+          {
+            'icon': Icons.scale_outlined,
+            'title': 'Fitomboana & sakafo',
+            'points': [
+              'Démarrage (0-4 herinandro): 28% protéine, 60-80g/isa/andro.',
+              'Croissance (5-8 herinandro): 24% protéine, 180-220g/isa/andro.',
+              'Finition (9-16+ herinandro): 18-20% protéine, katsaka 60%, soya 20%, blé 15%, CMV 5%.',
+              'Ampidiro fibre (ahitra na luzerne) 5-8% hisorohana matavy loatra.',
+            ],
+          },
+          {
+            'icon': Icons.flag_outlined,
+            'title': 'Tetiandro famokarana',
+            'points': [
+              'Herinandro 0-2: brooder 34-32°C, jiro 23 ora/andro.',
+              'Herinandro 3-8: manomboka maka toerana malalaka sy mitsabo coccidiose raha ilaina.',
+              'Herinandro 9-12: fisarahana lahy/vavy; atomboka fanomezana sakafo finition misy katsaka betsaka.',
+              'Herinandro 16-20: lanja kendrena 12-15kg (lahy) sy 8-10kg (vavy).',
+            ],
+          },
+        ],
+        'feed': [
+          {'label': '0-4 herinandro', 'value': 'Starter 28% protéine + coccidiostat, 60-80g/isa/andro.'},
+          {'label': '5-8 herinandro', 'value': 'Grower 24% protéine, omena amin\'ny fatra 2 isa/andro hisorohana fandaniam-panafody.'},
+          {'label': '9-16+ herinandro', 'value': 'Finisher 18% protéine + katsaka voatoto, fibre 5-8% ho an\'ny tsinay.'},
+        ],
+        'timeline': [
+          {'label': 'Fividianana na incubation', 'value': 'Sivana atody 85g+, incubation 28 andro, mila fihodinana atody 5x/andro.'},
+          {'label': 'Brooder', 'value': 'Lampy 250W, tsihy fihazonana hafanana, misaraka avy hatrany ny lahy rohy raha be fifandirana.'},
+          {'label': 'Fanaraha-maso lanja', 'value': 'Mandrefy isan-kerinandro, raha latsaky ny tondro (table) dia mampiakatra protéine/kaloria 10% mandritra ny 3 andro.'},
+        ],
+      },
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final guides = _buildGuides();
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHero(),
+          const SizedBox(height: 20),
+          ...guides.map((guide) => Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: _buildGuideCard(guide),
+              )),
+          _buildChecklistCard(),
+          const SizedBox(height: 16),
+          _buildAlertCard(),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHero() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Color(0xFF2F8F83), Color(0xFF0F5132)]),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 25,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text('Torohay manokana', style: TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 0.5)),
+          SizedBox(height: 6),
+          Text('Fomba fiompiana Papelika & Vorontsiloza', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+          SizedBox(height: 8),
+          Text(
+            'Paikady haingana ahazoana atody betsaka sy hena mavesatra, miaraka amin\'ny sakafo, hakitroka ary fisorohana aretina.',
+            style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuideCard(Map<String, dynamic> guide) {
+    final List<String> badges = List<String>.from(guide['badges'] as List);
+    final List<Map<String, dynamic>> steps = List<Map<String, dynamic>>.from(guide['steps'] as List);
+    final List<Map<String, String>> feed = List<Map<String, String>>.from(guide['feed'] as List);
+    final List<Map<String, String>> timeline = List<Map<String, String>>.from(guide['timeline'] as List);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 18, offset: const Offset(0, 10)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(guide['emoji'] as String, style: const TextStyle(fontSize: 32)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(guide['title'] as String, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text(
+                      guide['subtitle'] as String,
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: badges.map((badge) => _buildBadge(badge)).toList(),
+          ),
+          const SizedBox(height: 18),
+          ...steps.map((step) => _buildStepTile(step)),
+          const SizedBox(height: 16),
+          _buildListSection('Sakafo & Fatra', feed, Icons.restaurant_menu),
+          const SizedBox(height: 12),
+          _buildListSection('Tetiandro / Workflow', timeline, Icons.schedule),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBadge(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Text(text, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12)),
+    );
+  }
+
+  Widget _buildStepTile(Map<String, dynamic> step) {
+    final List<String> points = List<String>.from(step['points'] as List);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(step['icon'] as IconData, color: AppColors.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(step['title'] as String, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...points.map((point) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('• ', style: TextStyle(fontSize: 14, height: 1.4)),
+                    Expanded(child: Text(point, style: const TextStyle(fontSize: 14, height: 1.4))),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListSection(String title, List<Map<String, String>> items, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppColors.accent),
+              const SizedBox(width: 8),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...items.map((item) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item['label']!, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text(item['value']!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChecklistCard() {
+    final items = [
+      'Manao planing famokarana 12 herinandro (batch) mba hifandimby ny papelika sy vorontsiloza.',
+      'Mitahiry angona (isan\'atody, lanjan\'ny vorona, fatran\'ny sakafo) ao amin\'ny takelaka Excel na boky.',
+      'Manao fumigation/ranon-kobilava isaky ny 2 herinandro ho fisorohana bibikely sy fofona ao an-trano.',
+      'Mitovy amin\'ny vola: kajio mialoha ny vola lany/kg sy sandan\'ny vokatra (atody, hena) mba hahitana tombony.',
+    ];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Checklist an\'ny mpamboly', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primary)),
+          const SizedBox(height: 10),
+          ...items.map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.check_circle, color: AppColors.primary, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(item, style: const TextStyle(fontSize: 14, height: 1.4))),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAlertCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Icon(Icons.warning_amber_rounded, color: AppColors.error),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Fisorohana aretina: aza mifangaro amin\'ny akoho ny vorontsiloza sy papelika. Manaova karantina 3 herinandro ho an\'ny vorona vaovao ary tandremo ny hafanana (brooder) mba tsy hisy fahafatesana tampoka.',
+              style: TextStyle(fontSize: 13, height: 1.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// --- MODULE 4: FAHASALAMANA (HEALTH) ---
 class Disease {
   final String name;
   final String description;
@@ -15206,17 +15828,18 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
       'formulas': [
         {
           'name': 'Premium (Viande Maigre)',
-          'desc': 'Hena be, tavy kely (Qualité Export)',
+          'desc': 'Hena be, tavy kely (Qualité Export). Ahitsy ny Lysine.',
           'ingredients': [
             {'name': 'Katsaka', 'qty': '65 kg'},
             {'name': 'Tourteau Soja', 'qty': '15 kg'},
             {'name': 'Apombo (Son)', 'qty': '15 kg'},
             {'name': 'CMV 5% Finition', 'qty': '5 kg'},
+            {'name': 'Lysine', 'qty': '100 g'},
           ]
         },
         {
           'name': 'Standard (Mid Range)',
-          'desc': 'Fifandanjana tsara',
+          'desc': 'Fifandanjana tsara. Sombin\'ny hena sy tavy.',
           'ingredients': [
             {'name': 'Katsaka', 'qty': '40 kg'},
             {'name': 'Mangahazo', 'qty': '20 kg'},
@@ -15227,7 +15850,7 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
         },
         {
           'name': 'Low Cost (Mora)',
-          'desc': 'Ho an\'ny farany (mora vidy)',
+          'desc': 'Ho an\'ny farany. Hena be tavy kokoa.',
           'ingredients': [
             {'name': 'Mangahazo maina', 'qty': '50 kg'},
             {'name': 'Apombo', 'qty': '30 kg'},
@@ -15236,7 +15859,7 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
           ]
         }
       ],
-      'tips': 'Any Eoropa, ferana ny sakafo amin\'ny farany mba tsy ho matavy loatra (Gras).',
+      'tips': 'Any Eoropa: Ferana ny sakafo (Rationing) amin\'ny farany mba tsy ho matavy loatra. Ny Premium dia mitaky proteina ambany (14%) fa Lysine ambony (0.7-0.8%) = hena tsy misy tavy.',
     },
     'Renin-kisoa (Gestante)': {
       'age': 'Vohoka (114 andro)',
@@ -15279,6 +15902,63 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
       'tips': 'Mila rano be dia be hamokarana ronono (20-30 Litatra/andro). Omeo sakafo betsaka araka izay laniny.',
     },
   };
+  
+  final List<Map<String, dynamic>> _engraissementPlan = [
+    {
+      'emoji': '⚡',
+      'title': 'Phase 1 - Booster (60-75kg)',
+      'duration': '7-10 andro (Adaptation)',
+      'feed': '2.2 - 2.5 kg/kisoa/andro',
+      'objective': 'GMQ 700-800g/andro, hena be hozatra',
+      'composition': [
+        'Proteina 16-17%',
+        'Angovo 3100-3200 kcal/kg',
+        'Lysine 0.75%',
+        'Fibre < 6%',
+      ],
+      'actions': [
+        'Sakafo 3-4 isaky ny andro (kely fa matetika)',
+        'Rano 8-10L isan\'andro + Electrolyte raha mafana',
+        'Afangaro 10-15% fibre (Apombo) hisorohana aretin-kibo',
+      ],
+    },
+    {
+      'emoji': '📈',
+      'title': 'Phase 2 - Power Growth (75-95kg)',
+      'duration': '15-20 andro',
+      'feed': '2.5 - 3.0 kg/kisoa/andro',
+      'objective': 'Mitazona lanja 800g-1kg/andro',
+      'composition': [
+        'Proteina 15-16%',
+        'Angovo 3000-3100 kcal/kg',
+        'Lysine 0.65-0.7%',
+        'Ca/P = 1.3',
+      ],
+      'actions': [
+        'Afangaro 60% katsaka + 20% apombo + 12% soja + 5% menaka',
+        'Fizarana sakafo roa be (maraina/soroka) + "snack" kely hariva',
+        'Tazomy ho madio ny trano sy ventilations mba tsy hilatsaka ny fihinanana',
+      ],
+    },
+    {
+      'emoji': '🏁',
+      'title': 'Phase 3 - Finition (95-110kg)',
+      'duration': '10-12 andro (alohan\'ny fivarotana)',
+      'feed': '2.8 - 3.2 kg/kisoa/andro',
+      'objective': 'Hena malefaka, tavy voafehy < 2.5 cm',
+      'composition': [
+        'Proteina 14-15%',
+        'Angovo 2950-3000 kcal/kg',
+        'Lysine 0.55-0.6%',
+        'Fibre 4-5%',
+      ],
+      'actions': [
+        'Ahena ny fibre (Apombo 5-8%) mba hampitony ny tsinay',
+        'Ataovy 55-60% katsaka + 15% soja + 15% mangahazo maina',
+        'Aza atao mando be ny trano (slatted floor na mololo maina)',
+      ],
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -15391,6 +16071,35 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
               ],
             ),
           ),
+          _buildCard(
+            title: 'Plan Engraissement (60-110kg)',
+            icon: Icons.monitor_weight,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ..._engraissementPlan.map(_buildEngraissementPhase),
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blueGrey.shade100),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('🚰 Fanaraha-maso', style: TextStyle(fontWeight: FontWeight.bold)),
+                      SizedBox(height: 6),
+                      Text('• Rano 24/24 (10-12L/kisoa/andro) - mijanona ny fitomboana raha tsy ampy.'),
+                      Text('• Thermo: < 28°C, raha mihoatra dia apetraho ny douchage na ventilation.'),
+                      Text('• Tazomy ho 1.2 m²/kisoa (10-12 kisoa/pen 3m x 4m) mba hihinana tsara.'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -15460,6 +16169,58 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
       ),
     );
   }
+  
+  Widget _buildEngraissementPhase(Map<String, dynamic> phase) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(phase['emoji'] as String, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  phase['title'] as String,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          _buildInfoRow('⏱️ Fotoana', phase['duration'] as String),
+          _buildInfoRow('🍽️ Fatra', phase['feed'] as String),
+          _buildInfoRow('🎯 Tanjon\'ny phase', phase['objective'] as String),
+          const SizedBox(height: 6),
+          const Text('⚖️ Composition', style: TextStyle(fontWeight: FontWeight.bold)),
+          ...((phase['composition'] as List).map((text) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text('• $text'),
+              ))),
+          const SizedBox(height: 6),
+          const Text('🛠️ Toromarika', style: TextStyle(fontWeight: FontWeight.bold)),
+          ...((phase['actions'] as List).map((text) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text('• $text'),
+              ))),
+        ],
+      ),
+    );
+  }
 }
 
 class KisoaHealthScreen extends StatefulWidget {
@@ -15514,7 +16275,7 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
       'prophylaxis': '• Fahadiovana\n• Hafanana (26-28°C ho an\'ny kely)\n• Tsindrona Fer J-3',
     },
     {
-      'name': 'Pneumonie (Aretim-bavony)',
+      'name': 'Pneumonie (Aretitratra)',
       'description': 'Fivontosana ny havokavoka, matetika vokatry ny hatsiaka na vovoka.',
       'symptoms': '• Mikohaka, mikorina\n• Miaina mafy (Sempo)\n• Fanaviana\n• Tsy te-homana\n• Mitombo miadana',
       'treatment': '• Antibiotique (Tylosine, Florfénicol, Tilmicosine)\n• Anti-inflammatoire',
@@ -15541,8 +16302,8 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
       'prophylaxis': '• Vermifuge ara-potoana\n• Fanadiovana tsy tapaka',
     },
     {
-      'name': 'Anémie (Kisoa kely)',
-      'description': 'Tsy fahampian-dry amin\'ny kisoa vao teraka. Mety hahafaty raha tsy tsaboina.',
+      'name': 'Anémie (Hatsatra)',
+      'description': 'Tsy fahampian-dry (Fer) amin\'ny kisoa vao teraka ka mahatonga hatsatra sy fahalemena.',
       'symptoms': '• Hatsatra (Pâle) ny hoditra sy sofina\n• Reraka, tsy mazoto\n• Miaina mafy\n• Mitombo miadana',
       'treatment': '• Tsindrona Fer-Dextran 200mg (J-3)\n• Azo averina J-10 raha ilaina',
       'naturalRemedy': '• Tsy misy tena mahomby. Ny vy no ilaina.',
@@ -15604,7 +16365,7 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
       list.add({'day': 'J-7', 'act': '💊 Vermifuge + Ivermectine (Lagaly)'});
       list.add({'day': 'J-14', 'act': '💉 Vaksiny Parvovirose + Rouget'});
       list.add({'day': 'J-30', 'act': '✅ Hiala quarantaine - Ampakarina'});
-      list.add({'day': 'Alohan\'ny Fampakaram-bady', 'act': '💊 Vermifuge + Flushing (sakafo betsaka)'});
+      list.add({'day': 'Alohan\'ny Fampanarahana', 'act': '💊 Vermifuge + Flushing (sakafo betsaka)'});
       list.add({'day': 'J-90 vohoka', 'act': '💉 Rappel Vaksiny + Ahena sakafo'});
       list.add({'day': 'J-110 vohoka', 'act': '💊 Vermifuge + Fanomanana box fiterahana'});
       list.add({'day': 'Andro fiterahana', 'act': '⚠️ Fitsirihana 24/24, Ocytocine raha ilaina'});
@@ -15612,7 +16373,7 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
       list.add({'day': 'Isak\'6 volana', 'act': '💉 Rappel Vaksiny (PPC, Rouget, Parvovirose)'});
     } else if (_type == 'Kisoa Kely') {
       // Porcelet - Soins jusqu'au sevrage
-      list.add({'day': 'H-0', 'act': '🐽 Fiterahana - Famoahana ny ranon\'akanjo, Famahanana voalohany (Colostrum)'});
+      list.add({'day': 'H-0', 'act': '🐽 Fiterahana - Fanalana ny dity tavela (mucus) ary omena colostrum haingana'});
       list.add({'day': 'H-1', 'act': '🔥 Hafanana (Lampe 35°C) - Tena ilaina!'});
       list.add({'day': 'J-1', 'act': '✂️ Fanapahana tadim-poitra (1-2 sm) + Betadine'});
       list.add({'day': 'J-1', 'act': '🦷 Fanapahana nify (8 nify maranitra) - Tsy obligatoire'});
@@ -15668,7 +16429,7 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
           tabs: const [
             Tab(text: 'Tetiandro'),
             Tab(text: 'Kisoa Kely'),
-            Tab(text: 'Fahasalamana'),
+            Tab(text: 'Aretina'),
             Tab(text: 'Biosecurity (Pro)'),
           ],
         ),
@@ -15822,32 +16583,128 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
   }
 
   Widget _buildDiseaseTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _diseases.length,
-      itemBuilder: (context, index) {
-        final d = _diseases[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 10),
-          child: ExpansionTile(
-            leading: const Icon(Icons.medical_services, color: Colors.pink),
-            title: Text(d['name']!, style: const TextStyle(fontWeight: FontWeight.bold)),
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDetailRow('📖 Filazana:', d['description']!),
-                    _buildDetailRow('🤒 Soritr\'aretina:', d['symptoms']!),
-                    _buildDetailRow('💊 Fanafody (Veto):', d['treatment']!),
-                    _buildDetailRow('🌿 Tambavy (Gasy):', d['naturalRemedy']!),
-                    _buildDetailRow('⚡ Hetsika atao:', d['actions']!),
-                    _buildDetailRow('🛡️ Fisorohana:', d['prophylaxis']!),
-                  ],
+    final gradients = [
+      [const Color(0xFFFF5F6D), const Color(0xFFFFC371)], // rouge -> orange
+      [const Color(0xFF7F00FF), const Color(0xFFE100FF)], // violet flashy
+      [const Color(0xFF36D1DC), const Color(0xFF5B86E5)], // bleu ocean
+      [const Color(0xFFFF512F), const Color(0xFFF09819)], // magma
+      [const Color(0xFF11998E), const Color(0xFF38EF7D)], // vert
+      [const Color(0xFFF7971E), const Color(0xFFFFD200)], // jaune
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final targetWidth = 170.0;
+        final computed = (constraints.maxWidth / targetWidth).floor();
+        final crossAxisCount = computed < 2 ? 2 : (computed > 4 ? 4 : computed);
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 14,
+            mainAxisSpacing: 14,
+            childAspectRatio: 0.9,
+          ),
+          itemCount: _diseases.length,
+          itemBuilder: (context, index) {
+            final d = _diseases[index];
+            final gradient = gradients[index % gradients.length];
+            return Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(22),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(22),
+                onTap: () => _showDiseaseDetails(d),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: gradient,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(color: gradient.first.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 6)),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, 4)),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      d['name']!,
+                      textAlign: TextAlign.center,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showDiseaseDetails(Map<String, String> disease) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.medical_information, color: Colors.pink),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          disease['name']!,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDetailRow('📖 Filazana:', disease['description']!),
+                  _buildDetailRow('🤒 Soritr\'aretina:', disease['symptoms']!),
+                  _buildDetailRow('💊 Fanafody (Veto):', disease['treatment']!),
+                  _buildDetailRow('🌿 Tambavy (Gasy):', disease['naturalRemedy']!),
+                  _buildDetailRow('⚡ Hetsika atao:', disease['actions']!),
+                  _buildDetailRow('🛡️ Fisorohana:', disease['prophylaxis']!),
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -15866,7 +16723,7 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildCareStep('1', 'Famoahana ranon\'akanjo', 'Esory ny ranon\'akanjo amin\'ny vava sy orona. Famafazana amin\'ny lamba maina.', Colors.red),
+                _buildCareStep('1', 'Fanalana ny dity tavela (mucus)', 'Esory amin\'ny lamba madio na poire à mucus ny dity tavela ao am-bava sy orona alohan\'ny hitsentsenany ronono.', Colors.red),
                 _buildCareStep('2', 'Fanapahana tadim-poitra', 'Tapaho 3-4 sm amin\'ny kibo. Ahosotra Betadine na Iodine.', Colors.orange),
                 _buildCareStep('3', 'Famahanana Colostrum', 'Tena ilaina ao anatin\'ny 6 ora voalohany! Misy Anticorps fiarovana.', Colors.green),
                 _buildCareStep('4', 'Hafanana', 'Lampe chauffante 35°C. Ahena 2°C isaky ny herinandro.', Colors.blue),
