@@ -10,11 +10,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
 import 'pages/tombony_analyzer_page.dart';
-import 'pages/supabase_test_page.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,14 +25,16 @@ Future<void> main() async {
   } catch (_) {
     // If firebase config isn't set up yet, app will still run using placeholder options.
   }
-  // Initialize Supabase (replace URL and anonKey with your project's values)
-  try {
-    await Supabase.initialize(
-      url: 'https://ivnmbrzjltshrfqywwoj.supabase.co', // your project URL
-      anonKey: 'sb_publishable_VETJEXoLGp-2bfs7Nrbn_A_clY_rR3q', // your anon key
-    );
-  } catch (_) {
-    // Supabase not configured yet; continue without it.
+  // Initialize Supabase on non-web platforms only (temporarily disabled on web for debugging)
+  if (!kIsWeb) {
+    try {
+      await Supabase.initialize(
+        url: 'https://ivnmbrzjltshrfqywwoj.supabase.co', // your project URL
+        anonKey: 'sb_publishable_VETJEXoLGp-2bfs7Nrbn_A_clY_rR3q', // your anon key
+      );
+    } catch (_) {
+      // Supabase not configured yet; continue without it.
+    }
   }
   runApp(const AkohoTechApp());
 }
@@ -1793,44 +1795,8 @@ class CategorySelectionScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Supabase Test button
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const SupabaseTestPage()),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.teal.shade700,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.3),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.cloud, color: Colors.white, size: 18),
-                            SizedBox(width: 6),
-                            Text(
-                              'TEST SUPABASE',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    // Supabase test button removed to avoid displaying that text
+                    const SizedBox.shrink(),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () {
