@@ -34,3 +34,8 @@ echo "flutter build macos"
 echo "\nBuilding Flutter web app..."
 flutter build web
 echo "Flutter web build complete."
+
+# Deploy to Vercel
+echo "\nDeploying to Vercel..."
+vercel --prod --cwd build/web
+echo "Vercel deployment complete."
