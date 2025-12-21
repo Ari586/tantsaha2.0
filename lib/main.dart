@@ -27,8 +27,8 @@ Future<void> main() async {
   // Initialize Supabase (replace URL and anonKey with your project's values)
   try {
     await Supabase.initialize(
-      url: 'https://your-project.supabase.co',
-      anonKey: 'your-anon-key',
+      url: 'https://ivnmbrzjltshrfqywwoj.supabase.co', // your project URL
+      anonKey: 'sb_publishable_VETJEXoLGp-2bfs7Nrbn_A_clY_rR3q', // your anon key
     );
   } catch (_) {
     // Supabase not configured yet; continue without it.
