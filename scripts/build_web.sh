@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+
+git clone https://github.com/flutter/flutter.git -b stable
+export PATH="$PATH:`pwd`/flutter/bin"
+flutter build web
