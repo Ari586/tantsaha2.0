@@ -11,7 +11,18 @@ import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
 import 'pages/tombony_analyzer_page.dart';
 
-void main() {
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (_) {
+    // If firebase config isn't set up yet, app will still run using placeholder options.
+  }
   runApp(const AkohoTechApp());
 }
 
