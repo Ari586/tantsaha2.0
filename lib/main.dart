@@ -9,9 +9,51 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
+import 'pages/tombony_analyzer_page.dart';
 
 void main() {
   runApp(const AkohoTechApp());
+}
+
+class _FloatingOrbsPainter extends CustomPainter {
+  final double t;
+  _FloatingOrbsPainter(this.t);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
+
+    Color tint(Color c, double alpha) => c.withValues(alpha: alpha);
+
+    final orbs = [
+      _Orb(0.15, 0.25, 200, 0.55, Colors.redAccent),
+      _Orb(0.8, 0.2, 240, 0.5, Colors.blueAccent),
+      _Orb(0.4, 0.8, 300, 0.42, AppColors.accent),
+      _Orb(0.7, 0.75, 220, 0.38, AppColors.info),
+    ];
+
+    for (final orb in orbs) {
+      final dx = (orb.x + 0.1 * sin(2 * pi * (t + orb.phase))).clamp(0.0, 1.0);
+      final dy = (orb.y + 0.1 * cos(2 * pi * (t + orb.phase))).clamp(0.0, 1.0);
+      paint.color = tint(orb.color, orb.alpha);
+      canvas.drawCircle(Offset(dx * size.width, dy * size.height), orb.radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _FloatingOrbsPainter oldDelegate) => oldDelegate.t != t;
+}
+
+class _Orb {
+  final double x;
+  final double y;
+  final double radius;
+  final double alpha;
+  final Color color;
+  final double phase;
+  _Orb(this.x, this.y, this.radius, this.alpha, this.color) : phase = (x + y) % 1.0;
 }
 
 // Code Admin secret (ce code ne expire jamais)
@@ -1265,7 +1307,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       'Fitantanana fambolena sy fiompiana',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontWeight: FontWeight.w300,
                       ),
                     ),
@@ -1688,11 +1730,12 @@ class CategorySelectionScreen extends StatelessWidget {
                     ),
                     
                     const SizedBox(height: 12),
+                    // Analyzer takes the slot of previous Fikajiana & Tombony
                     GestureDetector(
                       onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => const FikajianaTombonyDialog(),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const TombonyAnalyzerPage()),
                         );
                       },
                       child: Container(
@@ -1713,10 +1756,10 @@ class CategorySelectionScreen extends StatelessWidget {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.calculate, color: Colors.white, size: 18),
+                            Icon(Icons.auto_graph, color: Colors.white, size: 18),
                             SizedBox(width: 6),
                             Text(
-                              '📊 FIKAJIANA & TOMBONY',
+                              'Analyzer',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
@@ -2070,8 +2113,9 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
+  late final AnimationController _bgCtrl;
 
   String get _appTitle {
     if (widget.category == 'bitro') return 'BitroTech';
@@ -2186,6 +2230,18 @@ class _HomeScreenState extends State<HomeScreen> {
       const EggsScreen(category: 'akoho'),
       const FinanceScreen(),
     ];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _bgCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 22))..repeat();
+  }
+
+  @override
+  void dispose() {
+    _bgCtrl.dispose();
+    super.dispose();
   }
 
   List<String> get _titles {
@@ -2666,17 +2722,32 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.gradientStart, AppColors.gradientEnd],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.gradientStart, AppColors.gradientEnd],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _bgCtrl,
+                builder: (context, _) {
+                  return CustomPaint(
+                    painter: _FloatingOrbsPainter(_bgCtrl.value),
+                  );
+                },
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
               // Glassmorphism Header
               Container(
                 margin: const EdgeInsets.all(16),
@@ -2725,33 +2796,37 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(14),
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const TombonyAnalyzerPage()),
                       ),
-                      child: IconButton(
-                        icon: const Icon(Icons.info_outline, color: Colors.white, size: 22),
-                        onPressed: () {
-                          showAboutDialog(
-                            context: context,
-                            applicationName: _appTitle,
-                            applicationVersion: '3.0 Glass',
-                            applicationIcon: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(colors: [AppColors.gradientStart, AppColors.gradientEnd]),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(_appEmoji, style: const TextStyle(fontSize: 40)),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFF3B82F6), Color(0xFF06B6D4)]),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
-                            children: [Text(widget.category == 'bitro' 
-                                ? 'Fampiharana momba ny fiompiana bitro sy bitro voalavo.'
-                                : 'Fampiharana momba ny fiompiana akoho.')],
-                          );
-                        },
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.auto_graph, color: Colors.white, size: 16),
+                            SizedBox(width: 6),
+                            Text('Analyzer', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                          ],
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    const SizedBox(width: 8),
                   ],
                 ),
               ),
@@ -2783,9 +2858,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
       // Floating Action Button pour Atody - AkohoTech (index 5) et VoronaTech (index 4)
       floatingActionButton: ((widget.category == 'akoho' && _currentIndex == 5) || (widget.category == 'vorona' && _currentIndex == 4)) ? FloatingActionButton.extended(
@@ -9251,7 +9327,7 @@ class CalculatorsAndProfitScreen extends StatelessWidget {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            'Ampidiro ny budget-nao dia hahita hoe inona no fiompiana tsara indrindra',
+                            'Ampidiro ny budget-nao dia hahita hoe inona no fiompiana na fambolena tsara indrindra',
                             style: TextStyle(fontSize: 11, color: Colors.grey),
                           ),
                         ],
@@ -9344,7 +9420,7 @@ class CalculatorsAndProfitScreen extends StatelessWidget {
             context,
             emoji: '🦆',
             title: 'Fikajiana Olitra',
-            subtitle: 'Kajy ny vola lany sy tombony amin\'ny fiompiana ganagana/vorona',
+            subtitle: 'Kajy ny vola lany sy tombony amin\'ny famokarana olitra BSF',
             color: Colors.teal,
             onTap: () => _showOlitraCalculator(context),
           ),
@@ -9569,7 +9645,7 @@ class CalculatorsAndProfitScreen extends StatelessWidget {
         color: Colors.pink,
         fields: const [
           {'label': 'Isan\'ny kisoa', 'key': 'count', 'hint': '10'},
-          {'label': 'Vidin\'ny zana-kisoa (Ar)', 'key': 'piglet_price', 'hint': '80000'},
+          {'label': 'Vidin\'ny zana-kisoa (Ar)', 'key': 'piglet_price', 'hint': '120000'},
           {'label': 'Vidin\'ny sakafo/kg (Ar)', 'key': 'feed_price', 'hint': '1500'},
           {'label': 'Sakafo/kisoa/andro (kg)', 'key': 'feed_per_day', 'hint': '2.5'},
           {'label': 'Faharetan\'ny fiompiana (volana)', 'key': 'duration', 'hint': '6'},
@@ -9624,7 +9700,7 @@ class CalculatorsAndProfitScreen extends StatelessWidget {
         color: Colors.blue,
         fields: const [
           {'label': 'Isan\'ny zana-trondro', 'key': 'count', 'hint': '500'},
-          {'label': 'Vidin\'ny zana-trondro (Ar)', 'key': 'fry_price', 'hint': '300'},
+          {'label': 'Vidin\'ny zana-trondro (Ar)', 'key': 'fry_price', 'hint': '500'},
           {'label': 'Vidin\'ny sakafo/kg (Ar)', 'key': 'feed_price', 'hint': '3000'},
           {'label': 'FCR (kg sakafo/kg trondro)', 'key': 'fcr', 'hint': '1.5'},
           {'label': 'Lanja farany (g)', 'key': 'final_weight', 'hint': '500'},
@@ -9807,39 +9883,46 @@ class CalculatorsAndProfitScreen extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _CalculatorSheet(
-        title: 'Fikajiana Olitra',
-        emoji: '🦆',
+        title: 'Fikajiana Olitra BSF',
+        emoji: '🪱',
         color: Colors.teal,
         fields: const [
-          {'label': 'Isan\'ny ganagana/vorona', 'key': 'count', 'hint': '50'},
-          {'label': 'Vidin\'ny zanak\'olitra (Ar)', 'key': 'chick_price', 'hint': '8000'},
-          {'label': 'Sakafo/olitra/andro (g)', 'key': 'feed_per_day', 'hint': '150'},
-          {'label': 'Faharetan\'ny fiompiana (andro)', 'key': 'duration', 'hint': '60'},
-          {'label': 'Vidin\'ny sakafo/kg (Ar)', 'key': 'feed_price', 'hint': '2200'},
-          {'label': 'Vidin\'ny olitra iray rehefa lehibe (Ar)', 'key': 'sell_price', 'hint': '35000'},
+          {'label': 'Fako organika isan\'andro (kg)', 'key': 'waste_per_day', 'hint': '5'},
+          {'label': 'Faharetana (andro)', 'key': 'duration', 'hint': '30'},
+          {'label': 'Starter olitra (kg)', 'key': 'starter_qty', 'hint': '1'},
+          {'label': 'Vidin\'ny starter/kg (Ar)', 'key': 'starter_price', 'hint': '40000'},
+          {'label': 'Vidin\'ny olitra velona/kg (Ar)', 'key': 'live_price', 'hint': '20000'},
+          {'label': 'Vidin\'ny olitra maina/kg (Ar)', 'key': 'dried_price', 'hint': '50000'},
         ],
         calculateResult: (values) {
-          final count = values['count'] ?? 0;
-          final chickPrice = values['chick_price'] ?? 0;
-          final feedPerDay = values['feed_per_day'] ?? 0;
-          final duration = values['duration'] ?? 0;
-          final feedPrice = values['feed_price'] ?? 0;
-          final sellPrice = values['sell_price'] ?? 0;
-          
-          final chickCost = count * chickPrice;
-          final totalFeedKg = count * feedPerDay * duration / 1000;
-          final feedCost = totalFeedKg * feedPrice;
-          final otherCost = (chickCost + feedCost) * 0.1; // 10% autres frais
-          final totalCost = chickCost + feedCost + otherCost;
-          
-          final revenue = count * sellPrice * 0.90; // 90% taux survie
+          final wastePerDay = (values['waste_per_day'] ?? 0).toDouble();
+          final duration = (values['duration'] ?? 0).toDouble();
+          final starterQty = (values['starter_qty'] ?? 0).toDouble();
+          final starterPrice = (values['starter_price'] ?? 0).toDouble();
+          final livePrice = (values['live_price'] ?? 0).toDouble();
+          final driedPrice = (values['dried_price'] ?? 0).toDouble();
+
+          // Assumptions: 20% conversion waste -> olitra velona; 25% drying yield
+          final totalWaste = wastePerDay * duration;
+          final liveOutputKg = totalWaste * 0.20;
+          final driedOutputKg = liveOutputKg * 0.25;
+
+          final starterCost = starterQty * starterPrice;
+          final opsCost = totalWaste * 500; // fanodinana/asa 500 Ar/kg waste
+          final totalCost = starterCost + opsCost;
+
+          final revenueLive = liveOutputKg * livePrice;
+          final revenueDried = driedOutputKg * driedPrice;
+          final revenue = revenueLive + revenueDried;
           final profit = revenue - totalCost;
           final roi = totalCost > 0 ? (profit / totalCost * 100) : 0;
-          
+
           return {
-            'Vidin\'ny zanak\'olitra': '${NumberFormat("#,##0").format(chickCost)} Ar',
-            'Vidin\'ny sakafo': '${NumberFormat("#,##0").format(feedCost)} Ar',
-            'Hafa (10%)': '${NumberFormat("#,##0").format(otherCost)} Ar',
+            'Fako nodiovina': '${totalWaste.toStringAsFixed(1)} kg',
+            'Vokatra olitra velona': '${liveOutputKg.toStringAsFixed(1)} kg',
+            'Vokatra olitra maina': '${driedOutputKg.toStringAsFixed(1)} kg',
+            'Vidin\'ny starter': '${NumberFormat("#,##0").format(starterCost)} Ar',
+            'Saran\'asa (500Ar/kg waste)': '${NumberFormat("#,##0").format(opsCost)} Ar',
             '---': '---',
             'VOLA LANY REHETRA': '${NumberFormat("#,##0").format(totalCost)} Ar',
             'VOLA MIDITRA': '${NumberFormat("#,##0").format(revenue)} Ar',
@@ -19984,13 +20067,13 @@ DINGANA 5: FIJINJANA
 ✅ TAHAN'NY FIPOSAHANA: 70-85%
 
 💡 TOROHEVITRA HO AN'NY VAO HANOMBOKA:
-1. Aleno ao anaty rano MAFANA ny voa (12 ora)
+1. Alona ao anaty rano MAFANA ny voa (12 ora)
 2. Afafy amin'ny tanin-ketsa aloha
 3. Arovy amin'ny orana be (mety hamono ny ketsa)
 4. Afindra rehefa misy ravina 4-6 (4-6 herinandro)''',
       'nursery': 'Tanin-ketsa: 4-6 herinandro; afindra rehefa misy ravina 4-6',
       'plantingGuide': '''DINGANA 1: FANOMANANA VOA
-• Aleno ao anaty rano mafana (12 ora)
+• Alona ao anaty rano mafana (12 ora)
 • Esory ary avelao eo amin'ny toerana mafana
 • Afaka afafy rehefa mibontsina kely
 
@@ -26752,7 +26835,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
             Navigator.pop(context);
             _showTantelyCalculator(context);
           }),
-          _buildCalcCard('🦆', 'Olitra', 'Ganagana, vorona, tombony', Colors.teal, () {
+          _buildCalcCard('🦆', 'Olitra', 'Olitra BSF, fahana, tombony', Colors.teal, () {
             Navigator.pop(context);
             _showOlitraCalculator(context);
           }),
@@ -26823,7 +26906,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('TOMBONY ANALYZER', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          Text('Inona no fiompiana tsara indrindra?', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text('Inona no mampidi-bola kokoa?', style: TextStyle(fontSize: 12, color: Colors.grey)),
                         ],
                       ),
                     ),
@@ -26831,7 +26914,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Ampidiro ny budget-nao dia hahita izay fiompiana mampidi-bola kokoa araka ny vola anananao.',
+                  'Ampidiro ny budget-nao dia hahita izay mampidi-bola kokoa araka ny vola anananao.',
                   style: TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 16),
@@ -26903,7 +26986,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
                 Text(
                   '• Ny akoho dia tsara ho an\'ny budget kely\n'
                   '• Ny kisoa sy tantely dia mampidi-bola be kokoa\n'
-                  '• Ny olitra (ganagana) dia mora ompiana sy manome tombony tsara\n'
+                  '• Ny olitra BSF dia mora vokarina sy manome tombony tsara\n'
                   '• Ampifangaroy ny fiompiana sy fambolena mba hampitombo ny tombony',
                   style: TextStyle(fontSize: 11, height: 1.5),
                 ),
@@ -27081,7 +27164,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
         color: Colors.pink,
         fields: const [
           {'label': 'Isan\'ny kisoa', 'key': 'count', 'hint': '10'},
-          {'label': 'Vidin\'ny zana-kisoa (Ar)', 'key': 'piglet_price', 'hint': '80000'},
+          {'label': 'Vidin\'ny zana-kisoa (Ar)', 'key': 'piglet_price', 'hint': '120000'},
           {'label': 'Vidin\'ny sakafo/kg (Ar)', 'key': 'feed_price', 'hint': '1500'},
           {'label': 'Sakafo/kisoa/andro (kg)', 'key': 'feed_per_day', 'hint': '2.5'},
           {'label': 'Faharetan\'ny fiompiana (volana)', 'key': 'duration', 'hint': '6'},
@@ -27130,7 +27213,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
         color: Colors.blue,
         fields: const [
           {'label': 'Isan\'ny zana-trondro', 'key': 'count', 'hint': '500'},
-          {'label': 'Vidin\'ny zana-trondro (Ar)', 'key': 'fry_price', 'hint': '300'},
+          {'label': 'Vidin\'ny zana-trondro (Ar)', 'key': 'fry_price', 'hint': '500'},
           {'label': 'Vidin\'ny sakafo/kg (Ar)', 'key': 'feed_price', 'hint': '3000'},
           {'label': 'FCR', 'key': 'fcr', 'hint': '1.5'},
           {'label': 'Lanja farany (g)', 'key': 'final_weight', 'hint': '500'},
@@ -27209,6 +27292,62 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
     );
   }
 
+  void _showOlitraCalculator(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _CalculatorSheet(
+        title: 'Fikajiana Olitra BSF',
+        emoji: '🪱',
+        color: Colors.teal,
+        fields: const [
+          {'label': 'Fako organika isan\'andro (kg)', 'key': 'waste_per_day', 'hint': '5'},
+          {'label': 'Faharetana (andro)', 'key': 'duration', 'hint': '30'},
+          {'label': 'Starter olitra (kg)', 'key': 'starter_qty', 'hint': '1'},
+          {'label': 'Vidin\'ny starter/kg (Ar)', 'key': 'starter_price', 'hint': '40000'},
+          {'label': 'Vidin\'ny olitra velona/kg (Ar)', 'key': 'live_price', 'hint': '20000'},
+          {'label': 'Vidin\'ny olitra maina/kg (Ar)', 'key': 'dried_price', 'hint': '50000'},
+        ],
+        calculateResult: (values) {
+          final wastePerDay = (values['waste_per_day'] ?? 0).toDouble();
+          final duration = (values['duration'] ?? 0).toDouble();
+          final starterQty = (values['starter_qty'] ?? 0).toDouble();
+          final starterPrice = (values['starter_price'] ?? 0).toDouble();
+          final livePrice = (values['live_price'] ?? 0).toDouble();
+          final driedPrice = (values['dried_price'] ?? 0).toDouble();
+
+          final totalWaste = wastePerDay * duration;
+          final liveOutputKg = totalWaste * 0.20;
+          final driedOutputKg = liveOutputKg * 0.25;
+
+          final starterCost = starterQty * starterPrice;
+          final opsCost = totalWaste * 500;
+          final totalCost = starterCost + opsCost;
+
+          final revenueLive = liveOutputKg * livePrice;
+          final revenueDried = driedOutputKg * driedPrice;
+          final revenue = revenueLive + revenueDried;
+          final profit = revenue - totalCost;
+          final roi = totalCost > 0 ? (profit / totalCost * 100) : 0;
+
+          return {
+            'Fako nodiovina': '${totalWaste.toStringAsFixed(1)} kg',
+            'Vokatra olitra velona': '${liveOutputKg.toStringAsFixed(1)} kg',
+            'Vokatra olitra maina': '${driedOutputKg.toStringAsFixed(1)} kg',
+            'Vidin\'ny starter': '${NumberFormat("#,##0").format(starterCost)} Ar',
+            'Saran\'asa (500Ar/kg waste)': '${NumberFormat("#,##0").format(opsCost)} Ar',
+            '---': '---',
+            'VOLA LANY REHETRA': '${NumberFormat("#,##0").format(totalCost)} Ar',
+            'VOLA MIDITRA': '${NumberFormat("#,##0").format(revenue)} Ar',
+            'TOMBONY': '${NumberFormat("#,##0").format(profit)} Ar',
+            'ROI': '${roi.toStringAsFixed(1)}%',
+          };
+        },
+      ),
+    );
+  }
+
   void _showAtodyCalculator(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -27281,56 +27420,6 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
             'Kitapo 25kg': '${(totalFeed / 25).ceil()}',
             'Kitapo 50kg': '${(totalFeed / 50).ceil()}',
             'VOLA ILAINA': '${NumberFormat("#,##0").format(totalCost)} Ar',
-          };
-        },
-      ),
-    );
-  }
-
-  void _showOlitraCalculator(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _CalculatorSheet(
-        title: 'Fikajiana Olitra',
-        emoji: '🦆',
-        color: Colors.teal,
-        fields: const [
-          {'label': 'Isan\'ny ganagana/vorona', 'key': 'count', 'hint': '50'},
-          {'label': 'Vidin\'ny zanak\'olitra (Ar)', 'key': 'chick_price', 'hint': '8000'},
-          {'label': 'Sakafo/olitra/andro (g)', 'key': 'feed_per_day', 'hint': '150'},
-          {'label': 'Faharetan\'ny fiompiana (andro)', 'key': 'duration', 'hint': '60'},
-          {'label': 'Vidin\'ny sakafo/kg (Ar)', 'key': 'feed_price', 'hint': '2200'},
-          {'label': 'Vidin\'ny olitra iray rehefa lehibe (Ar)', 'key': 'sell_price', 'hint': '35000'},
-        ],
-        calculateResult: (values) {
-          final count = values['count'] ?? 0;
-          final chickPrice = values['chick_price'] ?? 0;
-          final feedPerDay = values['feed_per_day'] ?? 0;
-          final duration = values['duration'] ?? 0;
-          final feedPrice = values['feed_price'] ?? 0;
-          final sellPrice = values['sell_price'] ?? 0;
-          
-          final chickCost = count * chickPrice;
-          final totalFeedKg = count * feedPerDay * duration / 1000;
-          final feedCost = totalFeedKg * feedPrice;
-          final otherCost = (chickCost + feedCost) * 0.1;
-          final totalCost = chickCost + feedCost + otherCost;
-          
-          final revenue = count * sellPrice * 0.90;
-          final profit = revenue - totalCost;
-          final roi = totalCost > 0 ? (profit / totalCost * 100) : 0;
-          
-          return {
-            'Vidin\'ny zanak\'olitra': '${NumberFormat("#,##0").format(chickCost)} Ar',
-            'Vidin\'ny sakafo': '${NumberFormat("#,##0").format(feedCost)} Ar',
-            'Hafa (10%)': '${NumberFormat("#,##0").format(otherCost)} Ar',
-            '---': '---',
-            'VOLA LANY REHETRA': '${NumberFormat("#,##0").format(totalCost)} Ar',
-            'VOLA MIDITRA': '${NumberFormat("#,##0").format(revenue)} Ar',
-            'TOMBONY': '${NumberFormat("#,##0").format(profit)} Ar',
-            'ROI': '${roi.toStringAsFixed(1)}%',
           };
         },
       ),
@@ -34658,7 +34747,9 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
   final TextEditingController _budgetCtrl = TextEditingController();
   double _budget = 0;
   bool _showResults = false;
-  String _sortOption = 'score'; // score, short_term, long_term
+  String _sortOption = 'score'; // score, short_term, long_term, risk_low, mix_two
+  String _sectorFilter = 'all'; // all, fiompiana, fambolena
+  bool _includeOptional = false; // Raha tiana ny fanampiny hidiran'ny kajy sy budget
   List<Map<String, dynamic>> _recommendations = [];
 
   // Base de données réaliste des activités avec leurs coûts et rendements
@@ -34791,18 +34882,18 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       'category': 'fiompiana',
       'type': 'Kisoakely (1 isa)',
       'emoji': '🐷',
-      'minBudget': 180000, // Version kely: 1 porcelet hatavezina
-      'unitCost': 80000, // Porcelet iray
+      'minBudget': 220000, // Version kely: 1 porcelet hatavezina (vidiny vao haingana)
+      'unitCost': 120000, // Porcelet iray (miakatra 120k Ar+)
       'feedCostPerMonth': 45000, // Sakafo manokana
       'cycleMonths': 5,
-      'unitProfit': 150000,
+      'unitProfit': 180000, // Tombony nohatsaraina mba hitazomana ROI mitombina
       'riskLevel': 'antonony',
       'difficulty': 'antonony',
       'description': 'Version kely: 1 kisoakely hatavezina. 5 volana dia azo amidy.',
       'tips': 'Mila tranobe madio, sakafo betsaka (apombombary, mangahazo).',
       'returnRate': 0.55,
       'materials': [
-        {'name': 'Kisoakely (Porcelet 2 volana)', 'quantity': '1', 'price': 80000, 'unit': 'iray', 'essential': true},
+        {'name': 'Kisoakely (Porcelet 2 volana)', 'quantity': '1', 'price': 120000, 'unit': 'iray', 'essential': true},
         {'name': 'Trano kisoa tsotra (hazo)', 'quantity': '1', 'price': 50000, 'unit': 'iray', 'essential': true},
         {'name': 'Apombombary (Son de riz) (1 volana)', 'quantity': '50 kg', 'price': 40000, 'unit': 'kg', 'essential': true},
         {'name': 'Mangahazo (1 volana)', 'quantity': '50 kg', 'price': 15000, 'unit': 'kg', 'essential': true},
@@ -34814,11 +34905,11 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       'category': 'fiompiana',
       'type': 'Trondro kely (Basin plastika)',
       'emoji': '🐟',
-      'minBudget': 95000, // Version kely: basin plastika + 100 fingerlings
-      'unitCost': 60000,
+      'minBudget': 120000, // Basin plastika + 100 fingerlings (vidiny vaovao)
+      'unitCost': 80000,
       'feedCostPerMonth': 15000,
       'cycleMonths': 6,
-      'unitProfit': 80000,
+      'unitProfit': 90000, // Tombony nohatsaraina mba tsy hihena loatra ny ROI
       'riskLevel': 'antonony',
       'difficulty': 'antonony',
       'description': 'Version kely: 100 trondro ao anaty basin plastika 500L.',
@@ -34826,7 +34917,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       'returnRate': 0.55,
       'materials': [
         {'name': 'Basin plastika 500L', 'quantity': '1', 'price': 45000, 'unit': 'iray', 'essential': true},
-        {'name': 'Fingerlings Tilapia 100 isa', 'quantity': '100', 'price': 25000, 'unit': 'iray', 'essential': true},
+        {'name': 'Fingerlings Tilapia 100 isa', 'quantity': '100', 'price': 50000, 'unit': 'iray', 'essential': true},
         {'name': 'Sakafo trondro (vary masaka)', 'quantity': '1 volana', 'price': 15000, 'unit': 'volana', 'essential': true},
         {'name': 'Harato kely', 'quantity': '1', 'price': 8000, 'unit': 'iray', 'essential': true},
         {'name': 'Pompe aérateur (optionnel)', 'quantity': '1', 'price': 45000, 'unit': 'iray', 'essential': false},
@@ -34837,18 +34928,18 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       'category': 'fiompiana',
       'type': 'Trondro (Kamory 1 are)',
       'emoji': '🌊',
-      'minBudget': 100000, // Alevins + sakafo (raha efa misy tany)
-      'unitCost': 80000, // Alevins 300 + fanomanana
+      'minBudget': 200000, // Alevins + sakafo (raha efa misy tany)
+      'unitCost': 180000, // Alevins 300 + fanomanana (vidiny vaovao)
       'feedCostPerMonth': 20000, // Compost + son
       'cycleMonths': 6,
-      'unitProfit': 250000, // 300 trondro x 250g = 75kg x 10000 Ar = 750000 - depenses
+      'unitProfit': 360000, // Tombony nohatsaraina mba hitovy lenta amin'ny ROI taloha
       'riskLevel': 'antonony',
       'difficulty': 'antonony',
       'description': 'Fiompiana anaty kamory (Etang). Tombony be raha manana tany.',
       'tips': 'Mila rano mikoriana kely na ovaina matetika. Zezika organika.',
       'returnRate': 1.25,
       'materials': [
-        {'name': 'Alevins Tilapia 300 isa', 'quantity': '300', 'price': 75000, 'unit': 'iray', 'essential': true},
+        {'name': 'Alevins Tilapia 300 isa', 'quantity': '300', 'price': 180000, 'unit': 'iray', 'essential': true},
         {'name': 'Sakafo (Apombombary + Compost)', 'quantity': '1 volana', 'price': 20000, 'unit': 'volana', 'essential': true},
         {'name': 'Fitaovana fandavahana (Angady)', 'quantity': '1', 'price': 0, 'unit': 'iray', 'essential': true, 'borrowable': true},
         {'name': 'Tuyau PVC (famoahana rano)', 'quantity': '1', 'price': 15000, 'unit': 'iray', 'essential': true},
@@ -34892,6 +34983,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       'unitProfit': 35000,
       'riskLevel': 'ambany',
       'difficulty': 'mora',
+      'unitAreaAre': 1,
       'description': 'Version kely: 1 are anana. Vokatra 3-4 herinandro.',
       'tips': 'Mila rano isan\'andro, zezika organika.',
       'returnRate': 0.90,
@@ -34914,6 +35006,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       'unitProfit': 60000,
       'riskLevel': 'antonony',
       'difficulty': 'antonony',
+      'unitAreaAre': 1,
       'description': 'Version kely: 50 hazo voatabia. Tombony 2-3 volana.',
       'tips': 'Mila tuteur, rano tsy be loatra, fiarovana aretina.',
       'returnRate': 0.75,
@@ -34939,6 +35032,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       'unitProfit': 50000, // Vidiny varotra: 2,100-2,300 Ar/kg
       'riskLevel': 'ambany',
       'difficulty': 'mora',
+      'unitAreaAre': 1,
       'description': 'Version kely: 1 are katsaka. Vidiny varotra: 2,100-2,300 Ar/kg.',
       'tips': 'Mila tany tsara, masoandro be.',
       'returnRate': 0.85,
@@ -34962,6 +35056,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       'unitProfit': 55000,
       'riskLevel': 'ambany',
       'difficulty': 'mora',
+      'unitAreaAre': 1,
       'description': 'Version kely: 1 are voanjo. Tsy mila zezika be.',
       'tips': 'Tsy mila rano be, fikojakojana kely.',
       'returnRate': 0.80,
@@ -34983,6 +35078,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       'unitProfit': 80000,
       'riskLevel': 'ambany',
       'difficulty': 'mora',
+      'unitAreaAre': 1,
       'description': 'Version kely: 1 are mangahazo. Tombony be aorian\'ny 10 volana.',
       'tips': 'Tsy mila fikarakarana be, mahatanty maintany.',
       'returnRate': 1.50,
@@ -35004,6 +35100,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       'unitProfit': 65000,
       'riskLevel': 'ambany',
       'difficulty': 'mora',
+      'unitAreaAre': 1,
       'description': 'Version kely: 1 are saonjo. Ravina sy fakany azo amidy.',
       'tips': 'Mila tany mando, alokaloka.',
       'returnRate': 0.95,
@@ -35025,12 +35122,119 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       return;
     }
 
+    double riskMultiplierFor(String risk) {
+      switch (risk) {
+        case 'ambany':
+          return 1.2;
+        case 'antonony':
+          return 1.0;
+        default:
+          return 0.8;
+      }
+    }
+
+    double difficultyMultiplierFor(String difficulty) {
+      switch (difficulty) {
+        case 'mora':
+          return 1.2;
+        case 'antonony':
+          return 1.0;
+        default:
+          return 0.8;
+      }
+    }
+
     setState(() {
       _budget = budget;
       _recommendations = [];
 
+      // Fanomanana angona ho an'ny combo raha mila azy
+      List<Map<String, dynamic>> eligibleForCombo = [];
+      for (var activity in _activities) {
+        if (_sectorFilter != 'all' && activity['category'] != _sectorFilter) {
+          continue;
+        }
+
+        double feedCost = (activity['feedCostPerMonth'] as int).toDouble();
+        int cycleMonths = activity['cycleMonths'] as int;
+        double unitCost = (activity['unitCost'] as int).toDouble();
+        double unitProfit = (activity['unitProfit'] as int).toDouble();
+        double returnRate = activity['returnRate'] as double;
+        double totalCostPerUnit = unitCost + (feedCost * cycleMonths);
+
+        if (budget >= totalCostPerUnit) {
+          eligibleForCombo.add({
+            ...activity,
+            'baseCost': totalCostPerUnit,
+            'baseProfit': unitProfit,
+            'cycleMonths': cycleMonths,
+            'returnRate': returnRate,
+          });
+        }
+      }
+
+      if (_sortOption == 'mix_two') {
+        const riskOrder = {'ambany': 0, 'antonony': 1, 'avo': 2};
+        Map<String, dynamic>? bestCombo;
+        double bestScore = -1;
+
+        for (int i = 0; i < eligibleForCombo.length; i++) {
+          for (int j = i + 1; j < eligibleForCombo.length; j++) {
+            final a = eligibleForCombo[i];
+            final b = eligibleForCombo[j];
+
+            double totalInvestment = (a['baseCost'] as double) + (b['baseCost'] as double);
+            if (totalInvestment > budget) continue;
+
+            double potentialProfit = (a['baseProfit'] as double) + (b['baseProfit'] as double);
+            double roi = (potentialProfit / totalInvestment) * 100;
+
+            double riskMul = (riskMultiplierFor(a['riskLevel'] as String) + riskMultiplierFor(b['riskLevel'] as String)) / 2;
+            double diffMul = (difficultyMultiplierFor(a['difficulty'] as String) + difficultyMultiplierFor(b['difficulty'] as String)) / 2;
+            double returnRate = ((a['returnRate'] as double) + (b['returnRate'] as double)) / 2;
+            double score = roi * riskMul * diffMul * returnRate;
+
+            String combinedRisk = (riskOrder[a['riskLevel']] ?? 0) >= (riskOrder[b['riskLevel']] ?? 0)
+                ? a['riskLevel'] as String
+                : b['riskLevel'] as String;
+            String combinedDifficulty = (difficultyMultiplierFor(a['difficulty'] as String) < difficultyMultiplierFor(b['difficulty'] as String))
+              ? a['difficulty'] as String
+              : b['difficulty'] as String;
+
+            if (score > bestScore) {
+              bestScore = score;
+              bestCombo = {
+                'type': 'Combo: ${a['type']} + ${b['type']}',
+                'emoji': '🔗',
+                'riskLevel': combinedRisk,
+                'difficulty': combinedDifficulty,
+                'description': 'Atambaro ny ${a['type']} sy ${b['type']} mba hizarana ny risika sy ny vola.',
+                'tips': 'Ataovy mitovy lenta ny fividianana ireo vokatra roa, ary jereo ny tsenan\'izy ireo tsirairay.',
+                'totalInvestment': totalInvestment,
+                'potentialProfit': potentialProfit,
+                'roi': roi,
+                'score': score,
+                'cycleMonths': ((a['cycleMonths'] as int) > (b['cycleMonths'] as int)) ? (a['cycleMonths'] as int) : (b['cycleMonths'] as int),
+                'possibleUnits': 1,
+                'comboItems': [a['type'], b['type']],
+              };
+            }
+          }
+        }
+
+        if (bestCombo != null) {
+          _recommendations.add(bestCombo);
+        }
+
+        _showResults = true;
+        return;
+      }
+
       // Filtrer les activités selon le budget
       for (var activity in _activities) {
+        if (_sectorFilter != 'all' && activity['category'] != _sectorFilter) {
+          continue;
+        }
         double minBudget = (activity['minBudget'] as int).toDouble();
         if (budget >= minBudget) {
           // Calculer combien d'unités on peut acheter
@@ -35040,8 +35244,15 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
           double unitProfit = (activity['unitProfit'] as int).toDouble();
           double returnRate = activity['returnRate'] as double;
 
-          // Coût total pour un cycle
+          // Coût total pour un cycle (essential ihany)
           double totalCostPerUnit = unitCost + (feedCost * cycleMonths);
+          final essentialCost = _computeBudget(activity, real: false);
+          final optionalCost = _computeBudget(activity, real: true);
+          if (_includeOptional && optionalCost != null && optionalCost > 0) {
+            totalCostPerUnit = optionalCost;
+          } else if (essentialCost != null && essentialCost > 0) {
+            totalCostPerUnit = essentialCost;
+          }
           
           // Nombre d'unités possibles
           int possibleUnits = (budget / totalCostPerUnit).floor();
@@ -35060,10 +35271,8 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
           double roi = (potentialProfit / totalInvestment) * 100;
 
           // Score de recommandation (basé sur ROI, risque, difficulté)
-          double riskMultiplier = activity['riskLevel'] == 'ambany' ? 1.2 : 
-                                  activity['riskLevel'] == 'antonony' ? 1.0 : 0.8;
-          double difficultyMultiplier = activity['difficulty'] == 'mora' ? 1.2 : 
-                                         activity['difficulty'] == 'antonony' ? 1.0 : 0.8;
+          double riskMultiplier = riskMultiplierFor(activity['riskLevel'] as String);
+          double difficultyMultiplier = difficultyMultiplierFor(activity['difficulty'] as String);
           double score = roi * riskMultiplier * difficultyMultiplier * returnRate;
 
           _recommendations.add({
@@ -35090,6 +35299,17 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       } else if (_sortOption == 'long_term') {
         _recommendations.sort((a, b) {
           int compare = (b['cycleMonths'] as int).compareTo(a['cycleMonths'] as int);
+          if (compare == 0) {
+            return (b['score'] as double).compareTo(a['score'] as double);
+          }
+          return compare;
+        });
+      } else if (_sortOption == 'risk_low') {
+        const order = {'ambany': 0, 'antonony': 1, 'avo': 2};
+        _recommendations.sort((a, b) {
+          int riskA = order[a['riskLevel']] ?? 3;
+          int riskB = order[b['riskLevel']] ?? 3;
+          int compare = riskA.compareTo(riskB);
           if (compare == 0) {
             return (b['score'] as double).compareTo(a['score'] as double);
           }
@@ -35132,9 +35352,73 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
     }
   }
 
+  double? _computeBudget(Map<String, dynamic> activity, {required bool real}) {
+    final materials = activity['materials'] as List<dynamic>?;
+    if (materials == null) return null;
+
+    double essentialCost = 0;
+    double optionalCost = 0;
+    for (var mat in materials) {
+      final price = (mat['price'] as num?)?.toDouble() ?? 0;
+      final isEssential = mat['essential'] as bool? ?? true;
+      if (isEssential) {
+        essentialCost += price;
+      } else {
+        optionalCost += price;
+      }
+    }
+
+    final total = essentialCost + (real ? optionalCost : 0);
+    return total > 0 ? total : null;
+  }
+
+  String _fmtAr(double value) => NumberFormat('#,##0').format(value);
+
+  String _activityTitle(Map<String, dynamic> rec) {
+    final type = rec['type'] as String?;
+    if (type == null) return '';
+    final units = rec['possibleUnits'] as int?;
+    final area = rec['unitAreaAre'] as num?;
+    if (units != null && units > 0 && area != null) {
+      final totalAre = units * area.toDouble();
+      final base = type.replaceAll(RegExp(r"\s*\(.*\)", dotAll: true), '').trim();
+      return '$base (${totalAre.toStringAsFixed(1)} are)';
+    }
+    return type;
+  }
+
+  String _costBreakdown(Map<String, dynamic> rec) {
+    final totalInvestment = rec['totalInvestment'] as double?;
+    final possibleUnits = rec['possibleUnits'] as int? ?? 0;
+    if (totalInvestment == null || possibleUnits <= 0) return '-';
+
+    final perUnit = totalInvestment / possibleUnits;
+    final essential = _computeBudget(rec, real: false);
+    final optional = _computeBudget(rec, real: true);
+    final optDelta = (optional ?? 0) - (essential ?? 0);
+    if (essential != null) {
+      if (_includeOptional && optDelta > 0) {
+        return 'Isan\'ny singa: ${_fmtAr(perUnit)} Ar (ilaina + fanampiny)';
+      }
+      return 'Isan\'ny singa: ${_fmtAr(perUnit)} Ar (fitaovana ilaina)';
+    }
+    return 'Isan\'ny singa: ${_fmtAr(perUnit)} Ar';
+  }
+
   // Afficher la liste détaillée des matériaux et matériels
   void _showMaterialsDialog(Map<String, dynamic> activity) {
     final materials = activity['materials'] as List<dynamic>? ?? [];
+    final displayTitle = _activityTitle(activity);
+    final areaText = () {
+      final units = activity['possibleUnits'] as int? ?? 0;
+      final area = activity['unitAreaAre'] as num?;
+      if (units > 0 && area != null) {
+        final totalAre = units * area.toDouble();
+        final totalM2 = totalAre * 100;
+        return 'Tany: ${totalAre.toStringAsFixed(1)} are (${totalM2.toStringAsFixed(0)} m²)';
+      }
+      return '';
+    }();
     
     // Séparer essential et optional
     List<dynamic> essentialMaterials = [];
@@ -35153,7 +35437,11 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
       }
     }
     
-    double totalCost = essentialCost + optionalCost;
+    final units = activity['possibleUnits'] as int? ?? 1;
+    double essentialTotal = essentialCost * units;
+    double optionalTotal = optionalCost * units;
+    bool optionalIncluded = _includeOptional && optionalTotal > 0;
+    double totalCost = (essentialCost + (optionalIncluded ? optionalCost : 0)) * units;
 
     showDialog(
       context: context,
@@ -35184,16 +35472,16 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            activity['type'] as String,
+                            displayTitle,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const Text(
-                            '🛒 Fitaovana sy entana ilaina',
-                            style: TextStyle(color: Colors.white70, fontSize: 12),
+                          Text(
+                            areaText.isNotEmpty ? areaText : '🛒 Fitaovana sy entana ilaina',
+                            style: const TextStyle(color: Colors.white70, fontSize: 12),
                           ),
                         ],
                       ),
@@ -35238,7 +35526,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              '${essentialCost.toStringAsFixed(0)} Ar',
+                              '${essentialTotal.toStringAsFixed(0)} Ar',
                               style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -35249,7 +35537,8 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                     ...essentialMaterials.asMap().entries.map((entry) {
                       final index = entry.key;
                       final mat = entry.value;
-                      return _buildMaterialItem(mat, index, true);
+                      final units = activity['possibleUnits'] as int? ?? 1;
+                      return _buildMaterialItem(mat, index, true, units);
                     }),
                     
                     // OPTIONAL MATERIALS
@@ -35265,15 +35554,18 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                           children: [
                             Icon(Icons.add_circle_outline, color: Colors.blue.shade700, size: 18),
                             const SizedBox(width: 8),
-                            Text(
-                              'FANAMPINY (azo atao rehefa afaka)',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue.shade800,
-                                fontSize: 13,
+                            Expanded(
+                              child: Text(
+                                'FANAMPINY (azo atao rehefa afaka)',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue.shade800,
+                                  fontSize: 13,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            const Spacer(),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
@@ -35281,7 +35573,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
-                                '${optionalCost.toStringAsFixed(0)} Ar',
+                                '${optionalTotal.toStringAsFixed(0)} Ar',
                                 style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -35289,11 +35581,41 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                         ),
                       ),
                       const SizedBox(height: 8),
-                      ...optionalMaterials.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final mat = entry.value;
-                        return _buildMaterialItem(mat, index, false);
-                      }),
+                        ...optionalMaterials.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final mat = entry.value;
+                          final units = activity['possibleUnits'] as int? ?? 1;
+                          return _buildMaterialItem(mat, index, false, units);
+                        }),
+
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('📊 Famintinana vola', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              const SizedBox(height: 6),
+                              _budgetLine('Fototra (kajy tombony)', _fmtAr(essentialTotal)),
+                              _budgetLine('Fanampiny raha atao', _fmtAr(optionalTotal)),
+                              _budgetLine('Fanampiny tafiditra amin\'ny kajy', optionalIncluded ? 'Eny' : 'Tsia'),
+                              Divider(color: Colors.grey.shade300, height: 14),
+                              _budgetLine('TOTAL kajiana', _fmtAr(totalCost)),
+                              const SizedBox(height: 4),
+                              Text(
+                                optionalIncluded
+                                    ? 'Ampidirina amin\'ny kajy ny fanampiny ka mitombo ny budget lany.'
+                                    : 'Fanampiny tsy tafiditra amin\'ny kajy; ampiasao raha te-hampiasa ny budget sisa ianao.',
+                                style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ],
                 ),
@@ -35421,7 +35743,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
     );
   }
   
-  Widget _buildMaterialItem(dynamic mat, int index, bool isEssential) {
+  Widget _buildMaterialItem(dynamic mat, int index, bool isEssential, int units) {
     bool isBorrowable = mat['borrowable'] as bool? ?? false;
     int price = mat['price'] as int;
     
@@ -35488,7 +35810,9 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  isBorrowable ? '🤝 Azo indramina' : 'Habetsaka: ${mat['quantity']}',
+                  isBorrowable
+                      ? '🤝 Azo indramina'
+                      : 'Habetsaka: ${mat['quantity']} x $units',
                   style: TextStyle(
                     fontSize: 11,
                     color: isBorrowable ? Colors.orange.shade600 : Colors.grey.shade600,
@@ -35504,26 +35828,61 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
               color: isBorrowable ? Colors.orange.shade100 : (isEssential ? Colors.green.shade100 : Colors.blue.shade100),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(
-              isBorrowable ? 'MAIMAIM-POANA' : '$price Ar',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: isBorrowable ? 10 : 12,
-                color: textColor,
-              ),
-            ),
+            child: isBorrowable
+                ? Text(
+                    'MAIMAIM-POANA',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      color: textColor,
+                    ),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${price * units} Ar',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: textColor,
+                        ),
+                      ),
+                      Text(
+                        '($price Ar/singa)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: textColor.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
     );
   }
 
+  Widget _budgetLine(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(child: Text(label, style: const TextStyle(fontSize: 12))),
+        Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 450, maxHeight: 750),
+      insetPadding: EdgeInsets.zero,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      child: SizedBox(
+        width: size.width,
+        height: size.height,
         child: Column(
           children: [
             // Header
@@ -35533,10 +35892,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                 gradient: LinearGradient(
                   colors: [Colors.amber.shade700, Colors.orange.shade600],
                 ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
+                borderRadius: BorderRadius.zero,
               ),
               child: Row(
                 children: [
@@ -35603,6 +35959,41 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                             ),
                           ),
                           const SizedBox(height: 12),
+                          const Text(
+                            '🔀 Safidio ny sehatra tianao:',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              ChoiceChip(
+                                label: const Text('🔁 Rehetra'),
+                                selected: _sectorFilter == 'all',
+                                onSelected: (selected) {
+                                  if (selected) setState(() => _sectorFilter = 'all');
+                                },
+                                selectedColor: Colors.amber.shade200,
+                              ),
+                              ChoiceChip(
+                                label: const Text('🐓 Fiompiana'),
+                                selected: _sectorFilter == 'fiompiana',
+                                onSelected: (selected) {
+                                  if (selected) setState(() => _sectorFilter = 'fiompiana');
+                                },
+                                selectedColor: Colors.orange.shade200,
+                              ),
+                              ChoiceChip(
+                                label: const Text('🌱 Fambolena'),
+                                selected: _sectorFilter == 'fambolena',
+                                onSelected: (selected) {
+                                  if (selected) setState(() => _sectorFilter = 'fambolena');
+                                },
+                                selectedColor: Colors.green.shade200,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
                           
                           // Sort Options
                           const Text(
@@ -35640,11 +36031,46 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                                   },
                                   selectedColor: Colors.amber.shade200,
                                 ),
+                                const SizedBox(width: 8),
+                                ChoiceChip(
+                                  label: const Text('Risika ambany'),
+                                  selected: _sortOption == 'risk_low',
+                                  onSelected: (selected) {
+                                    if (selected) setState(() => _sortOption = 'risk_low');
+                                  },
+                                  selectedColor: Colors.green.shade200,
+                                ),
+                                const SizedBox(width: 8),
+                                ChoiceChip(
+                                  label: const Text('Combo 2 vokatra'),
+                                  selected: _sortOption == 'mix_two',
+                                  onSelected: (selected) {
+                                    if (selected) setState(() => _sortOption = 'mix_two');
+                                  },
+                                  selectedColor: Colors.blue.shade200,
+                                ),
                               ],
                             ),
                           ),
                           
                           const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _includeOptional,
+                                onChanged: (v) {
+                                  setState(() => _includeOptional = v ?? false);
+                                },
+                              ),
+                              const Expanded(
+                                child: Text(
+                                  'Ampidiro ny fanampiny (optionnel) ao anatin\'ny kajy',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
@@ -35733,43 +36159,40 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            rec['type'] as String,
+                                            _activityTitle(rec),
                                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                                           ),
-                                          Row(
+                                          Wrap(
+                                            spacing: 6,
+                                            runSpacing: 4,
                                             children: [
-                                              Flexible(
-                                                child: Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                  decoration: BoxDecoration(
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: rec['category'] == 'fiompiana' ? 
+                                                         Colors.orange.shade100 : Colors.green.shade100,
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  rec['category'] == 'fiompiana' ? '🐔 Fiompiana' : '🌱 Fambolena',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
                                                     color: rec['category'] == 'fiompiana' ? 
-                                                           Colors.orange.shade100 : Colors.green.shade100,
-                                                    borderRadius: BorderRadius.circular(6),
+                                                           Colors.orange.shade800 : Colors.green.shade800,
                                                   ),
-                                                  child: Text(
-                                                    rec['category'] == 'fiompiana' ? '🐔 Fiompiana' : '🌱 Fambolena',
-                                                    style: TextStyle(
-                                                      fontSize: 10,
-                                                      color: rec['category'] == 'fiompiana' ? 
-                                                             Colors.orange.shade800 : Colors.green.shade800,
-                                                    ),
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
                                                 ),
                                               ),
-                                              const SizedBox(width: 6),
-                                              Flexible(
-                                                child: Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                  decoration: BoxDecoration(
-                                                    color: _getRiskColor(rec['riskLevel']).withValues(alpha: 0.1),
-                                                    borderRadius: BorderRadius.circular(6),
-                                                  ),
-                                                  child: Text(
-                                                    'Risika: ${_getRiskText(rec['riskLevel'])}',
-                                                    style: TextStyle(fontSize: 10, color: _getRiskColor(rec['riskLevel'])),
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: _getRiskColor(rec['riskLevel']).withValues(alpha: 0.1),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  'Risika: ${_getRiskText(rec['riskLevel'])}',
+                                                  style: TextStyle(fontSize: 10, color: _getRiskColor(rec['riskLevel'])),
+                                                  overflow: TextOverflow.ellipsis,
                                                 ),
                                               ),
                                             ],
@@ -35796,10 +36219,27 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          const Flexible(
+                                          const Expanded(
+                                            child: Text('💳 Budget nampidirina:', style: TextStyle(fontSize: 12)),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              '${_fmtAr(_budget)} Ar',
+                                              style: const TextStyle(fontSize: 12),
+                                              textAlign: TextAlign.end,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
                                             child: Text('💸 Fampiasam-bola:', style: TextStyle(fontSize: 12)),
                                           ),
-                                          Flexible(
+                                          Expanded(
                                             child: Text(
                                               '${(rec['totalInvestment'] as double).toStringAsFixed(0)} Ar',
                                               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
@@ -35813,10 +36253,37 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          const Text('⏱️ Fotoana:', style: TextStyle(fontSize: 12)),
-                                          Text(
-                                            '${rec['cycleMonths']} volana',
-                                            style: const TextStyle(fontSize: 12),
+                                          const Expanded(
+                                            child: Text('🪙 Sisa vola:', style: TextStyle(fontSize: 12)),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              () {
+                                                final remaining = _budget - (rec['totalInvestment'] as double);
+                                                return '${_fmtAr(remaining > 0 ? remaining : 0)} Ar';
+                                              }(),
+                                              style: const TextStyle(fontSize: 12),
+                                              textAlign: TextAlign.end,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Expanded(
+                                            child: Text('🔍 Fanazavana:', style: TextStyle(fontSize: 12)),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              _costBreakdown(Map<String, dynamic>.from(rec)),
+                                              style: const TextStyle(fontSize: 12),
+                                              textAlign: TextAlign.end,
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 2,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -35824,14 +36291,100 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Flexible(
+                                          Expanded(
+                                            child: Text('💵 Budget kely:', style: TextStyle(fontSize: 12)),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              () {
+                                                final mini = rec['minBudget'];
+                                                final computedMini = _computeBudget(Map<String, dynamic>.from(rec), real: false);
+                                                if (mini is num) return '${_fmtAr(mini.toDouble())} Ar';
+                                                if (computedMini != null) return '${_fmtAr(computedMini)} Ar';
+                                                return '-';
+                                              }(),
+                                              style: const TextStyle(fontSize: 12),
+                                              textAlign: TextAlign.end,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text('🏗️ Budget feno:', style: TextStyle(fontSize: 12)),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              () {
+                                                final realistic = _computeBudget(Map<String, dynamic>.from(rec), real: true);
+                                                if (realistic != null) return '${_fmtAr(realistic)} Ar';
+                                                return '-';
+                                              }(),
+                                              style: const TextStyle(fontSize: 12),
+                                              textAlign: TextAlign.end,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Expanded(
+                                            child: Text('⏱️ Fotoana:', style: TextStyle(fontSize: 12)),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              '${rec['cycleMonths']} volana',
+                                              style: const TextStyle(fontSize: 12),
+                                              textAlign: TextAlign.end,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (rec['unitAreaAre'] != null) ...[
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            const Expanded(
+                                              child: Text('🌱 Tany azo volena:', style: TextStyle(fontSize: 12)),
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                () {
+                                                  final units = rec['possibleUnits'] as int? ?? 0;
+                                                  final areaAre = (rec['unitAreaAre'] as num).toDouble();
+                                                  final totalAre = units * areaAre;
+                                                  final totalM2 = totalAre * 100;
+                                                  return '${totalAre.toStringAsFixed(1)} are (${totalM2.toStringAsFixed(0)} m²)';
+                                                }(),
+                                                style: const TextStyle(fontSize: 12),
+                                                textAlign: TextAlign.end,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
                                             child: Text(
                                               '💰 Tombony azo antenaina:',
                                               style: TextStyle(fontSize: 12, color: Colors.green.shade700),
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
-                                          Flexible(
+                                          Expanded(
                                             child: Text(
                                               '${(rec['potentialProfit'] as double).toStringAsFixed(0)} Ar',
                                               style: TextStyle(
@@ -35849,7 +36402,9 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          const Text('📈 ROI:', style: TextStyle(fontSize: 12)),
+                                          const Expanded(
+                                            child: Text('📈 ROI:', style: TextStyle(fontSize: 12)),
+                                          ),
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                             decoration: BoxDecoration(
