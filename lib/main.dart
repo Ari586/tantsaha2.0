@@ -13,6 +13,7 @@ import 'pages/tombony_analyzer_page.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,15 @@ Future<void> main() async {
     );
   } catch (_) {
     // If firebase config isn't set up yet, app will still run using placeholder options.
+  }
+  // Initialize Supabase (replace URL and anonKey with your project's values)
+  try {
+    await Supabase.initialize(
+      url: 'https://your-project.supabase.co',
+      anonKey: 'your-anon-key',
+    );
+  } catch (_) {
+    // Supabase not configured yet; continue without it.
   }
   runApp(const AkohoTechApp());
 }
