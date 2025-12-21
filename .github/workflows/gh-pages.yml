@@ -10,16 +10,54 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Cache pub packages to reduce network usage and speed up builds
+      - name: Cache Pub Packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ~/.dartServer/
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-cache-
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: 'stable'
+          # enable the action's internal caching when supported
+          cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Install dependencies (with retries)
+        run: |
+          n=0
+          until [ $n -ge 3 ]; do
+            flutter pub get && break
+            n=$((n+1))
+            echo "Retrying flutter pub get ($n/3)..."
+            sleep 5
+          done
+          if [ $n -ge 3 ]; then
+            echo "flutter pub get failed after 3 attempts" >&2
+            exit 1
+          fi
 
-      - name: Build web
-        run: flutter build web --release
+      - name: Build web (with retry)
+        run: |
+          attempt=0
+          max=2
+          until [ $attempt -ge $max ]; do
+            if flutter build web --release; then
+              break
+            fi
+            attempt=$((attempt+1))
+            echo "Build failed, retrying ($attempt/$max)..."
+            sleep 6
+          done
+          if [ $attempt -ge $max ]; then
+            echo "flutter build web failed after $max attempts" >&2
+            exit 1
+          fi
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
