@@ -49,7 +49,7 @@ class _FloatingOrbsPainter extends CustomPainter {
       ..style = PaintingStyle.fill
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
 
-    Color tint(Color c, double alpha) => c.withValues(alpha: alpha);
+    Color tint(Color c, double alpha) => c.withOpacity( alpha);
 
     final orbs = [
       _Orb(0.15, 0.25, 200, 0.55, Colors.redAccent),
@@ -468,14 +468,14 @@ class AkohoTechApp extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.white.withValues(alpha: 0.8),
+          fillColor: Colors.white.withOpacity( 0.8),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
+            borderSide: BorderSide(color: Colors.grey.withOpacity( 0.2)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
@@ -485,8 +485,8 @@ class AkohoTechApp extends StatelessWidget {
           labelStyle: const TextStyle(color: AppColors.textSecondary),
         ),
         navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: Colors.white.withValues(alpha: 0.8),
-          indicatorColor: AppColors.primary.withValues(alpha: 0.15),
+          backgroundColor: Colors.white.withOpacity( 0.8),
+          indicatorColor: AppColors.primary.withOpacity( 0.15),
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
               return const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary);
@@ -833,7 +833,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: statusColor.withValues(alpha: 0.2),
+                        backgroundColor: statusColor.withOpacity( 0.2),
                         child: Icon(
                           isUsed ? Icons.check : (isExpired ? Icons.timer_off : Icons.key),
                           color: statusColor,
@@ -856,7 +856,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.2),
+                          color: statusColor.withOpacity( 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -978,7 +978,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.2),
+                      color: color.withOpacity( 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -1000,9 +1000,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
+                      color: color.withOpacity( 0.15),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: color.withValues(alpha: 0.5)),
+                      border: Border.all(color: color.withOpacity( 0.5)),
                     ),
                     child: Column(
                       children: [
@@ -1122,7 +1122,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   border: Border.all(color: AppColors.primary, width: 4),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
+                      color: AppColors.primary.withOpacity( 0.3),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -1134,7 +1134,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        color: AppColors.primary.withOpacity( 0.1),
                         child: const Icon(
                           Icons.person,
                           size: 60,
@@ -1158,7 +1158,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: AppColors.primary.withOpacity( 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
@@ -1221,7 +1221,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.1),
+          color: AppColors.primary.withOpacity( 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: AppColors.primary, size: 22),
@@ -1288,7 +1288,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
+                              color: Colors.black.withOpacity( 0.2),
                               blurRadius: 30,
                               spreadRadius: 5,
                             ),
@@ -1331,7 +1331,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       'Fitantanana fambolena sy fiompiana',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: Colors.white.withOpacity( 0.6),
                         fontWeight: FontWeight.w300,
                       ),
                     ),
@@ -1341,10 +1341,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: Colors.white.withOpacity( 0.15),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
+                          color: Colors.white.withOpacity( 0.3),
                         ),
                       ),
                       child: Column(
@@ -1359,7 +1359,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             'Entrez le code d\'accès / Code eingeben',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.white.withValues(alpha: 0.9),
+                              color: Colors.white.withOpacity( 0.9),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -1368,7 +1368,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             'Contactez le développeur / Entwickler kontaktieren',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.6),
+                              color: Colors.white.withOpacity( 0.6),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -1378,7 +1378,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             'Ou achetez l\'application',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.8),
+                              color: Colors.white.withOpacity( 0.8),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -1446,7 +1446,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             'À partir de 10 000 Ar',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.white.withValues(alpha: 0.7),
+                              color: Colors.white.withOpacity( 0.7),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1462,7 +1462,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
+                            color: Colors.black.withOpacity( 0.1),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -1479,7 +1479,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         decoration: InputDecoration(
                           hintText: 'Entrez le code',
                           hintStyle: TextStyle(
-                            color: Colors.grey.withValues(alpha: 0.5),
+                            color: Colors.grey.withOpacity( 0.5),
                             letterSpacing: 2,
                             fontSize: 16,
                           ),
@@ -1496,7 +1496,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.2),
+                          color: Colors.red.withOpacity( 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -1564,7 +1564,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               border: Border.all(color: Colors.white, width: 3),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
+                                  color: Colors.black.withOpacity( 0.3),
                                   blurRadius: 15,
                                   spreadRadius: 2,
                                 ),
@@ -1576,7 +1576,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
-                                    color: Colors.white.withValues(alpha: 0.2),
+                                    color: Colors.white.withOpacity( 0.2),
                                     child: const Icon(
                                       Icons.person,
                                       color: Colors.white,
@@ -1600,7 +1600,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           Text(
                             'Développeur Web, Apps',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
+                              color: Colors.white.withOpacity( 0.7),
                               fontSize: 13,
                             ),
                           ),
@@ -1672,7 +1672,7 @@ class CategorySelectionScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(25),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.red.withValues(alpha: 0.5),
+                                  color: Colors.red.withOpacity( 0.5),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -1706,12 +1706,12 @@ class CategorySelectionScreen extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.25),
+                              color: Colors.white.withOpacity( 0.25),
                               borderRadius: BorderRadius.circular(25),
                               border: Border.all(color: Colors.white, width: 2),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
+                                  color: Colors.black.withOpacity( 0.2),
                                   blurRadius: 8,
                                   offset: const Offset(0, 3),
                                 ),
@@ -1759,7 +1759,7 @@ class CategorySelectionScreen extends StatelessWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const TombonyAnalyzerPage()),
+                          MaterialPageRoute(builder: (context) => const DashboardPage()),
                         );
                       },
                       child: Container(
@@ -1771,7 +1771,7 @@ class CategorySelectionScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.3),
+                              color: Colors.black.withOpacity( 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -1812,7 +1812,7 @@ class CategorySelectionScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.3),
+                              color: Colors.black.withOpacity( 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -2079,7 +2079,7 @@ class CategorySelectionScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: gradientColors[0].withValues(alpha: 0.4),
+              color: gradientColors[0].withOpacity( 0.4),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -2429,7 +2429,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.1),
+                        color: AppColors.warning.withOpacity( 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Text('🥚', style: TextStyle(fontSize: 24)),
@@ -2546,7 +2546,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withValues(alpha: 0.1),
+                            color: AppColors.success.withOpacity( 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(incubData['emoji'], style: const TextStyle(fontSize: 24)),
@@ -2643,9 +2643,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.1),
+                        color: AppColors.success.withOpacity( 0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                        border: Border.all(color: AppColors.success.withOpacity( 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -2690,7 +2690,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             value: enableAlarm,
                             onChanged: (v) => setModalState(() => enableAlarm = v),
                             activeThumbColor: AppColors.success,
-                            activeTrackColor: AppColors.success.withValues(alpha: 0.4),
+                            activeTrackColor: AppColors.success.withOpacity( 0.4),
                           ),
                         ],
                       ),
@@ -2780,12 +2780,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.white.withOpacity( 0.2),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                  border: Border.all(color: Colors.white.withOpacity( 0.3)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: Colors.black.withOpacity( 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -2796,7 +2796,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: Colors.white.withOpacity( 0.15),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(_appEmoji, style: const TextStyle(fontSize: 28)),
@@ -2815,7 +2815,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.25),
+                              color: Colors.white.withOpacity( 0.25),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(_titles[_currentIndex], style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600)),
@@ -2827,7 +2827,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     GestureDetector(
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const TombonyAnalyzerPage()),
+                        MaterialPageRoute(builder: (_) => const DashboardPage()),
                       ),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -2836,7 +2836,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
+                              color: Colors.black.withOpacity( 0.2),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -2863,11 +2863,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 child: Container(
                   margin: const EdgeInsets.fromLTRB(4, 0, 4, 0),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Colors.white.withOpacity( 0.9),
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withOpacity( 0.05),
                         blurRadius: 20,
                         offset: const Offset(0, -5),
                       ),
@@ -2921,7 +2921,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.warning.withValues(alpha: 0.1),
+                              color: AppColors.warning.withOpacity( 0.1),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: AppColors.warning),
                             ),
@@ -2948,7 +2948,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.success.withValues(alpha: 0.1),
+                              color: AppColors.success.withOpacity( 0.1),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: AppColors.success),
                             ),
@@ -2980,7 +2980,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: AppColors.primary.withOpacity( 0.1),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -3191,7 +3191,7 @@ class _HousingScreenState extends State<HousingScreen> {
                       Switch(
                         value: _showFloorPlan,
                         onChanged: (val) => setState(() => _showFloorPlan = val),
-                        activeTrackColor: Colors.green.withValues(alpha: 0.5),
+                        activeTrackColor: Colors.green.withOpacity( 0.5),
                         thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.green : Colors.grey),
                       ),
                     ],
@@ -3417,7 +3417,7 @@ class Coop3DPainter extends CustomPainter {
     // Add horizontal plank lines for wood effect
     if (addPlanks && points.length >= 4) {
       final plankPaint = Paint()
-        ..color = fill.color.withValues(alpha: 0.3)
+        ..color = fill.color.withOpacity( 0.3)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.5;
       
@@ -3531,7 +3531,7 @@ class Coop3DPainter extends CustomPainter {
     
     // Glass (light blue with transparency effect)
     double inset = 4;
-    final glassPaint = Paint()..color = const Color(0xFF87CEEB).withValues(alpha: 0.7)..style = PaintingStyle.fill;
+    final glassPaint = Paint()..color = const Color(0xFF87CEEB).withOpacity( 0.7)..style = PaintingStyle.fill;
     canvas.drawRect(
       Rect.fromLTRB(w0.dx + inset, w2.dy + inset, w1.dx - inset, w0.dy - inset),
       glassPaint,
@@ -3546,7 +3546,7 @@ class Coop3DPainter extends CustomPainter {
     
     // Window reflection highlight
     final reflectionPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.3)
+      ..color = Colors.white.withOpacity( 0.3)
       ..style = PaintingStyle.fill;
     canvas.drawRect(
       Rect.fromLTRB(w0.dx + inset + 2, w2.dy + inset + 2, centerX - 2, centerY - 2),
@@ -3626,7 +3626,7 @@ class Coop3DPainter extends CustomPainter {
       ),
       const Radius.circular(14),
     );
-    canvas.drawRRect(bgRect, Paint()..color = const Color(0xFF2C3E50).withValues(alpha: 0.9));
+    canvas.drawRRect(bgRect, Paint()..color = const Color(0xFF2C3E50).withOpacity( 0.9));
     
     textPainter.paint(canvas, Offset(size.width / 2 - textPainter.width / 2, size.height - 34));
 
@@ -3753,7 +3753,7 @@ class FloorPlan2DPainter extends CustomPainter {
   
   void _drawBuildingShadow(Canvas canvas, double x, double y, double w, double h) {
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.15)
+      ..color = Colors.black.withOpacity( 0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawRect(Rect.fromLTWH(x + 6, y + 6, w, h), shadowPaint);
   }
@@ -3870,7 +3870,7 @@ class FloorPlan2DPainter extends CustomPainter {
     final troughTop = Paint()..color = const Color(0xFFD4A574);
     
     // Shadow
-    canvas.drawRect(Rect.fromLTWH(x + 2, y + 2, length, 8), Paint()..color = Colors.black.withValues(alpha: 0.2));
+    canvas.drawRect(Rect.fromLTWH(x + 2, y + 2, length, 8), Paint()..color = Colors.black.withOpacity( 0.2));
     
     // Trough body
     Path trough = Path()
@@ -4023,8 +4023,8 @@ class FloorPlan2DPainter extends CustomPainter {
     int numWindows = (length / 3).floor().clamp(2, 6);
     
     final windowFrame = Paint()..color = const Color(0xFF5C4033)..strokeWidth = 2..style = PaintingStyle.stroke;
-    final windowGlass = Paint()..color = const Color(0xFFADD8E6).withValues(alpha: 0.6);
-    final windowReflect = Paint()..color = Colors.white.withValues(alpha: 0.4);
+    final windowGlass = Paint()..color = const Color(0xFFADD8E6).withOpacity( 0.6);
+    final windowReflect = Paint()..color = Colors.white.withOpacity( 0.4);
     
     for (int i = 0; i < numWindows; i++) {
       double windowX = x + w * (i + 0.5) / numWindows - windowWidth / 2;
@@ -4047,7 +4047,7 @@ class FloorPlan2DPainter extends CustomPainter {
     double doorX = x + w / 2 - doorWidth / 2;
     
     // Door shadow
-    canvas.drawRect(Rect.fromLTWH(doorX + 2, y + h - 2, doorWidth, doorHeight + 2), Paint()..color = Colors.black.withValues(alpha: 0.3));
+    canvas.drawRect(Rect.fromLTWH(doorX + 2, y + h - 2, doorWidth, doorHeight + 2), Paint()..color = Colors.black.withOpacity( 0.3));
     
     // Door frame
     canvas.drawRect(Rect.fromLTWH(doorX - 2, y + h - 2, doorWidth + 4, doorHeight + 4), Paint()..color = const Color(0xFF5C4033));
@@ -4137,7 +4137,7 @@ class FloorPlan2DPainter extends CustomPainter {
       textDirection: ui.TextDirection.ltr,
     );
     areaLabel.layout();
-    canvas.drawRect(Rect.fromLTWH(x + w/2 - areaLabel.width/2 - 4, y + h/2 - 8, areaLabel.width + 8, 16), Paint()..color = Colors.white.withValues(alpha: 0.9));
+    canvas.drawRect(Rect.fromLTWH(x + w/2 - areaLabel.width/2 - 4, y + h/2 - 8, areaLabel.width + 8, 16), Paint()..color = Colors.white.withOpacity( 0.9));
     canvas.drawRect(Rect.fromLTWH(x + w/2 - areaLabel.width/2 - 4, y + h/2 - 8, areaLabel.width + 8, 16), Paint()..color = Colors.green.shade700..style = PaintingStyle.stroke..strokeWidth = 1);
     areaLabel.paint(canvas, Offset(x + w/2 - areaLabel.width/2, y + h/2 - 6));
   }
@@ -4166,7 +4166,7 @@ class FloorPlan2DPainter extends CustomPainter {
     
     // Legend background
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(legendX - 5, legendY - 5, size.width - 20, 25), Radius.circular(4)), 
-      Paint()..color = Colors.white.withValues(alpha: 0.95));
+      Paint()..color = Colors.white.withOpacity( 0.95));
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(legendX - 5, legendY - 5, size.width - 20, 25), Radius.circular(4)), 
       Paint()..color = Colors.grey.shade400..style = PaintingStyle.stroke..strokeWidth = 0.5);
     
@@ -4492,7 +4492,7 @@ class PiggeryFloorPlanPainter extends CustomPainter {
   
   void _drawBuildingShadow(Canvas canvas, double x, double y, double w, double h) {
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.15)
+      ..color = Colors.black.withOpacity( 0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawRect(Rect.fromLTWH(x + 6, y + 6, w, h), shadowPaint);
   }
@@ -4691,7 +4691,7 @@ class PiggeryFloorPlanPainter extends CustomPainter {
       ..shader = ui.Gradient.radial(
         Offset(x, y),
         radius,
-        [Colors.orange.withValues(alpha: 0.6), Colors.orange.withValues(alpha: 0.2), Colors.transparent],
+        [Colors.orange.withOpacity( 0.6), Colors.orange.withOpacity( 0.2), Colors.transparent],
         [0.0, 0.6, 1.0],
       );
     canvas.drawCircle(Offset(x, y), radius, glowPaint);
@@ -4857,7 +4857,7 @@ class PiggeryFloorPlanPainter extends CustomPainter {
     double legendX = 10;
     
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(legendX - 5, legendY - 5, size.width - 20, 25), Radius.circular(4)), 
-      Paint()..color = Colors.white.withValues(alpha: 0.95));
+      Paint()..color = Colors.white.withOpacity( 0.95));
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(legendX - 5, legendY - 5, size.width - 20, 25), Radius.circular(4)), 
       Paint()..color = Colors.grey.shade400..style = PaintingStyle.stroke..strokeWidth = 0.5);
     
@@ -5061,7 +5061,7 @@ class RabbitryFloorPlanPainter extends CustomPainter {
   
   void _drawBuildingShadow(Canvas canvas, double x, double y, double w, double h) {
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.15)
+      ..color = Colors.black.withOpacity( 0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawRect(Rect.fromLTWH(x + 6, y + 6, w, h), shadowPaint);
   }
@@ -5127,7 +5127,7 @@ class RabbitryFloorPlanPainter extends CustomPainter {
       }
       
       // Row label with background
-      final rowBg = Paint()..color = Colors.white.withValues(alpha: 0.8);
+      final rowBg = Paint()..color = Colors.white.withOpacity( 0.8);
       canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x + 1, rowY + scaledCageH / 2 - 8, 18, 16), Radius.circular(3)), rowBg);
       _drawText(canvas, 'R${row + 1}', Offset(x + 3, rowY + scaledCageH / 2 - 5), const Color(0xFF5C3317), 9);
     }
@@ -5165,7 +5165,7 @@ class RabbitryFloorPlanPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(x, y, w, h), Paint()..color = const Color(0xFF606060)..strokeWidth = 2..style = PaintingStyle.stroke);
     
     // Hay/bedding on floor
-    final hayPaint = Paint()..color = const Color(0xFFE8D4A8).withValues(alpha: 0.6);
+    final hayPaint = Paint()..color = const Color(0xFFE8D4A8).withOpacity( 0.6);
     canvas.drawRect(Rect.fromLTWH(x + 3, y + h - 12, w - 6, 9), hayPaint);
     // Hay texture
     for (double hx = x + 5; hx < x + w - 5; hx += 4) {
@@ -5228,7 +5228,7 @@ class RabbitryFloorPlanPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(x + w * 0.3, y + h * 0.8, w * 0.4, h * 0.2), Paint()..color = const Color(0xFFB0B0B0));
     
     // Water level
-    canvas.drawRect(Rect.fromLTWH(x + 2, y + h * 0.15, w - 4, h * 0.6), Paint()..color = const Color(0xFF64B5F6).withValues(alpha: 0.5));
+    canvas.drawRect(Rect.fromLTWH(x + 2, y + h * 0.15, w - 4, h * 0.6), Paint()..color = const Color(0xFF64B5F6).withOpacity( 0.5));
   }
   
   void _drawNestBox(Canvas canvas, double x, double y, double w, double h) {
@@ -5334,7 +5334,7 @@ class RabbitryFloorPlanPainter extends CustomPainter {
     double legendX = 10;
     
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(legendX - 5, legendY - 5, size.width - 20, 25), Radius.circular(4)), 
-      Paint()..color = Colors.white.withValues(alpha: 0.95));
+      Paint()..color = Colors.white.withOpacity( 0.95));
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(legendX - 5, legendY - 5, size.width - 20, 25), Radius.circular(4)), 
       Paint()..color = Colors.grey.shade400..style = PaintingStyle.stroke..strokeWidth = 0.5);
     
@@ -6510,10 +6510,10 @@ class _FeedScreenState extends State<FeedScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+          border: Border.all(color: AppColors.primary.withOpacity( 0.2)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity( 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -6524,7 +6524,7 @@ class _FeedScreenState extends State<FeedScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.primary.withOpacity( 0.1),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Row(
@@ -6762,9 +6762,9 @@ class _FeedScreenState extends State<FeedScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.5), style: BorderStyle.solid),
+                          border: Border.all(color: AppColors.primary.withOpacity( 0.5), style: BorderStyle.solid),
                           borderRadius: BorderRadius.circular(12),
-                          color: AppColors.primary.withValues(alpha: 0.05),
+                          color: AppColors.primary.withOpacity( 0.05),
                         ),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -6785,7 +6785,7 @@ class _FeedScreenState extends State<FeedScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         elevation: 4,
-                        shadowColor: AppColors.primary.withValues(alpha: 0.4),
+                        shadowColor: AppColors.primary.withOpacity( 0.4),
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -6981,7 +6981,7 @@ class _FeedScreenState extends State<FeedScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.grey.shade200),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 5, offset: const Offset(0, 2))],
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.03), blurRadius: 5, offset: const Offset(0, 2))],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -7042,7 +7042,7 @@ class _FeedScreenState extends State<FeedScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withValues(alpha: 0.3),
+            color: Colors.green.withOpacity( 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -7056,7 +7056,7 @@ class _FeedScreenState extends State<FeedScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.white.withOpacity( 0.2),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Text('🥕', style: TextStyle(fontSize: 32)),
@@ -7098,9 +7098,9 @@ class _FeedScreenState extends State<FeedScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
+        color: Colors.white.withOpacity( 0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        border: Border.all(color: Colors.white.withOpacity( 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -7458,7 +7458,7 @@ class TorohayAkohoScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: Colors.black.withOpacity( 0.15),
             blurRadius: 25,
             offset: const Offset(0, 12),
           ),
@@ -7556,7 +7556,7 @@ class TorohayAkohoScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
+              color: Colors.black.withOpacity( 0.15),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -7566,7 +7566,7 @@ class TorohayAkohoScreen extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [
               getCardColor(),
-              getCardColor().withValues(alpha: 0.7),
+              getCardColor().withOpacity( 0.7),
             ],
           ),
         ),
@@ -7593,7 +7593,7 @@ class TorohayAkohoScreen extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Colors.black.withValues(alpha: 0.8),
+                    Colors.black.withOpacity( 0.8),
                   ],
                   stops: const [0.4, 1.0],
                 ),
@@ -7613,9 +7613,9 @@ class TorohayAkohoScreen extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.25),
+                            color: Colors.white.withOpacity( 0.25),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                            border: Border.all(color: Colors.white.withOpacity( 0.3)),
                           ),
                           child: Text(
                             badges.isNotEmpty ? badges[0] : '',
@@ -7677,9 +7677,9 @@ class TorohayAkohoScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
+        color: AppColors.primary.withOpacity( 0.08),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.primary.withOpacity( 0.3)),
       ),
       child: Text(text, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12)),
     );
@@ -7703,7 +7703,7 @@ class TorohayAkohoScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: AppColors.primary.withOpacity( 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(step['icon'] as IconData, color: AppColors.primary),
@@ -7775,9 +7775,9 @@ class TorohayAkohoScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
+        color: AppColors.primary.withOpacity( 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.primary.withOpacity( 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -8165,7 +8165,7 @@ class TorohayVoronaScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: Colors.black.withOpacity( 0.15),
             blurRadius: 25,
             offset: const Offset(0, 12),
           ),
@@ -8255,7 +8255,7 @@ class TorohayVoronaScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
+              color: Colors.black.withOpacity( 0.15),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -8265,7 +8265,7 @@ class TorohayVoronaScreen extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [
               getCardColor(),
-              getCardColor().withValues(alpha: 0.7),
+              getCardColor().withOpacity( 0.7),
             ],
           ),
         ),
@@ -8292,7 +8292,7 @@ class TorohayVoronaScreen extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Colors.black.withValues(alpha: 0.8),
+                    Colors.black.withOpacity( 0.8),
                   ],
                   stops: const [0.4, 1.0],
                 ),
@@ -8312,9 +8312,9 @@ class TorohayVoronaScreen extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.25),
+                            color: Colors.white.withOpacity( 0.25),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                            border: Border.all(color: Colors.white.withOpacity( 0.3)),
                           ),
                           child: Text(
                             badges.isNotEmpty ? badges[0] : '',
@@ -8376,9 +8376,9 @@ class TorohayVoronaScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
+        color: AppColors.primary.withOpacity( 0.08),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.primary.withOpacity( 0.3)),
       ),
       child: Text(text, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12)),
     );
@@ -8402,7 +8402,7 @@ class TorohayVoronaScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: AppColors.primary.withOpacity( 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(step['icon'] as IconData, color: AppColors.primary),
@@ -8474,9 +8474,9 @@ class TorohayVoronaScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
+        color: AppColors.primary.withOpacity( 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.primary.withOpacity( 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -9535,7 +9535,7 @@ class CalculatorsAndProfitScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
+                  color: color.withOpacity( 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(emoji, style: const TextStyle(fontSize: 24)),
@@ -10262,9 +10262,9 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: widget.color.withValues(alpha: 0.1),
+                        color: widget.color.withOpacity( 0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: widget.color.withValues(alpha: 0.3)),
+                        border: Border.all(color: widget.color.withOpacity( 0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -10437,7 +10437,7 @@ Widget _buildCard({required String title, required Widget child, IconData? icon}
       borderRadius: BorderRadius.circular(24),
       boxShadow: [
         BoxShadow(
-          color: AppColors.primary.withValues(alpha: 0.1),
+          color: AppColors.primary.withOpacity( 0.1),
           blurRadius: 20,
           offset: const Offset(0, 8),
         ),
@@ -10462,7 +10462,7 @@ Widget _buildCard({required String title, required Widget child, IconData? icon}
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.15),
+                        color: AppColors.primary.withOpacity( 0.15),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -10815,9 +10815,9 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.info.withValues(alpha: 0.08),
+                      color: AppColors.info.withOpacity( 0.08),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
+                      border: Border.all(color: AppColors.info.withOpacity( 0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -11101,7 +11101,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
         decoration: BoxDecoration(
           color: sex == 'Lahy' ? Colors.blue.shade50 : Colors.pink.shade50,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: (sex == 'Lahy' ? Colors.blue : Colors.pink).withValues(alpha: 0.3)),
+          border: Border.all(color: (sex == 'Lahy' ? Colors.blue : Colors.pink).withOpacity( 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -11539,7 +11539,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 10)],
                     ),
                     child: Row(
                       children: [
@@ -11547,7 +11547,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
-                            color: typeColor.withValues(alpha: 0.15),
+                            color: typeColor.withOpacity( 0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Center(child: Text(_getBreedEmoji(breed['type']), style: const TextStyle(fontSize: 24))),
@@ -11563,7 +11563,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: typeColor.withValues(alpha: 0.15),
+                                      color: typeColor.withOpacity( 0.15),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(breed['type'], style: TextStyle(color: typeColor, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -11645,7 +11645,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
-                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 10)],
                       ),
                       child: ListTile(
                         leading: Container(
@@ -11766,7 +11766,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 10)],
                   ),
                   child: Column(
                     children: [
@@ -11785,7 +11785,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 10)],
                   ),
                   child: Column(
                     children: [
@@ -11953,7 +11953,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.1),
+                        color: AppColors.warning.withOpacity( 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Text('🥚', style: TextStyle(fontSize: 24)),
@@ -12078,7 +12078,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withValues(alpha: 0.1),
+                            color: AppColors.success.withOpacity( 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(incubData['emoji'], style: const TextStyle(fontSize: 24)),
@@ -12188,9 +12188,9 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.08),
+                        color: AppColors.success.withOpacity( 0.08),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                        border: Border.all(color: AppColors.success.withOpacity( 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -12269,7 +12269,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                             value: enableAlarm,
                             onChanged: (v) => setModalState(() => enableAlarm = v),
                             activeThumbColor: AppColors.success,
-                            activeTrackColor: AppColors.success.withValues(alpha: 0.4),
+                            activeTrackColor: AppColors.success.withOpacity( 0.4),
                           ),
                         ],
                       ),
@@ -12490,7 +12490,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 4)),
+                          BoxShadow(color: Colors.black.withOpacity( 0.06), blurRadius: 10, offset: const Offset(0, 4)),
                         ],
                       ),
                       child: Row(
@@ -12499,7 +12499,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                             width: 50,
                             height: 50,
                             decoration: BoxDecoration(
-                              color: AppColors.warning.withValues(alpha: 0.12),
+                              color: AppColors.warning.withOpacity( 0.12),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Center(child: Text('🥚', style: TextStyle(fontSize: 24))),
@@ -12556,7 +12556,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                               ? Border.all(color: AppColors.success, width: 2)
                               : null,
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 4)),
+                            BoxShadow(color: Colors.black.withOpacity( 0.06), blurRadius: 10, offset: const Offset(0, 4)),
                           ],
                         ),
                         child: Column(
@@ -12569,8 +12569,8 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                                   height: 50,
                                   decoration: BoxDecoration(
                                     color: incub['status'] == 'Vita' 
-                                      ? AppColors.success.withValues(alpha: 0.12)
-                                      : isReady ? AppColors.warning.withValues(alpha: 0.12) : AppColors.info.withValues(alpha: 0.12),
+                                      ? AppColors.success.withOpacity( 0.12)
+                                      : isReady ? AppColors.warning.withOpacity( 0.12) : AppColors.info.withOpacity( 0.12),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Center(child: Text(incub['status'] == 'Vita' ? '🐤' : isReady ? '🐣' : incubData['emoji'], style: const TextStyle(fontSize: 24))),
@@ -12587,7 +12587,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: AppColors.primary.withValues(alpha: 0.12),
+                                              color: AppColors.primary.withOpacity( 0.12),
                                               borderRadius: BorderRadius.circular(6),
                                             ),
                                             child: Text(incubType.split(' ').first, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary)),
@@ -12715,7 +12715,7 @@ Widget _buildStatCard({
       borderRadius: BorderRadius.circular(20),
       boxShadow: [
         BoxShadow(
-          color: cardColor.withValues(alpha: 0.12),
+          color: cardColor.withOpacity( 0.12),
           blurRadius: 20,
           offset: const Offset(0, 8),
         ),
@@ -12728,7 +12728,7 @@ Widget _buildStatCard({
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [cardColor.withValues(alpha: 0.2), cardColor.withValues(alpha: 0.35)],
+              colors: [cardColor.withOpacity( 0.2), cardColor.withOpacity( 0.35)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -13003,8 +13003,8 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withValues(alpha: 0.1),
-            AppColors.primaryLight.withValues(alpha: 0.05),
+            AppColors.primary.withOpacity( 0.1),
+            AppColors.primaryLight.withOpacity( 0.05),
           ],
         ),
       ),
@@ -13017,11 +13017,11 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: Colors.white.withOpacity( 0.9),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity( 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -13281,11 +13281,11 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: Colors.white.withOpacity( 0.9),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity( 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -13336,7 +13336,7 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
+                    color: AppColors.primary.withOpacity( 0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 6),
                   ),
@@ -13367,7 +13367,7 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
                       margin: const EdgeInsets.only(top: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withOpacity( 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -13406,7 +13406,7 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: Colors.white.withOpacity( 0.9),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -13518,7 +13518,7 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
                         Switch(
                           value: _showFloorPlan,
                           onChanged: (val) => setState(() => _showFloorPlan = val),
-                          activeTrackColor: Colors.blueAccent.withValues(alpha: 0.5),
+                          activeTrackColor: Colors.blueAccent.withOpacity( 0.5),
                           thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.blueAccent : Colors.grey),
                         ),
                       ],
@@ -14399,7 +14399,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
                                 gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
-                                  BoxShadow(color: gradient[0].withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
+                                  BoxShadow(color: gradient[0].withOpacity( 0.4), blurRadius: 8, offset: const Offset(0, 4)),
                                 ],
                               ),
                               child: Column(
@@ -14418,7 +14418,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.2),
+                                      color: Colors.white.withOpacity( 0.2),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
@@ -14758,7 +14758,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withValues(alpha: 0.3),
+            color: Colors.purple.withOpacity( 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -14772,7 +14772,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.white.withOpacity( 0.2),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(data['emoji'] as String, style: const TextStyle(fontSize: 32)),
@@ -14813,9 +14813,9 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
+        color: Colors.white.withOpacity( 0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        border: Border.all(color: Colors.white.withOpacity( 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -14832,7 +14832,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
     return Column(
       children: [
         Text(value, style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold)),
-        Text(label, style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 12)),
+        Text(label, style: TextStyle(color: color.withOpacity( 0.7), fontSize: 12)),
       ],
     );
   }
@@ -14953,7 +14953,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity( 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -14967,7 +14967,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.1),
+                  color: Colors.purple.withOpacity( 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: Colors.purple),
@@ -15017,7 +15017,7 @@ class GuideDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [Colors.purple, Colors.deepPurple], begin: Alignment.topLeft, end: Alignment.bottomRight),
                 borderRadius: BorderRadius.circular(18),
-                boxShadow: [BoxShadow(color: Colors.purple.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
+                boxShadow: [BoxShadow(color: Colors.purple.withOpacity( 0.3), blurRadius: 12, offset: const Offset(0, 6))],
               ),
               child: Column(
                 children: [
@@ -15038,7 +15038,7 @@ class GuideDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.purple.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 4))],
+                boxShadow: [BoxShadow(color: Colors.purple.withOpacity( 0.05), blurRadius: 8, offset: const Offset(0, 4))],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -15393,7 +15393,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.3),
+            color: Colors.grey.withOpacity( 0.3),
             offset: const Offset(5, 5),
             blurRadius: 10,
           ),
@@ -15455,7 +15455,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                   color: isSelected ? AppColors.primary : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: isSelected ? [
-                                    BoxShadow(color: AppColors.primary.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4))
+                                    BoxShadow(color: AppColors.primary.withOpacity( 0.4), blurRadius: 8, offset: const Offset(0, 4))
                                   ] : null,
                                   border: Border.all(
                                     color: isSelected ? AppColors.primaryDark : Colors.grey[300]!,
@@ -15493,7 +15493,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))
+                  BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 4, offset: const Offset(0, 2))
                 ],
               ),
               child: TabBar(
@@ -15545,7 +15545,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                   decoration: BoxDecoration(
                                     color: Colors.green[100],
                                     borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [BoxShadow(color: Colors.green.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2))],
+                                    boxShadow: [BoxShadow(color: Colors.green.withOpacity( 0.2), blurRadius: 4, offset: const Offset(0, 2))],
                                   ),
                                   child: Text(sign, style: TextStyle(color: Colors.green[800])),
                                 )).toList(),
@@ -15600,7 +15600,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                             decoration: BoxDecoration(
                               color: Colors.blue[50],
                               borderRadius: BorderRadius.circular(12),
-                              boxShadow: [BoxShadow(color: Colors.blue.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))],
+                              boxShadow: [BoxShadow(color: Colors.blue.withOpacity( 0.1), blurRadius: 4, offset: const Offset(0, 2))],
                             ),
                             child: Row(
                               children: [
@@ -15638,7 +15638,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                 color: Colors.orange.shade50,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Colors.orange.shade100),
-                                boxShadow: [BoxShadow(color: Colors.orange.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))],
+                                boxShadow: [BoxShadow(color: Colors.orange.withOpacity( 0.1), blurRadius: 4, offset: const Offset(0, 2))],
                               ),
                               child: Row(
                                 children: [
@@ -15721,7 +15721,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                     gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
-                                      BoxShadow(color: gradient[0].withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
+                                      BoxShadow(color: gradient[0].withOpacity( 0.4), blurRadius: 8, offset: const Offset(0, 4)),
                                     ],
                                   ),
                                   child: Column(
@@ -15730,7 +15730,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                       Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.2),
+                                          color: Colors.white.withOpacity( 0.2),
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(Icons.medical_services_outlined, color: Colors.white, size: 24),
@@ -15747,7 +15747,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.2),
+                                          color: Colors.white.withOpacity( 0.2),
                                           borderRadius: BorderRadius.circular(10),
                                         ),
                                         child: const Text(
@@ -15819,7 +15819,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                     gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
-                                      BoxShadow(color: gradient[0].withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
+                                      BoxShadow(color: gradient[0].withOpacity( 0.4), blurRadius: 8, offset: const Offset(0, 4)),
                                     ],
                                   ),
                                   child: Column(
@@ -15828,7 +15828,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                       Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.2),
+                                          color: Colors.white.withOpacity( 0.2),
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(Icons.menu_book_rounded, color: Colors.white, size: 24),
@@ -15845,7 +15845,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.2),
+                                          color: Colors.white.withOpacity( 0.2),
                                           borderRadius: BorderRadius.circular(10),
                                         ),
                                         child: const Text(
@@ -15898,7 +15898,7 @@ class DiseaseDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [Color(0xFFEF5350), Color(0xFFE57373)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                 borderRadius: BorderRadius.circular(18),
-                boxShadow: [BoxShadow(color: const Color(0xFFE53935).withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
+                boxShadow: [BoxShadow(color: const Color(0xFFE53935).withOpacity( 0.3), blurRadius: 12, offset: const Offset(0, 6))],
               ),
               child: Column(
                 children: [
@@ -15951,8 +15951,8 @@ class DiseaseDetailScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 4))],
+        border: Border.all(color: color.withOpacity( 0.2)),
+        boxShadow: [BoxShadow(color: color.withOpacity( 0.1), blurRadius: 8, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -15961,11 +15961,11 @@ class DiseaseDetailScreen extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: color.withOpacity( 0.1), shape: BoxShape.circle),
                 child: Icon(icon, color: color, size: 20),
               ),
               const SizedBox(width: 12),
-              Expanded(child: Text(title, style: TextStyle(color: color.withValues(alpha: 0.8), fontWeight: FontWeight.bold, fontSize: 16))),
+              Expanded(child: Text(title, style: TextStyle(color: color.withOpacity( 0.8), fontWeight: FontWeight.bold, fontSize: 16))),
             ],
           ),
           const SizedBox(height: 12),
@@ -16217,9 +16217,9 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.info.withValues(alpha: 0.08),
+                      color: AppColors.info.withOpacity( 0.08),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
+                      border: Border.all(color: AppColors.info.withOpacity( 0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -16437,7 +16437,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
         decoration: BoxDecoration(
           color: sex == 'Lahy' ? Colors.blue.shade50 : Colors.pink.shade50,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: (sex == 'Lahy' ? Colors.blue : Colors.pink).withValues(alpha: 0.3)),
+          border: Border.all(color: (sex == 'Lahy' ? Colors.blue : Colors.pink).withOpacity( 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -16566,7 +16566,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 10, offset: const Offset(0, 4))],
           ),
           child: Row(
             children: [
@@ -16639,9 +16639,9 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity( 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        border: Border.all(color: color.withOpacity( 0.2)),
       ),
       child: Row(
         children: [
@@ -16655,7 +16655,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-              Text(label, style: TextStyle(fontSize: 12, color: color.withValues(alpha: 0.8))),
+              Text(label, style: TextStyle(fontSize: 12, color: color.withOpacity( 0.8))),
             ],
           ),
         ],
@@ -16721,7 +16721,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
-                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 10)],
                 ),
                 child: Row(
                   children: [
@@ -16729,7 +16729,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: typeColor.withValues(alpha: 0.15),
+                        color: typeColor.withOpacity( 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(child: Text(_getBreedEmoji(breed['type']), style: const TextStyle(fontSize: 24))),
@@ -16745,7 +16745,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: typeColor.withValues(alpha: 0.15),
+                                  color: typeColor.withOpacity( 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(breed['type'], style: TextStyle(color: typeColor, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -16897,7 +16897,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
-                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 10)],
                       ),
                       child: ListTile(
                         leading: Container(
@@ -16972,7 +16972,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
             decoration: BoxDecoration(
               gradient: const LinearGradient(colors: [AppColors.gradientStart, AppColors.gradientEnd]),
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
+              boxShadow: [BoxShadow(color: AppColors.primary.withOpacity( 0.3), blurRadius: 12, offset: const Offset(0, 6))],
             ),
             child: Column(
               children: [
@@ -17090,8 +17090,8 @@ class _BitroGestationScreenState extends State<BitroGestationScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withValues(alpha: 0.1),
-            AppColors.primaryLight.withValues(alpha: 0.05),
+            AppColors.primary.withOpacity( 0.1),
+            AppColors.primaryLight.withOpacity( 0.05),
           ],
         ),
       ),
@@ -17119,7 +17119,7 @@ class _BitroGestationScreenState extends State<BitroGestationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: Colors.white.withOpacity( 0.9),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -17190,7 +17190,7 @@ class _BitroGestationScreenState extends State<BitroGestationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: Colors.white.withOpacity( 0.9),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -17256,7 +17256,7 @@ class _BitroGestationScreenState extends State<BitroGestationScreen> {
           // Breeding info
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(color: Colors.white.withOpacity( 0.9), borderRadius: BorderRadius.circular(16)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -17462,7 +17462,7 @@ class _KisoaHousingScreenState extends State<KisoaHousingScreen> {
                     Switch(
                       value: _showFloorPlan,
                       onChanged: (val) => setState(() => _showFloorPlan = val),
-                      activeTrackColor: Colors.pink.withValues(alpha: 0.5),
+                      activeTrackColor: Colors.pink.withOpacity( 0.5),
                       thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.pink : Colors.grey),
                     ),
                   ],
@@ -18776,7 +18776,7 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity( 0.04),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -19219,10 +19219,10 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
+                    border: Border.all(color: Colors.white.withOpacity( 0.35), width: 1.5),
                     boxShadow: [
-                      BoxShadow(color: gradient.first.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 6)),
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, 4)),
+                      BoxShadow(color: gradient.first.withOpacity( 0.35), blurRadius: 14, offset: const Offset(0, 6)),
+                      BoxShadow(color: Colors.black.withOpacity( 0.15), blurRadius: 10, offset: const Offset(0, 4)),
                     ],
                   ),
                   child: Center(
@@ -23618,7 +23618,7 @@ DINGANA 5: FIJINJANA
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFF81C784)),
                   boxShadow: [
-                    BoxShadow(color: Colors.green.withValues(alpha: 0.15), blurRadius: 8, offset: const Offset(0, 4)),
+                    BoxShadow(color: Colors.green.withOpacity( 0.15), blurRadius: 8, offset: const Offset(0, 4)),
                   ],
                 ),
                 child: TextField(
@@ -23692,7 +23692,7 @@ DINGANA 5: FIJINJANA
                 color: const Color(0xFF4CAF50),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
-                  BoxShadow(color: Colors.green.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2)),
+                  BoxShadow(color: Colors.green.withOpacity( 0.3), blurRadius: 4, offset: const Offset(0, 2)),
                 ],
               ),
               child: Text(
@@ -23717,7 +23717,7 @@ DINGANA 5: FIJINJANA
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(color: Colors.green.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 4)),
+                BoxShadow(color: Colors.green.withOpacity( 0.1), blurRadius: 8, offset: const Offset(0, 4)),
               ],
             ),
             child: Center(
@@ -23802,10 +23802,10 @@ DINGANA 5: FIJINJANA
         decoration: BoxDecoration(
           gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.4), width: isSelected ? 2.5 : 1.5),
+          border: Border.all(color: isSelected ? Colors.white : Colors.white.withOpacity( 0.4), width: isSelected ? 2.5 : 1.5),
           boxShadow: [
-            BoxShadow(color: gradient[0].withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 6)),
-            BoxShadow(color: gradient[1].withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2)),
+            BoxShadow(color: gradient[0].withOpacity( 0.4), blurRadius: 12, offset: const Offset(0, 6)),
+            BoxShadow(color: gradient[1].withOpacity( 0.2), blurRadius: 4, offset: const Offset(0, 2)),
           ],
         ),
         child: Stack(
@@ -23816,7 +23816,7 @@ DINGANA 5: FIJINJANA
               child: Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.25),
+                  color: Colors.white.withOpacity( 0.25),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 12),
@@ -23842,7 +23842,7 @@ DINGANA 5: FIJINJANA
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: Colors.white.withOpacity( 0.25),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -23878,9 +23878,9 @@ DINGANA 5: FIJINJANA
         width: 56,
         height: 56,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
+          color: Colors.white.withOpacity( 0.2),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+          border: Border.all(color: Colors.white.withOpacity( 0.3), width: 2),
         ),
         child: Image.asset(
           path,
@@ -23945,12 +23945,12 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF16A34A).withValues(alpha: 0.15),
+                    color: const Color(0xFF16A34A).withOpacity( 0.15),
                     blurRadius: 16,
                     offset: const Offset(0, 10),
                   ),
                 ],
-                border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.2)),
+                border: Border.all(color: const Color(0xFF16A34A).withOpacity( 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -24019,8 +24019,8 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.15)),
-        boxShadow: [BoxShadow(color: const Color(0xFF16A34A).withValues(alpha: 0.1), blurRadius: 12, offset: const Offset(0, 8))],
+        border: Border.all(color: const Color(0xFF16A34A).withOpacity( 0.15)),
+        boxShadow: [BoxShadow(color: const Color(0xFF16A34A).withOpacity( 0.1), blurRadius: 12, offset: const Offset(0, 8))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -24077,8 +24077,8 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.2)),
-        boxShadow: [BoxShadow(color: const Color(0xFF16A34A).withValues(alpha: 0.1), blurRadius: 12, offset: const Offset(0, 4))],
+        border: Border.all(color: const Color(0xFF16A34A).withOpacity( 0.2)),
+        boxShadow: [BoxShadow(color: const Color(0xFF16A34A).withOpacity( 0.1), blurRadius: 12, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -24088,7 +24088,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF16A34A).withValues(alpha: 0.15),
+                  color: const Color(0xFF16A34A).withOpacity( 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.agriculture_rounded, color: Color(0xFF16A34A), size: 18),
@@ -24116,9 +24116,9 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.08),
+                color: color.withOpacity( 0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.withValues(alpha: 0.2)),
+                border: Border.all(color: color.withOpacity( 0.2)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -24128,13 +24128,13 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                     height: 28,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [color, color.withValues(alpha: 0.7)],
+                        colors: [color, color.withOpacity( 0.7)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
-                        BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 2)),
+                        BoxShadow(color: color.withOpacity( 0.3), blurRadius: 6, offset: const Offset(0, 2)),
                       ],
                     ),
                     alignment: Alignment.center,
@@ -24190,9 +24190,9 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: iconColor.withValues(alpha: 0.08),
+          color: iconColor.withOpacity( 0.08),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: iconColor.withValues(alpha: 0.15)),
+          border: Border.all(color: iconColor.withOpacity( 0.15)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -24200,7 +24200,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.2),
+                color: iconColor.withOpacity( 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(iconData, color: iconColor, size: 14),
@@ -24227,9 +24227,9 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.2)),
+        border: Border.all(color: const Color(0xFF16A34A).withOpacity( 0.2)),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF16A34A).withValues(alpha: 0.1), blurRadius: 12, offset: const Offset(0, 4)),
+          BoxShadow(color: const Color(0xFF16A34A).withOpacity( 0.1), blurRadius: 12, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -24240,7 +24240,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF16A34A).withValues(alpha: 0.15),
+                  color: const Color(0xFF16A34A).withOpacity( 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.grass_rounded, color: Color(0xFF16A34A), size: 18),
@@ -24266,7 +24266,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFFDCFCE7),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.2)),
+                border: Border.all(color: const Color(0xFF16A34A).withOpacity( 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -24280,7 +24280,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF16A34A).withValues(alpha: 0.15),
+                          color: const Color(0xFF16A34A).withOpacity( 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text('Semences', style: TextStyle(color: Color(0xFF16A34A), fontSize: 9, fontWeight: FontWeight.w500)),
@@ -24299,9 +24299,9 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF92400E).withValues(alpha: 0.1),
+                color: const Color(0xFF92400E).withOpacity( 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.2)),
+                border: Border.all(color: const Color(0xFFF59E0B).withOpacity( 0.2)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -24309,7 +24309,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                      color: const Color(0xFFF59E0B).withOpacity( 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.landscape_rounded, color: Color(0xFFF59E0B), size: 16),
@@ -24335,9 +24335,9 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0891B2).withValues(alpha: 0.1),
+                color: const Color(0xFF0891B2).withOpacity( 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF06B6D4).withValues(alpha: 0.2)),
+                border: Border.all(color: const Color(0xFF06B6D4).withOpacity( 0.2)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -24345,7 +24345,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF06B6D4).withValues(alpha: 0.15),
+                      color: const Color(0xFF06B6D4).withOpacity( 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.home_work_rounded, color: Color(0xFF06B6D4), size: 16),
@@ -24377,8 +24377,8 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
       decoration: BoxDecoration(
         gradient: const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFECFDF5)]),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.15)),
-        boxShadow: [BoxShadow(color: const Color(0xFF16A34A).withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: const Color(0xFF16A34A).withOpacity( 0.15)),
+        boxShadow: [BoxShadow(color: const Color(0xFF16A34A).withOpacity( 0.08), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -24395,7 +24395,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: const Color(0xFF16A34A).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                      decoration: BoxDecoration(color: const Color(0xFF16A34A).withOpacity( 0.15), borderRadius: BorderRadius.circular(8)),
                       child: Text(value['week']?.toString() ?? 'H${e.key + 1}', style: const TextStyle(color: Color(0xFF16A34A), fontWeight: FontWeight.bold, fontSize: 12)),
                     ),
                     const SizedBox(width: 12),
@@ -24411,7 +24411,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: const Color(0xFF16A34A).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(color: const Color(0xFF16A34A).withOpacity( 0.15), borderRadius: BorderRadius.circular(8)),
                     child: Text('H${e.key + 1}', style: const TextStyle(color: Color(0xFF16A34A), fontWeight: FontWeight.bold, fontSize: 12)),
                   ),
                   const SizedBox(width: 12),
@@ -24432,8 +24432,8 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
       decoration: BoxDecoration(
         gradient: const LinearGradient(colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)]),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.25)),
-        boxShadow: [BoxShadow(color: const Color(0xFFF59E0B).withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: const Color(0xFFF59E0B).withOpacity( 0.25)),
+        boxShadow: [BoxShadow(color: const Color(0xFFF59E0B).withOpacity( 0.1), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -25580,7 +25580,7 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
       ),
       child: Column(
         children: [
@@ -25631,7 +25631,7 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
       ),
       child: Column(
         children: [
@@ -25749,7 +25749,7 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
       ),
       child: Column(
         children: [
@@ -25845,7 +25845,7 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               children: [
@@ -25988,14 +25988,14 @@ class FambolenaSoilScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 10)],
             ),
             child: Column(
               children: [
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: (soil['color'] as Color).withValues(alpha: 0.2),
+                    color: (soil['color'] as Color).withOpacity( 0.2),
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   ),
                   child: Row(
@@ -26458,7 +26458,7 @@ class FambolenaPestsScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -26514,7 +26514,7 @@ class FambolenaPestsScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -26766,7 +26766,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
                   // Tabs
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: Colors.white.withOpacity( 0.2),
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: TabBar(
@@ -27033,7 +27033,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
         leading: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
+            color: color.withOpacity( 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(emoji, style: const TextStyle(fontSize: 18)),
@@ -27069,7 +27069,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
+              color: color.withOpacity( 0.15),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(roi, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color)),
@@ -27819,7 +27819,7 @@ class _PricingDialogState extends State<PricingDialog> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 3)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 3)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -27871,7 +27871,7 @@ class _PricingDialogState extends State<PricingDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 13)),
-                Text(subtitle, style: TextStyle(fontSize: 11, color: textColor.withValues(alpha: 0.7))),
+                Text(subtitle, style: TextStyle(fontSize: 11, color: textColor.withOpacity( 0.7))),
               ],
             ),
           ),
@@ -28035,7 +28035,7 @@ class TrondroSystemsScreen extends StatelessWidget {
                       const Text('KARAZANA TRONDRO',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Tilapia, Carpe, Clarias, Heterotis - Vidiny sy toetoetra',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -28078,13 +28078,13 @@ class TrondroSystemsScreen extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
+                          colors: [color.withOpacity( 0.9), color.withOpacity( 0.6)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
-                          BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4)),
+                          BoxShadow(color: color.withOpacity( 0.3), blurRadius: 8, offset: const Offset(0, 4)),
                         ],
                       ),
                       child: Padding(
@@ -28103,7 +28103,7 @@ class TrondroSystemsScreen extends StatelessWidget {
                             ),
                             Text(
                               fish['localName'] as String,
-                              style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 10),
+                              style: TextStyle(color: Colors.white.withOpacity( 0.85), fontSize: 10),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -28112,7 +28112,7 @@ class TrondroSystemsScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.95),
+                                color: Colors.white.withOpacity( 0.95),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -28149,7 +28149,7 @@ class TrondroSystemsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.25),
+        color: Colors.white.withOpacity( 0.25),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(text, style: const TextStyle(fontSize: 9, color: Colors.white)),
@@ -28175,7 +28175,7 @@ class TrondroSystemsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [color, color.withValues(alpha: 0.7)],
+                  colors: [color, color.withOpacity( 0.7)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -28192,7 +28192,7 @@ class TrondroSystemsScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(fish['name'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
-                            Text(fish['localName'] as String, style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 14)),
+                            Text(fish['localName'] as String, style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 14)),
                           ],
                         ),
                       ),
@@ -28361,9 +28361,9 @@ class TrondroSystemsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity( 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity( 0.3)),
       ),
       child: Column(
         children: [
@@ -28619,7 +28619,7 @@ class TrondroTeknikaScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text('TEKNIKA FIOMPIANA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-                      Text('Fomba sy rafitra samihafa', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
+                      Text('Fomba sy rafitra samihafa', style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 13)),
                     ],
                   ),
                 ),
@@ -28660,7 +28660,7 @@ class TrondroTeknikaScreen extends StatelessWidget {
                                   const Text('PARCOURS EXPRESS (1 JOUR)',
                                       style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                                   Text('Dingana tsotra: fanomanana → alevinage → sakafo → fanaraha-maso',
-                                      style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                                      style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                                 ],
                               ),
                             ),
@@ -28682,7 +28682,7 @@ class TrondroTeknikaScreen extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(12),
-                                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))],
+                                      boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 6, offset: const Offset(0, 2))],
                                     ),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -28731,7 +28731,7 @@ class TrondroTeknikaScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 2))],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 8, offset: const Offset(0, 2))],
               ),
               child: Row(
                 children: [
@@ -28770,7 +28770,7 @@ class TrondroTeknikaScreen extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 2)),
+                BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 8, offset: const Offset(0, 2)),
               ],
             ),
             child: Theme(
@@ -28782,7 +28782,7 @@ class TrondroTeknikaScreen extends StatelessWidget {
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    color: (teknika['color'] as Color).withValues(alpha: 0.15),
+                    color: (teknika['color'] as Color).withOpacity( 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(child: Text(teknika['emoji'] as String, style: const TextStyle(fontSize: 28))),
@@ -28794,7 +28794,7 @@ class TrondroTeknikaScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: (teknika['color'] as Color).withValues(alpha: 0.08),
+                      color: (teknika['color'] as Color).withOpacity( 0.08),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Wrap(
@@ -28805,7 +28805,7 @@ class TrondroTeknikaScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: (teknika['color'] as Color).withValues(alpha: 0.3)),
+                          border: Border.all(color: (teknika['color'] as Color).withOpacity( 0.3)),
                         ),
                         child: Column(
                           children: [
@@ -29224,7 +29224,7 @@ class _TrondroFeedScreenState extends State<TrondroFeedScreen> {
                       const Text('SAKAFO TRONDRO',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Fomba famahanana Tilapia sy Carpe',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -29240,7 +29240,7 @@ class _TrondroFeedScreenState extends State<TrondroFeedScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 6)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -29579,7 +29579,7 @@ class _TrondroFeedScreenState extends State<TrondroFeedScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -29698,7 +29698,7 @@ class _TrondroFeedScreenState extends State<TrondroFeedScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -29857,7 +29857,7 @@ class TrondroHealthScreen extends StatelessWidget {
                       const Text('FAHASALAMANA TRONDRO',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Aretina sy fitsaboana',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -29921,7 +29921,7 @@ class TrondroHealthScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -30067,7 +30067,7 @@ class TrondroWaterScreen extends StatelessWidget {
                       const Text('FITANTANANA RANO',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Kalitao sy fikojakojana rano',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -30087,7 +30087,7 @@ class TrondroWaterScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -30163,7 +30163,7 @@ class TrondroWaterScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -30428,7 +30428,7 @@ class TantelyHivesScreen extends StatelessWidget {
                       const Text('TOHO-TANTELY & FITAOVANA',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Karazana toho-tantely sy fitaovana ilaina',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -30444,7 +30444,7 @@ class TantelyHivesScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -30518,7 +30518,7 @@ class TantelyHivesScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -30604,7 +30604,7 @@ class TantelyHivesScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -30768,7 +30768,7 @@ class TantelyProductsScreen extends StatelessWidget {
                       const Text('VOKATRA TANTELY',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Tantely, Savoka, Propolis, Gelée royale...',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -30835,7 +30835,7 @@ class TantelyProductsScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -31012,7 +31012,7 @@ class TantelyHealthScreen extends StatelessWidget {
                       const Text('FAHASALAMAN\'NY TANTELY',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Aretina sy fitsaboana - Fisorohana',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -31071,7 +31071,7 @@ class TantelyHealthScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -31310,7 +31310,7 @@ class TantelyCalendarScreen extends StatelessWidget {
                       const Text('TETIANDRO APICULTURE',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Asa tokony atao isam-bolana',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -31355,7 +31355,7 @@ class TantelyCalendarScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -31536,7 +31536,7 @@ class OlitraSpeciesScreen extends StatelessWidget {
                       const Text('KARAZANA OLITRA',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('BSF, Vers de farine, Grillons...',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -31585,7 +31585,7 @@ class OlitraSpeciesScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -31672,7 +31672,7 @@ class OlitraSpeciesScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -31812,7 +31812,7 @@ class OlitraFeedScreen extends StatelessWidget {
                       const Text('SAKAFO OLITRA',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Fako organika sy cerealy',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -31828,7 +31828,7 @@ class OlitraFeedScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -31884,7 +31884,7 @@ class OlitraFeedScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -32027,7 +32027,7 @@ class OlitraProductionScreen extends StatelessWidget {
                       const Text('VOKATRA & FIJINJANA',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Cycle fiainana sy fomba fijinjana',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -32043,7 +32043,7 @@ class OlitraProductionScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -32171,7 +32171,7 @@ class OlitraProductionScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Row(
               children: [
@@ -32313,7 +32313,7 @@ class OlitraUsesScreen extends StatelessWidget {
                       const Text('FAMPIASANA OLITRA',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Sakafo biby, zezika, orinasa...',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -32329,7 +32329,7 @@ class OlitraUsesScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -32682,7 +32682,7 @@ class ZezikaTypesScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: (type['color'] as Color).withValues(alpha: 0.15),
+                      color: (type['color'] as Color).withOpacity( 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(type['emoji'], style: const TextStyle(fontSize: 28)),
@@ -33095,7 +33095,7 @@ class ZezikaProductionScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity( 0.1),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
@@ -33308,7 +33308,7 @@ class ZezikaUsageScreen extends StatelessWidget {
             width: 80,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
+              color: color.withOpacity( 0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(type, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color), textAlign: TextAlign.center),
@@ -33627,7 +33627,7 @@ class ZezikaResultsScreen extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
+            color: color.withOpacity( 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 24),
@@ -33667,7 +33667,7 @@ class ZezikaResultsScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
+                color: color.withOpacity( 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(increase, style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 14)),
@@ -34447,7 +34447,7 @@ class HolatraHarvestScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
+                color: color.withOpacity( 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text('🍄‍🟫', style: TextStyle(fontSize: 24)),
@@ -34477,7 +34477,7 @@ class HolatraHarvestScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
+              color: color.withOpacity( 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -34496,7 +34496,7 @@ class HolatraHarvestScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
+                        color: color.withOpacity( 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(duration, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold)),
@@ -34728,7 +34728,7 @@ class HolatraMarketScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
+                color: color.withOpacity( 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text('🍄‍🟫', style: TextStyle(fontSize: 24)),
@@ -35879,7 +35879,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                         '($price Ar/singa)',
                         style: TextStyle(
                           fontSize: 10,
-                          color: textColor.withValues(alpha: 0.7),
+                          color: textColor.withOpacity( 0.7),
                         ),
                       ),
                     ],
@@ -36157,7 +36157,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                                 width: isTop3 ? 2 : 1,
                               ),
                               boxShadow: isTop3 ? [
-                                BoxShadow(color: Colors.amber.withValues(alpha: 0.2), blurRadius: 5),
+                                BoxShadow(color: Colors.amber.withOpacity( 0.2), blurRadius: 5),
                               ] : null,
                             ),
                             child: Column(
@@ -36213,7 +36213,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                                 decoration: BoxDecoration(
-                                                  color: _getRiskColor(rec['riskLevel']).withValues(alpha: 0.1),
+                                                  color: _getRiskColor(rec['riskLevel']).withOpacity( 0.1),
                                                   borderRadius: BorderRadius.circular(6),
                                                 ),
                                                 child: Text(
@@ -37004,7 +37004,7 @@ class _ProjectManagementDialogState extends State<ProjectManagementDialog> with 
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: _getStatusColor(task['status']).withValues(alpha: 0.2),
+                        color: _getStatusColor(task['status']).withOpacity( 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -37029,7 +37029,7 @@ class _ProjectManagementDialogState extends State<ProjectManagementDialog> with 
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: _getPriorityColor(task['priority']).withValues(alpha: 0.2),
+                              color: _getPriorityColor(task['priority']).withOpacity( 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -37130,7 +37130,7 @@ class _ProjectManagementDialogState extends State<ProjectManagementDialog> with 
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -37178,7 +37178,7 @@ class _ProjectManagementDialogState extends State<ProjectManagementDialog> with 
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -37202,9 +37202,9 @@ class _ProjectManagementDialogState extends State<ProjectManagementDialog> with 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity( 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity( 0.3)),
       ),
       child: Column(
         children: [
@@ -37568,7 +37568,7 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
                     
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: statusColor.withValues(alpha: 0.2),
+                        backgroundColor: statusColor.withOpacity( 0.2),
                         child: Icon(
                           isUsed ? Icons.check : (isExpired ? Icons.timer_off : Icons.key),
                           color: statusColor,
@@ -37591,7 +37591,7 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.2),
+                          color: statusColor.withOpacity( 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -37630,7 +37630,7 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
                 border: Border.all(color: Colors.white, width: 4),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.4),
+                    color: Colors.black.withOpacity( 0.4),
                     blurRadius: 20,
                     offset: const Offset(0, 6),
                   ),
@@ -37706,7 +37706,7 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: Colors.white.withOpacity( 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -38071,7 +38071,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: isSelected 
-                              ? (method['color'] as Color).withValues(alpha: 0.1)
+                              ? (method['color'] as Color).withOpacity( 0.1)
                               : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
@@ -38274,7 +38274,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
-                                color: AppColors.primary.withValues(alpha: 0.1),
+                                color: AppColors.primary.withOpacity( 0.1),
                                 child: const Icon(Icons.person, color: AppColors.primary),
                               );
                             },

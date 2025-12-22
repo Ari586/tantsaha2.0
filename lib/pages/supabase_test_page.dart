@@ -37,11 +37,11 @@ class _SupabaseTestPageState extends State<SupabaseTestPage> {
       _logs.add('auth.currentUser error: $e');
     }
 
-    // Test 2: ping the Supabase health endpoint
+    // Test 2: ping the health endpoint
     // Replace the base URL below if you use a different project.
     const supabaseBase = 'https://ivnmbrzjltshrfqywwoj.supabase.co';
     try {
-      _logs.add('GET $supabaseBase/health');
+      _logs.add('GET health endpoint');
       final httpClient = HttpClient();
       final request = await httpClient.getUrl(Uri.parse('$supabaseBase/health'));
       final response = await request.close();
@@ -61,7 +61,7 @@ class _SupabaseTestPageState extends State<SupabaseTestPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Supabase Connectivity Test')),
+      appBar: AppBar(title: const Text('Connectivity Test')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

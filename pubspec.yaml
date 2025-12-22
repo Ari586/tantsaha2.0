@@ -43,6 +43,11 @@ dependencies:
   firebase_core: any
   supabase_flutter: ^1.0.0
 
+# If a transitive plugin (sign_in_with_apple) causes Android/Kotlin build errors,
+# force a newer compatible version here. This is a temporary override for debug.
+dependency_overrides:
+  sign_in_with_apple: ^7.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
