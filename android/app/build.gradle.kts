@@ -33,7 +33,7 @@ android {
 
     defaultConfig {
         applicationId = "com.arihavana.tantsaha"
-        minSdk = flutter.minSdkVersion
+        minSdk = flutter.minSdkVersion  // Android 5.0 Lollipop - Maximum de compatibilité
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
