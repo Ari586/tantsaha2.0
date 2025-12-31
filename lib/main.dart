@@ -9,7 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'pages/tombony_analyzer_page.dart';
+import 'pages/akoho_ebook_page.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -1619,513 +1621,657 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 }
 
 // Écran de sélection de catégorie
-class CategorySelectionScreen extends StatelessWidget {
+class CategorySelectionScreen extends StatefulWidget {
   const CategorySelectionScreen({super.key});
+
+  @override
+  State<CategorySelectionScreen> createState() => _CategorySelectionScreenState();
+}
+
+class _CategorySelectionScreenState extends State<CategorySelectionScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF1B5E20), Color(0xFF43A047), Color(0xFF66BB6A)],
+            colors: [
+              const Color(0xFF1B5E20),
+              const Color(0xFF2E7D32),
+              const Color(0xFF388E3C),
+              Colors.green.shade400,
+            ],
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              // === HEADER FIXE ===
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Tongasoa!',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    // === TOHANO ANAY & MON PROFIL EN HAUT ===
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: Column(
+                children: [
+                  // === HEADER MODERNISÉ ===
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Column(
                       children: [
-                        // Bouton TOHANO ANAY
-                        GestureDetector(
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => const PaymentDialog(),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Colors.pink.shade400, Colors.red.shade400],
+                        // Logo + Titre
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
                               ),
-                              borderRadius: BorderRadius.circular(25),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.red.withOpacity( 0.5),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.favorite, color: Colors.white, size: 20),
-                                SizedBox(width: 8),
-                                Text(
-                                  'TOHANO ANAY',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // Bouton MON PROFIL
-                        GestureDetector(
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => const AboutProfileDialog(),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity( 0.25),
-                              borderRadius: BorderRadius.circular(25),
-                              border: Border.all(color: Colors.white, width: 2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity( 0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(14),
+                                child: Container(
                                   decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Colors.green.shade700,
+                                        Colors.green.shade900,
+                                      ],
+                                    ),
                                   ),
-                                  child: ClipOval(
-                                    child: Image.asset(
-                                      'assets/images/arie.JPG',
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Icon(Icons.person, color: Colors.white, size: 22);
-                                      },
+                                  child: const Center(
+                                    child: Text(
+                                      '👨‍🌾',
+                                      style: TextStyle(
+                                        fontSize: 28,
+                                        fontFamilyFallback: ['Noto Color Emoji'],
+                                      ),
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 10),
-                                const Text(
-                                  'À propos',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
+                            const SizedBox(width: 12),
+                            Flexible(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      'TANTSAHA',
+                                      style: TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white,
+                                        letterSpacing: 2,
+                                        shadows: [
+                                          Shadow(
+                                            color: Colors.black26,
+                                            offset: Offset(2, 2),
+                                            blurRadius: 4,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      'Fambolena & Fiompiana',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        
+                        // Boutons d'action rapide en ligne
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _QuickActionButton(
+                                icon: Icons.auto_graph,
+                                label: 'Analyzer',
+                                gradientColors: [Colors.blue.shade700, Colors.indigo.shade700],
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const DashboardPage()),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _QuickActionButton(
+                                icon: Icons.folder_special,
+                                label: 'Tetikasa',
+                                gradientColors: [Colors.purple.shade700, Colors.deepPurple.shade700],
+                                onTap: () => showDialog(
+                                  context: context,
+                                  builder: (context) => const ProjectManagementDialog(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _QuickActionButton(
+                                icon: Icons.favorite,
+                                label: 'Tohano Anay',
+                                gradientColors: [Colors.pink.shade400, Colors.red.shade400],
+                                onTap: () => showDialog(
+                                  context: context,
+                                  builder: (context) => const PaymentDialog(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _QuickActionButton(
+                                icon: Icons.person,
+                                label: 'À propos',
+                                gradientColors: [Colors.teal.shade600, Colors.teal.shade700],
+                                onTap: () => showDialog(
+                                  context: context,
+                                  builder: (context) => const AboutProfileDialog(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        
+                        // Titre de section
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Text(
+                            '🌟 Safidio ny karazany 🌟',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ],
                     ),
-                    
-                    const SizedBox(height: 12),
-                    // Analyzer takes the slot of previous Fikajiana & Tombony
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const DashboardPage()),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.blue.shade700, Colors.indigo.shade700],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity( 0.3),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.auto_graph, color: Colors.white, size: 18),
-                            SizedBox(width: 6),
-                            Text(
-                              'Analyzer',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Supabase test button removed to avoid displaying that text
-                    const SizedBox.shrink(),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => const ProjectManagementDialog(),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.shade700,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity( 0.3),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.folder_special, color: Colors.white, size: 18),
-                            SizedBox(width: 6),
-                            Text(
-                              'FITANTANANA TETIKASA',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Safidio ny karazana fiompiana na fambolena',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // === GRILLE SCROLLABLE ===
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      // FambolenaTech Card
-                      _buildCategoryCard(
-                        context,
-                        emoji: '🌱',
-                        title: 'FambolenaTech',
-                        subtitle: 'Voly sy Fambolena',
-                        description: 'Vary, Katsaka, Legioma, Voankazo, Zava-maniry...',
-                        gradientColors: [const Color(0xFF2E7D32), const Color(0xFF1B5E20)],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen(category: 'fambolena')),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // AkohoTech Card
-                      _buildCategoryCard(
-                        context,
-                        emoji: '🐔',
-                        title: 'AkohoTech',
-                        subtitle: 'Akoho sy Vorona hafa',
-                        description: 'Akoho, Vorontsiloza, Akanga, Papelika...',
-                        gradientColors: [const Color(0xFFFF9800), const Color(0xFFFF5722)],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen(category: 'akoho')),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-
-                      // VoronaTech Card
-                      _buildCategoryCard(
-                        context,
-                        emoji: '🦆',
-                        title: 'VoronaTech',
-                        subtitle: 'Gana sy Gisa',
-                        description: 'Gana, Dokotra, Gisa, Sarindokotra...',
-                        gradientColors: [const Color(0xFF00BCD4), const Color(0xFF0097A7)],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen(category: 'vorona')),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // BitroTech Card
-                      _buildCategoryCard(
-                        context,
-                        emoji: '🐇',
-                        title: 'BitroTech',
-                        subtitle: 'Bitro sy Bitro Voalavo',
-                        description: 'Lapin, Cochon d\'Inde - Fiompiana biby kely',
-                        gradientColors: [const Color(0xFF9C27B0), const Color(0xFF673AB7)],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen(category: 'bitro')),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-
-                      // KisoaTech Card
-                      _buildCategoryCard(
-                        context,
-                        emoji: '🐷',
-                        title: 'KisoaTech',
-                        subtitle: 'Kisoa sy ny manodidina',
-                        description: 'Fiompiana kisoa, sakafo, fahasalamana...',
-                        gradientColors: [const Color(0xFFEC407A), const Color(0xFFD81B60)],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen(category: 'kisoa')),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-
-                      // TrondroTech Card
-                      _buildCategoryCard(
-                        context,
-                        emoji: '🐟',
-                        title: 'TrondroTech',
-                        subtitle: 'Pisciculture - Fiompiana trondro',
-                        description: 'Tilapia, Carpe - Hors sol, Dobo, Farihy, Rano velona...',
-                        gradientColors: [const Color(0xFF00BCD4), const Color(0xFF0097A7)],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen(category: 'trondro')),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-
-                      // TantelyTech Card
-                      _buildCategoryCard(
-                        context,
-                        emoji: '🐝',
-                        title: 'TantelyTech',
-                        subtitle: 'Apiculture - Fiompiana tantely',
-                        description: 'Toho-tantely, Famokarana tantely, Fahasalamana, Vokatra...',
-                        gradientColors: [const Color(0xFFFFB300), const Color(0xFFFF8F00)],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen(category: 'tantely')),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-
-                      // OlitraTech Card
-                      _buildCategoryCard(
-                        context,
-                        emoji: '🪲',
-                        title: 'OlitraTech',
-                        subtitle: 'Insectes - Fiompiana olitra',
-                        description: 'BSF (Black Soldier Fly), Vers de farine, Sakafo biby...',
-                        gradientColors: [const Color(0xFF795548), const Color(0xFF5D4037)],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen(category: 'olitra')),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // ZezikaTech Card
-                      _buildCategoryCard(
-                        context,
-                        emoji: '🌿',
-                        title: 'ZezikaTech',
-                        subtitle: 'Engrais - Zezika organika',
-                        description: 'Composte, Zezimaitso, Ranonjezika, Zezipahitra...',
-                        gradientColors: [const Color(0xFF616161), const Color(0xFF424242)],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen(category: 'zezika')),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-
-                      // HolatraTech Card
-                      _buildCategoryCard(
-                        context,
-                        emoji: '🍄‍🟫',
-                        title: 'HolatraTech',
-                        subtitle: 'Champignons comestibles',
-                        description: 'Pleurotes, Shiitake, Champignon de Paris...',
-                        gradientColors: [const Color(0xFF8D6E63), const Color(0xFF6D4C41)],
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen(category: 'holatra')),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 20),
-                    ],
                   ),
-                ),
-              ),
-              
-              // === FOOTER FIXE ===
-              Container(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 30,
-                      height: 30,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                      ),
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/images/arie.JPG',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.person, color: Colors.white54, size: 16);
-                          },
+                  
+                  const SizedBox(height: 12),
+                  
+                  // === GRILLE DES CATÉGORIES (MODERNISÉE) ===
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        // FambolenaTech Card
+                        _ModernCategoryCard(
+                          emoji: '🌱',
+                          title: 'FambolenaTech',
+                          subtitle: 'Voly sy Fambolena',
+                          description: 'Vary • Katsaka • Legioma • Voankazo',
+                          stats: '48+ Karazana',
+                          gradientColors: const [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomeScreen(category: 'fambolena')),
+                          ),
                         ),
-                      ),
+                        
+                        const SizedBox(height: 14),
+                        
+                        // AkohoTech Card  
+                        _ModernCategoryCard(
+                          emoji: '🐔',
+                          title: 'AkohoTech',
+                          subtitle: 'Akoho sy Vorona hafa',
+                          description: 'Akoho • Vorontsiloza • Akanga • Papelika',
+                          stats: 'Gestion Complète',
+                          gradientColors: const [Color(0xFFFF9800), Color(0xFFE65100)],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomeScreen(category: 'akoho')),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 14),
+
+                        // VoronaTech Card
+                        _ModernCategoryCard(
+                          emoji: '🦆',
+                          title: 'VoronaTech',
+                          subtitle: 'Gana sy Gisa',
+                          description: 'Gana • Dokotra • Gisa • Sarindokotra',
+                          stats: 'Aquaculture',
+                          gradientColors: const [Color(0xFF26C6DA), Color(0xFF00838F)],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomeScreen(category: 'vorona')),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 14),
+                        
+                        // BitroTech Card
+                        _ModernCategoryCard(
+                          emoji: '🐇',
+                          title: 'BitroTech',
+                          subtitle: 'Bitro sy Bitro Voalavo',
+                          description: 'Lapin • Cochon d\'Inde • Biby kely',
+                          stats: 'Hors Sol',
+                          gradientColors: const [Color(0xFFAB47BC), Color(0xFF7B1FA2)],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomeScreen(category: 'bitro')),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 14),
+
+                        // KisoaTech Card
+                        _ModernCategoryCard(
+                          emoji: '🐷',
+                          title: 'KisoaTech',
+                          subtitle: 'Kisoa sy ny manodidina',
+                          description: 'Fiompiana • Sakafo • Fahasalamana',
+                          stats: 'Productif',
+                          gradientColors: const [Color(0xFFEC407A), Color(0xFFC2185B)],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomeScreen(category: 'kisoa')),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 14),
+
+                        // TrondroTech Card
+                        _ModernCategoryCard(
+                          emoji: '🐟',
+                          title: 'TrondroTech',
+                          subtitle: 'Pisciculture',
+                          description: 'Tilapia • Carpe • Dobo • Farihy',
+                          stats: 'Aquaculture',
+                          gradientColors: const [Color(0xFF039BE5), Color(0xFF0277BD)],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomeScreen(category: 'trondro')),
+                          ),
+                        ),
+                      
+                        const SizedBox(height: 14),
+
+                        // TantelyTech Card
+                        _ModernCategoryCard(
+                          emoji: '🐝',
+                          title: 'TantelyTech',
+                          subtitle: 'Apiculture',
+                          description: 'Toho-tantely • Tantely • Savoka • Vokatra',
+                          stats: 'Production Miel',
+                          gradientColors: const [Color(0xFFFFC107), Color(0xFFF57C00)],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomeScreen(category: 'tantely')),
+                          ),
+                        ),
+                      
+                        const SizedBox(height: 14),
+
+                        // OlitraTech Card
+                        _ModernCategoryCard(
+                          emoji: '🪲',
+                          title: 'OlitraTech',
+                          subtitle: 'Insectes',
+                          description: 'BSF • Vers de farine • Protéines biby',
+                          stats: 'Biofactory',
+                          gradientColors: const [Color(0xFF8D6E63), Color(0xFF5D4037)],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomeScreen(category: 'olitra')),
+                          ),
+                        ),
+                      
+                        const SizedBox(height: 14),
+                      
+                        // ZezikaTech Card
+                        _ModernCategoryCard(
+                          emoji: '🌿',
+                          title: 'ZezikaTech',
+                          subtitle: 'Engrais Organika',
+                          description: 'Composte • Zezimaitso • Ranonjezika',
+                          stats: 'Écologique',
+                          gradientColors: const [Color(0xFF7CB342), Color(0xFF558B2F)],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomeScreen(category: 'zezika')),
+                          ),
+                        ),
+                      
+                        const SizedBox(height: 14),
+
+                        // HolatraTech Card
+                        _ModernCategoryCard(
+                          emoji: '🍄',
+                          title: 'HolatraTech',
+                          subtitle: 'Champignons',
+                          description: 'Pleurotes • Shiitake • Paris • Culture',
+                          stats: 'Indoor',
+                          gradientColors: const [Color(0xFFA1887F), Color(0xFF6D4C41)],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomeScreen(category: 'holatra')),
+                          ),
+                        ),
+                      
+                        const SizedBox(height: 20),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'v2.5 - by Ari Havana',
-                      style: TextStyle(color: Colors.white54, fontSize: 11),
+                  ),
+                  
+                  // === FOOTER COMPACT ===
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white30, width: 1.5),
+                          ),
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/arie.JPG',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(Icons.person, color: Colors.white54, size: 12);
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'v2.6 • Ari Havana',
+                          style: TextStyle(
+                            color: Colors.white60,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildCategoryCard(
-    BuildContext context, {
-    required String emoji,
-    required String title,
-    required String subtitle,
-    required String description,
-    required List<Color> gradientColors,
-    required VoidCallback onTap,
-  }) {
+// === WIDGET BOUTON D'ACTION RAPIDE ===
+class _QuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final List<Color> gradientColors;
+  final VoidCallback onTap;
+
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.gradientColors,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: gradientColors),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColors[0].withOpacity(0.4),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: Colors.white, size: 24),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// === WIDGET CARTE DE CATÉGORIE MODERNISÉE ===
+class _ModernCategoryCard extends StatelessWidget {
+  final String emoji;
+  final String title;
+  final String subtitle;
+  final String description;
+  final String stats;
+  final List<Color> gradientColors;
+  final VoidCallback onTap;
+
+  const _ModernCategoryCard({
+    required this.emoji,
+    required this.title,
+    required this.subtitle,
+    required this.description,
+    required this.stats,
+    required this.gradientColors,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: gradientColors,
           ),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: gradientColors[0].withOpacity( 0.4),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              color: gradientColors[0].withOpacity(0.5),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
-        child: Row(
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 50)),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              // Décoration de fond
+              Positioned(
+                right: -20,
+                top: -20,
+                child: Opacity(
+                  opacity: 0.15,
+                  child: Text(
+                    emoji,
+                    style: const TextStyle(
+                      fontSize: 140,
+                      fontFamilyFallback: ['Noto Color Emoji'],
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Contenu
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Row(
+                  children: [
+                    // Emoji principal
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        emoji,
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontFamilyFallback: ['Noto Color Emoji'],
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white70,
+                    
+                    const SizedBox(width: 16),
+                    
+                    // Textes
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            description,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white.withOpacity(0.8),
+                              height: 1.3,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.25),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              stats,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white60,
+                    
+                    // Icône flèche
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white70),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -7424,7 +7570,7 @@ class TorohayAkohoScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHero(),
+            _buildHero(context),
             const SizedBox(height: 20),
             GridView.builder(
               shrinkWrap: true,
@@ -7449,7 +7595,7 @@ class TorohayAkohoScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHero() {
+  Widget _buildHero(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -7466,14 +7612,38 @@ class TorohayAkohoScreen extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text('Torohay manokana', style: TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 0.5)),
-          SizedBox(height: 6),
-          Text('AkohoTech Tena raitra Guides', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-          SizedBox(height: 8),
-          Text(
+        children: [
+          const Text('Torohay manokana', style: TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 0.5)),
+          const SizedBox(height: 6),
+          const Text('AkohoTech Tena raitra Guides', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text(
             'Papelika, poulet de chair, poule pondeuse, vorontsiloza ary akanga miaraka amin\'ny sakafo, hakitroka ary fisorohana aretina maoderina.',
             style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AkohoEbookPage(
+                    guides: _buildGuides(),
+                    initialGuideTitle: _buildGuides().first['title'],
+                  ),
+                ),
+              );
+            },
+            icon: const Text('📖', style: TextStyle(fontSize: 18)),
+            label: const Text('Hijery amin\'ny fomba Boky'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF0F5132),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
         ],
       ),
@@ -7502,50 +7672,17 @@ class TorohayAkohoScreen extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        showDialog(
-          context: ctx,
-          builder: (dialogContext) => Dialog(
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 600, maxWidth: 500),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(guide['emoji'] as String, style: const TextStyle(fontSize: 32)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(guide['title'] as String, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(dialogContext),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(guide['subtitle'] as String, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: badges.map((badge) => _buildBadge(badge)).toList(),
-                    ),
-                    const SizedBox(height: 18),
-                    ...steps.map((step) => _buildStepTile(step)),
-                    const SizedBox(height: 16),
-                    _buildListSection('Sakafo & Fatra', feed, Icons.restaurant_menu),
-                    if (health.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      _buildListSection('Fahasalamana & Tips', health, Icons.health_and_safety),
-                    ],
-                    const SizedBox(height: 12),
-                    _buildListSection('Tetiandro / Workflow', timeline, Icons.schedule),
-                  ],
-                ),
-              ),
+        Navigator.push(
+          ctx,
+          MaterialPageRoute(
+            builder: (context) => _GuideDetailPage(
+              guide: guide,
+              badges: badges,
+              steps: steps,
+              feed: feed,
+              health: health,
+              timeline: timeline,
+              cardColor: getCardColor(),
             ),
           ),
         );
@@ -7673,97 +7810,6 @@ class TorohayAkohoScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBadge(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity( 0.08),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: AppColors.primary.withOpacity( 0.3)),
-      ),
-      child: Text(text, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12)),
-    );
-  }
-
-  Widget _buildStepTile(Map<String, dynamic> step) {
-    final List<String> points = List<String>.from(step['points'] as List);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity( 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(step['icon'] as IconData, color: AppColors.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(step['title'] as String, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ...points.map((point) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('• ', style: TextStyle(fontSize: 14, height: 1.4)),
-                    Expanded(child: Text(point, style: const TextStyle(fontSize: 14, height: 1.4))),
-                  ],
-                ),
-              )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildListSection(String title, List<Map<String, String>> items, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: AppColors.accent),
-              const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ...items.map((item) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item['label']!, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 2),
-                    Text(item['value']!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                  ],
-                ),
-              )),
-        ],
-      ),
-    );
-  }
-
   Widget _buildChecklistCard() {
     final items = [
       'Manao planing famokarana 12 herinandro (batch) mba hifandimby ny papelika sy vorontsiloza.',
@@ -7817,6 +7863,284 @@ class TorohayAkohoScreen extends StatelessWidget {
             child: Text(
               'Fisorohana aretina: aza mifangaro amin\'ny akoho ny vorontsiloza sy papelika. Manaova fanasarahana/atokana 3 herinandro ho an\'ny vorona vaovao ary tandremo ny hafanana (brooder) mba tsy hisy fahafatesana tampoka.',
               style: TextStyle(fontSize: 13, height: 1.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Page de détail pour un guide Torohay - pleine page
+class _GuideDetailPage extends StatelessWidget {
+  final Map<String, dynamic> guide;
+  final List<String> badges;
+  final List<Map<String, dynamic>> steps;
+  final List<Map<String, String>> feed;
+  final List<Map<String, String>> health;
+  final List<Map<String, String>> timeline;
+  final Color cardColor;
+
+  const _GuideDetailPage({
+    required this.guide,
+    required this.badges,
+    required this.steps,
+    required this.feed,
+    required this.health,
+    required this.timeline,
+    required this.cardColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        backgroundColor: cardColor,
+        title: Row(
+          children: [
+            Text(guide['emoji'] as String, style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                guide['title'] as String,
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Subtitle card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                guide['subtitle'] as String,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 16,
+                  height: 1.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Badges
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: badges.map((badge) => _buildBadge(badge, cardColor)).toList(),
+            ),
+            const SizedBox(height: 24),
+            
+            // Steps
+            ...steps.map((step) => _buildStepTile(step, cardColor)),
+            
+            const SizedBox(height: 24),
+            
+            // Sakafo & Fatra
+            _buildListSection('Sakafo & Farta', feed, Icons.restaurant_menu, cardColor),
+            
+            if (health.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildListSection('Fahasalamana & Tips', health, Icons.health_and_safety, cardColor),
+            ],
+            
+            const SizedBox(height: 16),
+            _buildListSection('Tetiandro / Workflow', timeline, Icons.schedule, cardColor),
+            
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepTile(Map<String, dynamic> step, Color color) {
+    final icon = step['icon'] as IconData;
+    final title = step['title'] as String;
+    final points = step['points'] as List<dynamic>;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: color, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: points.map((point) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('• ', style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
+                      Expanded(
+                        child: Text(
+                          point.toString(),
+                          style: const TextStyle(fontSize: 14, height: 1.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListSection(String title, List<Map<String, String>> items, IconData icon, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: color, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: items.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                final label = item['label'] ?? '';
+                final value = item['value'] ?? '';
+                
+                return Padding(
+                  padding: EdgeInsets.only(bottom: index < items.length - 1 ? 12 : 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (label.isNotEmpty)
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                          ),
+                        ),
+                      if (label.isNotEmpty) const SizedBox(height: 4),
+                      Text(
+                        value,
+                        style: const TextStyle(fontSize: 14, height: 1.5),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
             ),
           ),
         ],
@@ -8131,7 +8455,7 @@ class TorohayVoronaScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHero(),
+            _buildHero(context),
             const SizedBox(height: 20),
             GridView.builder(
               shrinkWrap: true,
@@ -8156,7 +8480,7 @@ class TorohayVoronaScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHero() {
+  Widget _buildHero(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -8173,14 +8497,38 @@ class TorohayVoronaScreen extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text('Torohay manokana', style: TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 0.5)),
-          SizedBox(height: 6),
-          Text('Fomba fiompiana Gana, Dokotra, Sarindokotra & Gisa', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-          SizedBox(height: 8),
-          Text(
+        children: [
+          const Text('Torohay manokana', style: TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 0.5)),
+          const SizedBox(height: 6),
+          const Text('Fomba fiompiana Gana, Dokotra, Sarindokotra & Gisa', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text(
             'Torolalana feno mikasika ny fiompiana vorona rano (canards, oies) sy ny Mulard (Sarindokotra).',
             style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AkohoEbookPage(
+                    guides: _buildGuides(),
+                    initialGuideTitle: _buildGuides().first['title'],
+                  ),
+                ),
+              );
+            },
+            icon: const Text('📖', style: TextStyle(fontSize: 18)),
+            label: const Text('Hijery amin\'ny fomba Boky'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF0F5132),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
         ],
       ),
@@ -8192,6 +8540,9 @@ class TorohayVoronaScreen extends StatelessWidget {
     final List<Map<String, dynamic>> steps = List<Map<String, dynamic>>.from(guide['steps'] as List);
     final List<Map<String, String>> feed = List<Map<String, String>>.from(guide['feed'] as List);
     final List<Map<String, String>> timeline = List<Map<String, String>>.from(guide['timeline'] as List);
+    final List<Map<String, String>> health = guide['health'] != null
+      ? List<Map<String, String>>.from(guide['health'] as List)
+      : [];
 
     // Associer une couleur de fond selon le type
     Color getCardColor() {
@@ -8205,46 +8556,17 @@ class TorohayVoronaScreen extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        showDialog(
-          context: ctx,
-          builder: (dialogContext) => Dialog(
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 600, maxWidth: 500),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(guide['emoji'] as String, style: const TextStyle(fontSize: 32)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(guide['title'] as String, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(dialogContext),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(guide['subtitle'] as String, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: badges.map((badge) => _buildBadge(badge)).toList(),
-                    ),
-                    const SizedBox(height: 18),
-                    ...steps.map((step) => _buildStepTile(step)),
-                    const SizedBox(height: 16),
-                    _buildListSection('Sakafo & Fatra', feed, Icons.restaurant_menu),
-                    const SizedBox(height: 12),
-                    _buildListSection('Tetiandro / Workflow', timeline, Icons.schedule),
-                  ],
-                ),
-              ),
+        Navigator.push(
+          ctx,
+          MaterialPageRoute(
+            builder: (context) => _GuideDetailPage(
+              guide: guide,
+              badges: badges,
+              steps: steps,
+              feed: feed,
+              health: health,
+              timeline: timeline,
+              cardColor: getCardColor(),
             ),
           ),
         );
@@ -8368,97 +8690,6 @@ class TorohayVoronaScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildBadge(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity( 0.08),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: AppColors.primary.withOpacity( 0.3)),
-      ),
-      child: Text(text, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12)),
-    );
-  }
-
-  Widget _buildStepTile(Map<String, dynamic> step) {
-    final List<String> points = List<String>.from(step['points'] as List);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity( 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(step['icon'] as IconData, color: AppColors.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(step['title'] as String, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ...points.map((point) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('• ', style: TextStyle(fontSize: 14, height: 1.4)),
-                    Expanded(child: Text(point, style: const TextStyle(fontSize: 14, height: 1.4))),
-                  ],
-                ),
-              )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildListSection(String title, List<Map<String, String>> items, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: AppColors.accent),
-              const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ...items.map((item) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item['label']!, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 2),
-                    Text(item['value']!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                  ],
-                ),
-              )),
-        ],
       ),
     );
   }
@@ -19742,7 +19973,7 @@ class _FambolenaCropsScreenState extends State<FambolenaCropsScreen> {
 (Izany hoe 85-95 amin'ny 100 voa no maniry)
 
 💡 TOROHEVITRA HO AN'NY VAO HANOMBOKA:
-1. Aleno ao anaty rano ny voa mandritra ny 24 ora
+1. Alona ao anaty rano ny voa mandritra ny 24 ora
 2. Esory ary avelao eo amin'ny toerana mando 24 ora hafa
 3. Rehefa miposaka ny tsimoka fotsy kely, afafy
 4. Aza avela ho maina mihitsy ny tany!''',
@@ -19812,7 +20043,7 @@ DINGANA 5: FAMETRAHANA AMIN'NY TANIMBARY
 (Tsara be ny katsaka - saika maniry daholo!)
 
 💡 TOROHEVITRA HO AN'NY VAO HANOMBOKA:
-1. Aza alena aloha ny voa - afafy mivantana
+1. Aza alona aloha ny voa - afafy mivantana
 2. Asio voa 2-3 isaky ny lavaka
 3. Rehefa maniry tsara, esory ny malemy, avelao 1-2
 4. Tondrahy tsara indrindra rehefa mamoaka felana (voninkazo)''',
@@ -20025,7 +20256,7 @@ DINGANA 5: FIJINJANA
 (Tsara be ny tsaramaso - mora ambolena!)
 
 💡 TOROHEVITRA HO AN'NY VAO HANOMBOKA:
-1. AZA alena aloha ny voa (mety ho lofika/lò)
+1. AZA alona aloha ny voa (mety ho lofika/lò)
 2. Afafy mivantana amin'ny tany
 3. Tondrahy moramora tsy be loatra
 4. Ny tsaramaso dia haingana (60-90 andro fotsiny!)''',
@@ -20137,6 +20368,237 @@ DINGANA 5: FIKARAKARANA SY FIJINJANA
         '💧 Tondrahy matetika fa aza avela hijanona ny rano',
         '🌶️ Jinjao matetika = vokatra betsaka kokoa',
         '🐛 Jereo ny bibikely (pucerons) - fanafody voajanahary',
+      ],
+    },
+    'Sakay Pilokely': {
+      'emoji': '🌶️',
+      'name': 'Sakay Pilokely (Piment Pili-Pili)',
+      'season': 'Septambra - Desambra (tsara indrindra: Novambra-Janoary)',
+      'duration': '5 volana vokatra voalohany, maharitra 18 volana',
+      'climate': 'Tropical - 25-35°C, somary alokaloka',
+      'spacing': '80x80 cm',
+      'yield': '7 kg/are (0.6 kapoaka/fototra) - 3-11 kg/are',
+      'waterNeeds': 'Antonony, ilaina rano matetika',
+      'soil': 'Tany lonaka, misy komposta be; pH 6-7; Zezika organika sy NPK',
+      'seed': '''📊 FATRA ILAINA (tanin-ketsa 1m²):
+• Voa sakay pilokely: 0,3-0,5 gramma (madinika be!)
+• Izany dia ≈ 50-100 voa
+• Iray volana amin'ny pepiniera alohan'ny famindrana
+
+📏 HALALINY FAMAFAZANA:
+• 0,5-1 cm fotsiny (tena maivana)
+• Saromy tany madinika manify
+• Alona rano 12 ora alohan'ny famafazana
+
+🌡️ HAFANANA SY FOTOANA:
+• Mila hafanana: 25-30°C (mafana)
+• Miposaka ao anatin'ny: 10-20 andro
+• ⚠️ MIADANA NY SAKAY - Mahandrasa!
+• Pepiniera: iray volana alohan'ny famindrana
+
+✅ TAHAN'NY FIPOSAHANA: 70-85%
+
+💡 TOROHEVITRA HO AN'NY VAO HANOMBOKA:
+1. Alona ao anaty rano MAFANA ny voa (12 ora)
+2. Afafy amin'ny pepiniera aloha (tanin-ketsa madinika)
+3. Arovy amin'ny orana be sy akoho (fefena ilaina!)
+4. Afindra rehefa 1 volana ny ketsa (misy ravina 4-6)
+5. Toerana alokaloka dia tsara fa tsy loatra''',
+      'nursery': '''🌱 PEPINIERA (1 VOLANA):
+• Tanin-ketsa madinika ao anaty goavana na sakana
+• Asio tany lonaka sy komposta (50/50)
+• Alona voa 12 ora alohan'ny famafazana
+• Afafy ny voa 0,5-1 cm lalina
+• Tondrahy moramora isan'andro (maraina)
+• Miposaka 10-20 andro - mahandrasa!
+• Ketsa afindra rehefa iray volana (ravina 4-6)
+
+⚠️ FIAROVANA PEPINIERA:
+• Fefena tsara mba tsy hidiran'ny akoho
+• Arovy amin'ny masoandro be loatra (alokaloka kely)
+• Arovy amin'ny orana be (sarom-plastika)''',
+      'plantingGuide': '''DINGANA 1: FANOMANANA VOA (2 HERINANDRO ALOHAN'NY FAMBOLY)
+• Safidio voa sakay pilokely tsara kalitao
+• Alona ao anaty rano mafana (12 ora)
+• Esory ary avelao eo amin'ny toerana mafana
+• Afaka afafy rehefa mibontsina kely
+
+DINGANA 2: FANAMBOARANA PEPINIERA (H1-4)
+• Goavana na sakana misy lavaka fanitarana
+• Tany lonaka + komposta (50/50)
+• Toerana mialokaloka kely (tsy masoandro be loatra)
+• Fefena tsara mba tsy hidiran'ny akoho
+• Arovy amin'ny orana be (sarom-plastika)
+
+DINGANA 3: FAMAFAZANA PEPINIERA
+• Afafazo miparitaka ny voa
+• Saromy tany madinika manify (0,5-1 cm)
+• Tondrahy moramora isan'andro (maraina)
+• Andraso 10-20 andro ny fiposahana
+• Fikarakarana ketsa 1 volana
+
+DINGANA 4: FANOMANANA TANY FAMBOLY (H4)
+• Toerana masoandro be (6-8 ora/andro)
+• Hadio ny tany, esory ahi-dratsy
+• Asio komposta be (2-3 kg/lavaka)
+• Hadio lavaka 30x30x30 cm
+• Elanelana: 80 cm x 80 cm
+
+DINGANA 5: FAMINDRANA KETSA (H5)
+• Rehefa iray volana ny ketsa (ravina 4-6)
+• Afindra maraina na hariva (tsy masoandro be)
+• Ajanony ny faka-tany (tsy manimba faka)
+• Asio zezika fototra (komposta + NPK)
+• Tondrahy avy hatrany sy matetika
+
+DINGANA 6: FIKARAKARANA SY FIJINJANA (H10-72)
+• Vokatra voalohany: 5 volana
+• Maharitra: 18 volana (herinandro 72)
+• Fijinjana: isaky ny 1-2 herinandro
+• Esory ahi-dratsy matetika
+• Tondrahy matetika (3-4 heny/herinandro)
+
+⚠️ FANAMARIHANA LEHIBE:
+• FEFENA ny saha mba tsy hidiran'ny akoho!
+• Ny akoho dia tia mihinana ravina sy voakazo
+• Vokatra lava (18 volana) = vola maharitra''',
+      'steps': [
+        {'week': 'H1-4', 'action': 'Fanomanana pepiniera - Famafazana voa - Fikarakarana ketsa'},
+        {'week': 'H5', 'action': 'Famindrana ketsa amin\'ny tany famboly (80x80cm)'},
+        {'week': 'H6-10', 'action': 'Fandroahana - Tondra-drano matetika - Fanaraha-maso bibikely'},
+        {'week': 'H11-20', 'action': 'Famokarana voninkazo - Fiforonana voankazo'},
+        {'week': 'H21-25', 'action': 'Fijinjana voalohany (5 volana) - Vokatra manomboka'},
+        {'week': 'H26-72', 'action': 'Fijinjana mitohy isaky ny 1-2 herinandro (18 volana)'},
+      ],
+      'benefits': '''🌟 TOMBONTSOA SY VOKATRA:
+• Vokatra: 7 kg/are (0.6 kapoaka/fototra)
+• Afaka hatramin'ny 3-11 kg/are arakaraka ny fikarakarana
+• Maharitra 18 volana = vola maharitra
+• Fijinjana isaky ny 1-2 herinandro
+• Afaka amidy maitso na maina
+• Vidiny ambony eny an-tsena
+• Tsy mila zezika be loatra
+
+💰 TOMBANA VOLA (1 ARE):
+• Vokatra: 7 kg/are x 10.000 Ar/kg = 70.000 Ar
+• Vidim-barotra: 5.000-15.000 Ar/kg
+• Vokatra: 18 volana = 4-6 fijinjana/volana
+• Vidin'ny sakay maina: 15.000-25.000 Ar/kg
+
+🌱 TOMBONTSOA HO AN'NY TANY:
+• Faka lalina, manampy ny tany
+• Afaka ambolena miaraka amin'ny voankazo''',
+      'care': '''🌱 FIKARAKARANA ISAN'ANDRO:
+• Fandroahana: Esory ahi-dratsy isaky ny 2 herinandro
+• Tondra-drano: 3-4 heny/herinandro (tsy be loatra)
+• Zezika: Komposta isaky ny 2 volana
+• Fanaraha-maso: Jereo bibikely sy aretina
+
+💧 TONDRA-DRANO:
+• Maraina na hariva (tsy mitatao be)
+• 3-4 heny/herinandro
+• Aza avela hijanona ny rano (mety hamono)
+• Mila rano matetika fa tsy be loatra
+
+🌿 ZEZIKA:
+• Komposta: 1-2 kg/fototra isaky ny 2 volana
+• NPK 15-15-15: 50 g/fototra isaky ny 3 volana
+• Zezika organika (fivalon'akoho): tsara be
+
+🐛 BIBIKELY SY ARETINA:
+• Bibikely: Pucerons, mouches blanches
+• Fanafody: Fanafody voajanahary (savon noir)
+• Aretina: Maladie de flétrissement
+• Fanamorana: Tany tsara kalitao, tsy feno rano
+
+🔪 FIJINJANA:
+• Vokatra voalohany: 5 volana
+• Fijinjana mitohy: 18 volana
+• Sakay maitso: Afaka jinjaina any time
+• Sakay mena: Andraso ho mena tanteraka
+• Mamaky amin'ny antsy na hetsika''',
+      'diseases': '''🐛 BIBIKELY SY ARETINA MAHAZATRA:
+
+1️⃣ PUCERONS (Bibikely kely maitso/mainty):
+• Soritr'aretina: Ravina miforitra, voninkazo mikoropaka
+• Fitsaboana: Savon noir (20g/1L rano), afapahy
+• Fisorohana: Toerana misy rivotra, tsy feno loatra
+
+2️⃣ MOUCHES BLANCHES:
+• Soritr'aretina: Bibikely fotsy manidina, ravina mavo
+• Fitsaboana: Fanafody voajanahary, fitrandrahana
+• Fisorohana: Fanadiovana matetika, fandroahana
+
+3️⃣ MALADIE DE FLÉTRISSEMENT:
+• Soritr'aretina: Ravina malazo, fototra manjary mainty
+• Fitsaboana: Esory zavamaniry marary, aza ambolena indray
+• Fisorohana: Tany tsara kalitao, tsy feno rano
+
+4️⃣ ANTHRACNOSE (Aretina voakazo):
+• Soritr'aretina: Voakazo misy pentina mainty/volontany
+• Fitsaboana: Esory voakazo marary, fanafody voajanahary
+• Fisorohana: Tsy feno rano, fijinjana matetika
+
+⚠️ FISOROHANA ANKAPOBENY:
+• Elanelana tsara (80x80 cm)
+• Tsy feno rano (tondra-drano antonony)
+• Fanadiovana matetika (esory ravina maty)
+• Fijinjana matetika (tsy avela hiparitaka)
+• Fefena mba tsy hidiran'ny akoho''',
+      'harvesting': '''🌶️ FIJINJANA SY FITAHIRIZANA:
+
+📅 FOTOANA FIJINJANA:
+• Vokatra voalohany: 5 volana aorian'ny famboly
+• Fotoana fijinjana: 18 volana (herinandro 72)
+• Matetika: Isaky ny 1-2 herinandro
+• Vokatra: 0.6 kapoaka/fototra isaky ny fijinjana
+
+🔪 FOMBA FIJINJANA:
+• Sakay maitso: Jinjao rehefa lehibe tsara
+• Sakay mena: Andraso ho mena tanteraka (tsara kokoa)
+• Mamaky amin'ny antsy na hetsika
+• Tsy manimba sampana (hivoaka indray)
+• Jinjao maraina na hariva (tsy mafana be)
+
+📊 KALITAO:
+• Tsara indrindra: Sakay mena tanteraka
+• Vidiny ambony: Sakay mena maina
+• Afaka amidy: Maitso na mena
+• Tsy misy pentina: Kalitao tsara
+
+💰 FIVAROTANA:
+• Tsena: 5.000-10.000 Ar/kg (maitso)
+• Maina: 15.000-25.000 Ar/kg
+• Vidim-barotra: Miankina amin'ny kalitao
+• Fotoana tsara: Rehefa tsy misy be eny an-tsena
+
+🏪 FITAHIRIZANA:
+• Sakay maitso: Ao anaty firadiatra 1-2 herinandro
+• Sakay mena: Afaka ampangarina (maharitra ela)
+• Fanamainana: Masoandro na fatana mafana
+• Maina: Tadidio ao anaty tavoahangy mihidy''',
+      'calendar': [
+        {'month': 'Septambra', 'activity': 'Fanomanana voa sy pepiniera - Famafazana'},
+        {'month': 'Oktobra', 'activity': 'Fikarakarana ketsa pepiniera - Fanomanana tany'},
+        {'month': 'Novambra', 'activity': 'Famindrana ketsa - Fotoana tsara indrindra'},
+        {'month': 'Desambra', 'activity': 'Fandroahana - Tondra-drano matetika'},
+        {'month': 'Janoary', 'activity': 'Fikarakarana - Zezika voalohany'},
+        {'month': 'Febroary-Martsa', 'activity': 'Famokarana voninkazo - Fiforanana voankazo'},
+        {'month': 'Aprily', 'activity': 'Vokatra manomboka (5 volana)'},
+        {'month': 'Mey-Desambra', 'activity': 'Fijinjana mitohy isaky ny 1-2 herinandro'},
+        {'month': 'Janoary n+1 - Martsa n+1', 'activity': 'Fijinjana farany - Mamaritra vokatra farany'},
+      ],
+      'tips': [
+        '🌱 PEPINIERA: Tena ilaina! 1 volana alohan\'ny famindrana',
+        '🐔 FEFENA: Ny akoho dia tia mihinana ravina sy voakazo!',
+        '☀️ Mila masoandro 6-8 ora/andro fa somary alokaloka',
+        '💧 Tondrahy 3-4 heny/herinandro (tsy be loatra)',
+        '🌶️ Fijinjana matetika = vokatra betsaka kokoa (18 volana)',
+        '⏰ Saino: Vokatra 5 volana fa maharitra 18 volana',
+        '🔥 Vidiny ambony: Sakay mena maina',
+        '📏 Elanelana 80x80 cm - Tsy atery loatra',
+        '🌿 Komposta isaky ny 2 volana = vokatra tsara',
+        '⚠️ Aza avela hijanona ny rano - Mety hamono ny fototra',
       ],
     },
     'Anana': {
@@ -20529,10 +20991,10 @@ DINGANA 4: FIJINJANA
 (Avo be satria nify fa tsy voa!)
 
 💡 TOROHEVITRA HO AN'NY VAO HANOMBOKA:
-1. MORA BE amboly - mora indrindra amin'ny tongolo!
+1. mora ambolena - mora indrindra amin'ny tongolo!
 2. Safidio nify SALAMA (tsy simba, tsy lo)
 3. Ny tany fasika drainage tsara no ilaina
-4. Aza mandena loatra = mora lo ny nify
+4. Aza amandoana loatra = mora lo ny nify
 5. Azo tehirizina ela rehefa maina tsara''',
       'nursery': 'Fametrahana MIVANTANA nify (bulbe) - tsy ilaina ketsa',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
@@ -20685,7 +21147,7 @@ DINGANA 6: FIJINJANA
 🌡️ HAFANANA SY FOTOANA:
 • Mila hafanana: 22-28°C (tia mafana!)
 • Miposaka ao anatin'ny: 8-14 andro
-• 💡 Alena rano mafana 24h alohan'ny afafy = haingana kokoa
+• 💡 Alona rano mafana 24h alohan'ny afafy = haingana kokoa
 
 ✅ TAHAN'NY FIPOSAHANA: 75-85%
 
@@ -20707,7 +21169,7 @@ DINGANA 2: FAMAFAZANA VOA
 • Elanelana: 5 cm
 • Saromy tany madinika manify
 • Tondrahy moramora isan'andro
-• 💡 Alena amin'ny rano mafana 24h aloha!
+• 💡 Alona amin'ny rano mafana 24h aloha!
 
 DINGANA 3: FAMINDRANA (H4-5)
 • Afindra rehefa misy ravina 4-5
@@ -21657,8 +22119,8 @@ DINGANA 5: FIJINJANA
 ✅ TAHAN'NY FIPOSAHANA: 85-95% (avo be!)
 
 💡 TOROHEVITRA HO AN'NY VAO HANOMBOKA:
-1. Haricots = MORA BE amboly!
-2. ⚠️ AZA ALENA RANO alohan'ny mamboly (lofika!)
+1. Haricots = mora ambolena!
+2. ⚠️ AZA ALONA RANO alohan'ny mamboly (lofika!)
 3. TSY MILA AZOTE betsaka (manamboatra azy)
 4. HAINGANA - 45-60 andro fotsiny!
 5. Variétés miakatra = mila tuteur''',
@@ -21674,7 +22136,7 @@ DINGANA 2: FAMAFAZANA MIVANTANA
 • Manaova lavaka 3-4 cm lalina
 • Elanelana: 60 x 10 cm na 40 x 20 cm
 • Afafazo voa 2-3 isaky ny lavaka
-• ⚠️ AZA ALENA RANO ny voa aloha (lofika!)
+• ⚠️ AZA ALONA RANO ny voa aloha (lofika!)
 • Tondrahy avy hatrany aorian'ny famafazana
 
 DINGANA 3: FIANDRASANA
@@ -21701,8 +22163,8 @@ DINGANA 5: FIJINJANA
         {'week': 'H7-9', 'action': 'Fijinjana alohan\'ny hamafiny ny tsaramaso'},
       ],
       'tips': [
-        '🌱 Haricots = MORA BE amboly!',
-        '💧 AZA ALENA RANO ny voa aloha!',
+        '🌱 Haricots = mora ambolena!',
+        '💧 AZA ALONA RANO ny voa aloha!',
         '🌿 TSY MILA AZOTE - manamboatra azy',
         '🌳 Variétés miakatra = mila tuteur',
         '⚡ HAINGANA - 45-60 andro fotsiny!',
@@ -21812,7 +22274,7 @@ DINGANA 5: FIJINJANA
 ✅ TAHAN'NY FIPOSAHANA: 75-85%
 
 💡 TOROHEVITRA HO AN'NY VAO HANOMBOKA:
-1. Tournesol = MORA BE amboly!
+1. Tournesol = mora ambolena!
 2. Safidio voa LEHIBE sy MAVESATRA
 3. TSY TIA rano miandrona
 4. Tuteur raha rivotra mafy
@@ -21823,7 +22285,7 @@ DINGANA 5: FIJINJANA
 • Asio komposta 2 kg/m²
 • Tany maivana drainage tsara
 
-💡 Tournesol = mora be amboly - tsara ho vao hanomboka!
+💡 Tournesol = mora ambolena - tsara ho vao hanomboka!
 
 DINGANA 2: FAMAFAZANA MIVANTANA
 • Manaova lavaka 2-3 cm lalina
@@ -21859,7 +22321,7 @@ DINGANA 5: FIJINJANA
         {'week': 'H13-16', 'action': 'Fijinjana rehefa loha maina sy miondrika'},
       ],
       'tips': [
-        '🌻 Tournesol = MORA BE amboly!',
+        '🌻 Tournesol = mora ambolena!',
         '💧 TSY TIA rano miandrona',
         '🌳 Tuteur raha rivotra mafy',
         '🐛 Pucerons → savon/huile neem',
@@ -21879,7 +22341,13 @@ DINGANA 5: FIJINJANA
       'yield': '2-4 T/ha',
       'waterNeeds': 'Antonony (tsy mila tanimbary)',
       'soil': 'Tany tanety lonaka; pH 5-6,5; komposta 3 T/ha',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 Ilaina: 60-80 kg/ha = 6-8 g isaky ny m²\\n📏 Halaliny famafazana: 2-3 cm\\n🌡️ Hafanana ilaina: 25-32°C (maniry 5-7 andro)\\n✅ Taux germination: 80-90%\\n💡 DINGANA: Alena rano 12h → avela hitsiry 24h → vao afafy',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 60-80 kg/ha = 6-8 g isaky ny m²
+📏 Halaliny famafazana: 2-3 cm
+🌡️ Hafanana ilaina: 25-32°C (maniry 5-7 andro)
+✅ Taux germination: 80-90%
+💡 DINGANA: Alona rano 12h → avela hitsiry 24h → vao afafy''',
       'nursery': 'Famafazana MIVANTANA amin\'ny tanety (tsy mila tanin-ketsa)',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA NY TANY
 • Diovy tsara ny ahi-dratsy rehetra
@@ -21887,7 +22355,7 @@ DINGANA 5: FIJINJANA
 • Asio komposta 3 T/ha raha misy
 
 DINGANA 2: FANOMANANA NY VOA
-• Aleno rano ny voa 12 ora
+• Alona rano ny voa 12 ora
 • Avelao hitsiry 24 ora ao amin'ny toerana mando
 • Jereo raha efa miposaka kely vao afafy
 
@@ -21932,7 +22400,13 @@ DINGANA 5: FIKARAKARANA
       'yield': '4-8 T/ha',
       'waterNeeds': 'Be loatra - Mila rano maharitra',
       'soil': 'Tany vilany/tanimanga; pH 5,5-7; zezika organika 5 T/ha',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 Ilaina: 40-50 kg/ha (tanin-ketsa) = 4-5 g/m²\\n📏 Halaliny: 1-2 cm amin\'ny tanin-ketsa\\n🌡️ Hafanana: 28-35°C (maniry 4-6 andro)\\n✅ Taux germination: 85-95%\\n💡 DINGANA: Alena 24h → miposaka 24h → afafy',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 40-50 kg/ha (tanin-ketsa) = 4-5 g/m²
+📏 Halaliny: 1-2 cm amin'ny tanin-ketsa
+🌡️ Hafanana: 28-35°C (maniry 4-6 andro)
+✅ Taux germination: 85-95%
+💡 DINGANA: Alona 24h → miposaka 24h → afafy''',
       'nursery': 'Tanin-ketsa: 100-150 m² ho an\'ny 1 ha; afindra 21-25 andro',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANIN-KETSA
 • Toerana kely 100-150 m² ho an'ny 1 ha tanimbary
@@ -21940,7 +22414,7 @@ DINGANA 5: FIKARAKARANA
 • Asio zezika organika (komposta na zezika omby)
 
 DINGANA 2: FANOMANANA NY VOA
-• Aleno ny voa 24 ora ao anaty rano
+• Alona ny voa 24 ora ao anaty rano
 • Avelao hiposaka 24 ora ao amin'ny toerana mando
 • Voa tokony efa misy faka kely vao afafy
 
@@ -21989,7 +22463,13 @@ DINGANA 5: FIKARAKARANA TANIMBARY
       'yield': '2-5 T/ha',
       'waterNeeds': 'Antonony',
       'soil': 'Tany lalina lonaka; pH 6-7,5; komposta 3 T/ha',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 Ilaina: 100-150 kg/ha = 10-15 g/m²\\n📏 Halaliny: 3-5 cm\\n🌡️ Hafanana: 12-20°C (maniry 7-10 andro)\\n✅ Taux germination: 85-95%\\n💡 Tsy mety amin\'ny toerana mafana loatra',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 100-150 kg/ha = 10-15 g/m²
+📏 Halaliny: 3-5 cm
+🌡️ Hafanana: 12-20°C (maniry 7-10 andro)
+✅ Taux germination: 85-95%
+💡 Tsy mety amin'ny toerana mafana loatra''',
       'nursery': 'Famafazana MIVANTANA - tsy mila tanin-ketsa',
       'plantingGuide': '''DINGANA 1: FISAFIDIANANA TOERANA
 • Fidio tanety avo mangatsiaka (15-22°C)
@@ -22041,7 +22521,13 @@ DINGANA 5: FIJINJANA
       'yield': '2-4 T/ha',
       'waterNeeds': 'Antonony',
       'soil': 'Tany lalina; pH 6-8; komposta 2-3 T/ha',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 Ilaina: 100-130 kg/ha = 10-13 g/m²\\n📏 Halaliny: 3-5 cm\\n🌡️ Hafanana: 10-18°C (maniry 6-10 andro)\\n✅ Taux germination: 85-95%\\n💡 Maharitra mangatsiaka kokoa noho ny blé',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 100-130 kg/ha = 10-13 g/m²
+📏 Halaliny: 3-5 cm
+🌡️ Hafanana: 10-18°C (maniry 6-10 andro)
+✅ Taux germination: 85-95%
+💡 Maharitra mangatsiaka kokoa noho ny blé''',
       'nursery': 'Famafazana MIVANTANA',
       'plantingGuide': '''DINGANA 1: FISAFIDIANANA TOERANA
 • Tanety avo mangatsiaka (12-20°C)
@@ -22092,7 +22578,13 @@ DINGANA 5: FIJINJANA
       'yield': '2-4 T/ha',
       'waterNeeds': 'Antonony - Be',
       'soil': 'Tany lalina; pH 5,5-7; komposta 2-3 T/ha',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 Ilaina: 80-120 kg/ha = 8-12 g/m²\\n📏 Halaliny: 3-5 cm\\n🌡️ Hafanana: 10-18°C (maniry 7-12 andro)\\n✅ Taux germination: 80-90%\\n💡 Tsara ho sakafon\'ny omby sy soavaly',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 80-120 kg/ha = 8-12 g/m²
+📏 Halaliny: 3-5 cm
+🌡️ Hafanana: 10-18°C (maniry 7-12 andro)
+✅ Taux germination: 80-90%
+💡 Tsara ho sakafon'ny omby sy soavaly''',
       'nursery': 'Famafazana MIVANTANA',
       'plantingGuide': '''DINGANA 1: FISAFIDIANANA TOERANA
 • Tany mando mangatsiaka (10-20°C)
@@ -22142,7 +22634,13 @@ DINGANA 5: FIJINJANA
       'yield': '8-15 T/ha (maintso)',
       'waterNeeds': 'Be',
       'soil': 'Tany lonaka mando; pH 6-7; zezika azota be',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 Ilaina: 25-35 kg/ha = 2,5-3,5 g/m²\\n📏 Halaliny: 0,5-1 cm (maivana)\\n🌡️ Hafanana: 10-20°C (maniry 7-14 andro)\\n✅ Taux germination: 80-90%\\n💡 Tsara indrindra ho sakafon\'ny omby sy osy',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 25-35 kg/ha = 2,5-3,5 g/m²
+📏 Halaliny: 0,5-1 cm (maivana)
+🌡️ Hafanana: 10-20°C (maniry 7-14 andro)
+✅ Taux germination: 80-90%
+💡 Tsara indrindra ho sakafon'ny omby sy osy''',
       'nursery': 'Famafazana MIVANTANA - afafy miparitaka',
       'plantingGuide': '''DINGANA 1: FISAFIDIANANA TOERANA
 • Tany mando mangatsiaka (10-20°C)
@@ -22197,7 +22695,13 @@ DINGANA 5: FIJINJANA
       'yield': '15-30 T/ha',
       'waterNeeds': 'Antonony',
       'soil': 'Tany fasika maivana; pH 5,5-6,5; tsy mila zezika be',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 TSY VOA - BOUTURE (tendron-dravina)\\n📏 Halavany: 25-30 cm (misy ravina 4-5)\\n📍 Fametrahana: 2/3 ao anaty tany\\n✅ Taux reprise: 90-95%\\n💡 Makà tendron-dravina salama avy amin\'ny vomanga antitra',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 TSY VOA - BOUTURE (tendron-dravina)
+📏 Halavany: 25-30 cm (misy ravina 4-5)
+📍 Fametrahana: 2/3 ao anaty tany
+✅ Taux reprise: 90-95%
+💡 Makà tendron-dravina salama avy amin'ny vomanga antitra''',
       'nursery': 'Tsy ilaina - fametrahana MIVANTANA ny bouture',
       'plantingGuide': '''DINGANA 1: FANOMANANA BOUTURE
 • Makà tendron-dravina salama 25-30 cm
@@ -22249,7 +22753,13 @@ DINGANA 5: FIJINJANA
       'yield': '15-30 T/ha',
       'waterNeeds': 'Antonony',
       'soil': 'Tany fasika lonaka; pH 5-6,5; komposta 4 T/ha',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 TSY VOA - TUBERCULE (ovy kely)\\n📏 Habeny: 30-50 g (misy maso 2-3)\\n📍 Fametrahana: 10 cm lalina\\n✅ Taux reprise: 90-95%\\n💡 Fidio ovy salama, misy maso maniry',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 TSY VOA - TUBERCULE (ovy kely)
+📏 Habeny: 30-50 g (misy maso 2-3)
+📍 Fametrahana: 10 cm lalina
+✅ Taux reprise: 90-95%
+💡 Fidio ovy salama, misy maso maniry''',
       'nursery': 'Tsy ilaina - fametrahana MIVANTANA',
       'plantingGuide': '''DINGANA 1: FISAFIDIANANA OVY HAMBOLENA
 • Fidio ovy kely salama 30-50 g
@@ -22301,7 +22811,13 @@ DINGANA 5: FIJINJANA
       'yield': '10-25 T/ha',
       'waterNeeds': 'Be loatra',
       'soil': 'Tany mando, vilany; pH 5,5-7; zezika organika be',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 TSY VOA - BULBE (saonjo kely na loha)\\n📏 Habeny: 50-100 g (misy maso)\\n📍 Fametrahana: 5-8 cm lalina\\n✅ Taux reprise: 85-95%\\n💡 Makà saonjo kely salama avy amin\'ny saonjo antitra',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 TSY VOA - BULBE (saonjo kely na loha)
+📏 Habeny: 50-100 g (misy maso)
+📍 Fametrahana: 5-8 cm lalina
+✅ Taux reprise: 85-95%
+💡 Makà saonjo kely salama avy amin'ny saonjo antitra''',
       'nursery': 'Tsy ilaina - fametrahana MIVANTANA',
       'plantingGuide': '''DINGANA 1: FISAFIDIANANA TOERANA
 • Toerana mando tia rano be
@@ -22355,7 +22871,13 @@ DINGANA 5: FIJINJANA
       'yield': '2-4 kg/m²',
       'waterNeeds': 'Antonony',
       'soil': 'Tany lonaka; pH 6-7; komposta 3 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 Ilaina: 0,5-1 g/m² (voa kely be)\\n📏 Halaliny: 0,5 cm (maivana)\\n🌡️ Hafanana: 20-30°C (maniry 7-10 andro)\\n✅ Taux germination: 70-85%\\n💡 Na avy amin\'ny voa na avy amin\'ny bouture',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,5-1 g/m² (voa kely be)
+📏 Halaliny: 0,5 cm (maivana)
+🌡️ Hafanana: 20-30°C (maniry 7-10 andro)
+✅ Taux germination: 70-85%
+💡 Na avy amin'ny voa na avy amin'ny bouture''',
       'nursery': 'Famafazana mivantana na tanin-ketsa 2-3 herinandro',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
 • Asio komposta 3 kg/m²
@@ -22407,7 +22929,13 @@ DINGANA 5: FIJINJANA
       'yield': '15-25 T/ha',
       'waterNeeds': 'Antonony - Be',
       'soil': 'Tany lonaka maivana; pH 5,5-6,5; komposta 4 T/ha',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 TSY VOA - RHIZOME (sakamalao kely)\\n📏 Habeny: 25-50 g (misy maso 2-3)\\n📍 Fametrahana: 5-8 cm lalina\\n✅ Taux reprise: 85-95%\\n💡 Makà rhizome salama, tsy misy lofika',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 TSY VOA - RHIZOME (sakamalao kely)
+📏 Habeny: 25-50 g (misy maso 2-3)
+📍 Fametrahana: 5-8 cm lalina
+✅ Taux reprise: 85-95%
+💡 Makà rhizome salama, tsy misy lofika''',
       'nursery': 'Tsy ilaina - fametrahana MIVANTANA',
       'plantingGuide': '''DINGANA 1: FISAFIDIANANA RHIZOME
 • Makà sakamalao salama 25-50 g
@@ -22459,7 +22987,13 @@ DINGANA 5: FIJINJANA
       'yield': '50-100 T/ha (ravina)',
       'waterNeeds': 'Be',
       'soil': 'Tany lonaka mando; pH 6-7; zezika organika be',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 TSY VOA - BOUTURE FAKA\\n📏 Habeny: 5-10 cm faka\\n📍 Fametrahana: 5 cm lalina\\n✅ Taux reprise: 90-95%\\n💡 Hazo maharitra - ambolena indray mandeha',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 TSY VOA - BOUTURE FAKA
+📏 Habeny: 5-10 cm faka
+📍 Fametrahana: 5 cm lalina
+✅ Taux reprise: 90-95%
+💡 Hazo maharitra - ambolena indray mandeha''',
       'nursery': 'Tsy ilaina - fametrahana MIVANTANA ny faka',
       'plantingGuide': '''DINGANA 1: FISAFIDIANANA FAKA
 • Makà faka consoude 5-10 cm
@@ -22513,7 +23047,13 @@ DINGANA 5: FAMPIASANA
       'yield': '1-2 kg/m²',
       'waterNeeds': 'Antonony - Be',
       'soil': 'Tany lonaka; pH 6-7; komposta 4 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 Ilaina: 0,03 g/m² (≈300 voa/g)\\n📏 Halaliny: 0,5-1 cm\\n🌡️ Hafanana: 15-20°C (maniry 5-8 andro)\\n✅ Taux germination: 80-90%\\n💡 Mila mangatsiaka - tsy mety amin\'ny mafana',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,03 g/m² (≈300 voa/g)
+📏 Halaliny: 0,5-1 cm
+🌡️ Hafanana: 15-20°C (maniry 5-8 andro)
+✅ Taux germination: 80-90%
+💡 Mila mangatsiaka - tsy mety amin'ny mafana''',
       'nursery': 'Tanin-ketsa: 4-5 herinandro; afindra rehefa ravina 4-5',
       'plantingGuide': '''DINGANA 1: TANIN-KETSA
 • Afafy 0,5-1 cm lalina
@@ -22565,7 +23105,13 @@ DINGANA 5: FIJINJANA
       'yield': '1,5-3 kg/m²',
       'waterNeeds': 'Be',
       'soil': 'Tany lonaka; pH 6-7; komposta 5 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 Ilaina: 0,03 g/m² (≈300 voa/g)\\n📏 Halaliny: 0,5-1 cm\\n🌡️ Hafanana: 15-18°C (maniry 5-8 andro)\\n✅ Taux germination: 80-90%\\n💡 Mila mangatsiaka kokoa noho ny brocoli',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,03 g/m² (≈300 voa/g)
+📏 Halaliny: 0,5-1 cm
+🌡️ Hafanana: 15-18°C (maniry 5-8 andro)
+✅ Taux germination: 80-90%
+💡 Mila mangatsiaka kokoa noho ny brocoli''',
       'nursery': 'Tanin-ketsa: 4-6 herinandro; afindra rehefa ravina 5-6',
       'plantingGuide': '''DINGANA 1: TANIN-KETSA
 • Afafy 0,5-1 cm lalina
@@ -22617,7 +23163,13 @@ DINGANA 5: FIJINJANA
       'yield': '0,8-1,5 T/ha',
       'waterNeeds': 'Kely - Antonony',
       'soil': 'Tany maivana; pH 6-7; tsy mila zezika be',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 Ilaina: 80-120 kg/ha = 8-12 g/m²\\n📏 Halaliny: 3-4 cm\\n🌡️ Hafanana: 15-25°C (maniry 7-10 andro)\\n✅ Taux germination: 85-95%\\n💡 Mora ambolena - tsy mila fikarakarana be',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 80-120 kg/ha = 8-12 g/m²
+📏 Halaliny: 3-4 cm
+🌡️ Hafanana: 15-25°C (maniry 7-10 andro)
+✅ Taux germination: 85-95%
+💡 Mora ambolena - tsy mila fikarakarana be''',
       'nursery': 'Famafazana MIVANTANA',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
 • Tany maivana (tsy mila zezika be)
@@ -22668,7 +23220,13 @@ DINGANA 5: FIJINJANA
       'yield': '30-60 T/ha',
       'waterNeeds': 'Antonony',
       'soil': 'Tany lonaka drainage tsara; pH 6-7; komposta 10 kg/tongotra',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 Ilaina: Voa avy amin\'ny voankazo masaka\\n📏 Halaliny: 1-2 cm\\n🌡️ Hafanana: 25-30°C (maniry 14-21 andro)\\n✅ Taux germination: 60-80%\\n💡 Misy lahy sy vavy - mila roa na telo isaky ny lavaka',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: Voa avy amin'ny voankazo masaka
+📏 Halaliny: 1-2 cm
+🌡️ Hafanana: 25-30°C (maniry 14-21 andro)
+✅ Taux germination: 60-80%
+💡 Misy lahy sy vavy - mila roa na telo isaky ny lavaka''',
       'nursery': 'Tanin-ketsa sachet 2-3 volana; afindra rehefa 30-40 cm',
       'plantingGuide': '''DINGANA 1: FANOMANANA VOA
 • Makà voa avy amin'ny papaye masaka tsara
@@ -22720,7 +23278,13 @@ DINGANA 5: FISAFIDIANANA
       'yield': '1,5-3 T/ha',
       'waterNeeds': 'Antonony',
       'soil': 'Tany maivana; pH 6-7; tsy mila azote be',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\\n🌱 Ilaina: 60-80 kg/ha = 6-8 g/m²\\n📏 Halaliny: 3-5 cm\\n🌡️ Hafanana: 20-30°C (maniry 5-8 andro)\\n✅ Taux germination: 85-95%\\n💡 Légumineuse - manamboatra azote',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 60-80 kg/ha = 6-8 g/m²
+📏 Halaliny: 3-5 cm
+🌡️ Hafanana: 20-30°C (maniry 5-8 andro)
+✅ Taux germination: 85-95%
+💡 Légumineuse - manamboatra azote''',
       'nursery': 'Famafazana MIVANTANA',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
 • Tsy mila azote be (légumineuse)
@@ -22775,7 +23339,13 @@ DINGANA 5: FIJINJANA
       'yield': '0,8-2 T/ha',
       'waterNeeds': 'Kely - Antonony',
       'soil': 'Tany maivana; pH 5,5-7; tsy mila azote',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 20-30 kg/ha = 2-3 g/m²\n📏 Halaliny: 3-4 cm\n🌡️ Hafanana: 25-35°C (maniry 4-7 andro)\n✅ Taux germination: 85-95%\n💡 Maharitra maintany - légumineuse',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 20-30 kg/ha = 2-3 g/m²
+📏 Halaliny: 3-4 cm
+🌡️ Hafanana: 25-35°C (maniry 4-7 andro)
+✅ Taux germination: 85-95%
+💡 Maharitra maintany - légumineuse''',
       'nursery': 'Famafazana MIVANTANA',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
 • Tsy mila zezika be (légumineuse)
@@ -22825,7 +23395,13 @@ DINGANA 5: FIJINJANA
       'yield': '2-4 kg/m²',
       'waterNeeds': 'Antonony',
       'soil': 'Tany lonaka; pH 6-7; komposta 3 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 0,3-0,5 g/m² (≈500 voa/g)\n📏 Halaliny: 0,5-1 cm\n🌡️ Hafanana: 15-22°C (maniry 4-7 andro)\n✅ Taux germination: 80-90%\n💡 Haingana vokatra - 25-40 andro',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,3-0,5 g/m² (≈500 voa/g)
+📏 Halaliny: 0,5-1 cm
+🌡️ Hafanana: 15-22°C (maniry 4-7 andro)
+✅ Taux germination: 80-90%
+💡 Haingana vokatra - 25-40 andro''',
       'nursery': 'Famafazana MIVANTANA na tanin-ketsa 2 herinandro',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
 • Asio komposta 3 kg/m²
@@ -22874,7 +23450,13 @@ DINGANA 5: FIJINJANA
       'yield': '2-5 kg/m²',
       'waterNeeds': 'Antonony - Be',
       'soil': 'Tany lonaka; pH 6-7; komposta 3-4 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 0,3-0,5 g/m² (≈400 voa/g)\n📏 Halaliny: 0,5-1 cm\n🌡️ Hafanana: 15-22°C (maniry 4-7 andro)\n✅ Taux germination: 80-90%\n💡 Fotsy = tahony fotsy; Maitso = tahony maitso',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,3-0,5 g/m² (≈400 voa/g)
+📏 Halaliny: 0,5-1 cm
+🌡️ Hafanana: 15-22°C (maniry 4-7 andro)
+✅ Taux germination: 80-90%
+💡 Fotsy = tahony fotsy; Maitso = tahony maitso''',
       'nursery': 'Tanin-ketsa 2-3 herinandro na mivantana',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
 • Asio komposta 3-4 kg/m²
@@ -22924,7 +23506,13 @@ DINGANA 5: FIJINJANA
       'yield': '1-3 kg/m²',
       'waterNeeds': 'Antonony',
       'soil': 'Tany lonaka; pH 5,5-7; komposta 2-3 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 0,2-0,4 g/m² (voa kely be)\n📏 Halaliny: 0,5 cm\n🌡️ Hafanana: 20-30°C (maniry 7-14 andro)\n✅ Taux germination: 70-80%\n💡 Anana malagasy mora ambolena',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,2-0,4 g/m² (voa kely be)
+📏 Halaliny: 0,5 cm
+🌡️ Hafanana: 20-30°C (maniry 7-14 andro)
+✅ Taux germination: 70-80%
+💡 Anana malagasy mora ambolena''',
       'nursery': 'Famafazana mivantana',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
 • Asio komposta 2-3 kg/m²
@@ -22973,7 +23561,13 @@ DINGANA 5: FIJINJANA
       'yield': '2-4 kg/m²',
       'waterNeeds': 'Antonony',
       'soil': 'Tany lonaka; pH 6-7; komposta 2-3 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 0,2-0,3 g/m² (voa kely be ≈1500/g)\n📏 Halaliny: 0,3-0,5 cm (maivana be)\n🌡️ Hafanana: 20-35°C (maniry 4-7 andro)\n✅ Taux germination: 75-85%\n💡 Anana malagasy - mora indrindra',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,2-0,3 g/m² (voa kely be ≈1500/g)
+📏 Halaliny: 0,3-0,5 cm (maivana be)
+🌡️ Hafanana: 20-35°C (maniry 4-7 andro)
+✅ Taux germination: 75-85%
+💡 Anana malagasy - mora indrindra''',
       'nursery': 'Famafazana MIVANTANA - miparitaka',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
 • Asio komposta 2-3 kg/m²
@@ -23023,7 +23617,13 @@ DINGANA 5: FIJINJANA
       'yield': '3-6 kg/m²',
       'waterNeeds': 'Be',
       'soil': 'Tany lonaka; pH 6-7; komposta 4 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 1-1,5 g/m² (≈35-40 voa/g)\n📏 Halaliny: 2-3 cm\n🌡️ Hafanana: 25-30°C (maniry 4-7 andro)\n✅ Taux germination: 85-95%\n💡 Voa lehibe - mora afafy',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 1-1,5 g/m² (≈35-40 voa/g)
+📏 Halaliny: 2-3 cm
+🌡️ Hafanana: 25-30°C (maniry 4-7 andro)
+✅ Taux germination: 85-95%
+💡 Voa lehibe - mora afafy''',
       'nursery': 'Famafazana MIVANTANA na godet 2 herinandro',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
 • Asio komposta 4 kg/m²
@@ -23073,7 +23673,13 @@ DINGANA 5: FIJINJANA
       'yield': '20-40 T/ha',
       'waterNeeds': 'Antonony',
       'soil': 'Tany fasika lonaka; pH 6-7; komposta 3 T/ha',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 3-4 g/m² (≈250 voa/g)\n📏 Halaliny: 1-1,5 cm\n🌡️ Hafanana: 15-25°C (maniry 10-15 andro)\n✅ Taux germination: 70-80%\n💡 Mena = mamy kokoa',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 3-4 g/m² (≈250 voa/g)
+📏 Halaliny: 1-1,5 cm
+🌡️ Hafanana: 15-25°C (maniry 10-15 andro)
+✅ Taux germination: 70-80%
+💡 Mena = mamy kokoa''',
       'nursery': 'Tanin-ketsa 6-8 herinandro',
       'plantingGuide': '''DINGANA 1: TANIN-KETSA
 • Afafy 1-1,5 cm lalina
@@ -23124,10 +23730,16 @@ DINGANA 5: FIJINJANA
       'yield': '1-3 kg/m²',
       'waterNeeds': 'Antonony',
       'soil': 'Tany lonaka; pH 6-7; komposta 3 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 0,3-0,5 g/m² (≈600 voa/g)\n📏 Halaliny: 0,5-1 cm\n🌡️ Hafanana: 15-25°C (maniry 14-28 andro) - MIADANA\n✅ Taux germination: 60-75%\n💡 Miadana maniry - alena rano 24h aloha',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,3-0,5 g/m² (≈600 voa/g)
+📏 Halaliny: 0,5-1 cm
+🌡️ Hafanana: 15-25°C (maniry 14-28 andro) - MIADANA
+✅ Taux germination: 60-75%
+💡 Miadana maniry - alona rano 24h aloha''',
       'nursery': 'Famafazana mivantana na tanin-ketsa 4-6 herinandro',
       'plantingGuide': '''DINGANA 1: FANOMANANA VOA
-• Aleno ny voa 24 ora ao anaty rano
+• Alona ny voa 24 ora ao anaty rano
 • Manampy haingana kokoa ny fiposahana
 • Voa miadana maniry (2-4 herinandro)
 
@@ -23158,7 +23770,7 @@ DINGANA 5: FIJINJANA
       ],
       'tips': [
         '💡 HO AN\'NY VAO HANOMBOKA:',
-        '✓ Aleno voa 24h alohan\'ny afafy',
+        '✓ Alona voa 24h alohan\'ny afafy',
         '✓ Miadana maniry (2-4 herinandro)',
         '✓ Jinjao ravina matetika - hitombo indray',
         '🌿 Esory voninkazo mba hitombo ravina',
@@ -23174,11 +23786,17 @@ DINGANA 5: FIJINJANA
       'yield': '1-2 kg/m²',
       'waterNeeds': 'Antonony',
       'soil': 'Tany maivana lonaka; pH 6-7; komposta 2 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 2-3 g/m² (≈50 voa/g - voa lehibe)\n📏 Halaliny: 1-2 cm\n🌡️ Hafanana: 15-25°C (maniry 7-14 andro)\n✅ Taux germination: 65-75%\n💡 Voa = voa roa afangaro - vakio roa',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 2-3 g/m² (≈50 voa/g - voa lehibe)
+📏 Halaliny: 1-2 cm
+🌡️ Hafanana: 15-25°C (maniry 7-14 andro)
+✅ Taux germination: 65-75%
+💡 Voa = voa roa afangaro - vakio roa''',
       'nursery': 'Famafazana MIVANTANA',
       'plantingGuide': '''DINGANA 1: FANOMANANA VOA
 • Voa roa afangaro - vakio roa
-• Aleno 12 ora ao anaty rano
+• Alona 12 ora ao anaty rano
 • Manampy haingana kokoa ny fiposahana
 
 DINGANA 2: FAMAFAZANA
@@ -23224,7 +23842,13 @@ DINGANA 5: FIJINJANA
       'yield': '2-4 kg/m²',
       'waterNeeds': 'Antonony',
       'soil': 'Tany lonaka; pH 6-7; komposta 3 kg/m² + NPK',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 0,02-0,04 g/m² (≈150 voa/g)\n📏 Halaliny: 0,5-1 cm\n🌡️ Hafanana: 22-28°C (maniry 10-14 andro)\n✅ Taux germination: 75-85%\n💡 Sakay tsy masiaka - azo hanina manta',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,02-0,04 g/m² (≈150 voa/g)
+📏 Halaliny: 0,5-1 cm
+🌡️ Hafanana: 22-28°C (maniry 10-14 andro)
+✅ Taux germination: 75-85%
+💡 Sakay tsy masiaka - azo hanina manta''',
       'nursery': 'Tanin-ketsa 5-6 herinandro',
       'plantingGuide': '''DINGANA 1: TANIN-KETSA
 • Afafy 0,5-1 cm lalina
@@ -23275,7 +23899,13 @@ DINGANA 5: FIJINJANA
       'yield': '4-8 kg/m²',
       'waterNeeds': 'Antonony',
       'soil': 'Tany lonaka drainage tsara; pH 6-6,8; komposta 4 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 0,03-0,05 g/m² (≈300 voa/g)\n📏 Halaliny: 0,5-1 cm\n🌡️ Hafanana: 20-25°C (maniry 6-10 andro)\n✅ Taux germination: 80-90%\n💡 Voatabia lava - tsara amin\'ny sauce',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,03-0,05 g/m² (≈300 voa/g)
+📏 Halaliny: 0,5-1 cm
+🌡️ Hafanana: 20-25°C (maniry 6-10 andro)
+✅ Taux germination: 80-90%
+💡 Voatabia lava - tsara amin'ny sauce''',
       'nursery': 'Tanin-ketsa 4-5 herinandro',
       'plantingGuide': '''DINGANA 1: TANIN-KETSA
 • Afafy 0,5-1 cm lalina
@@ -23326,7 +23956,13 @@ DINGANA 5: FIJINJANA
       'yield': '5-10 kg/m²',
       'waterNeeds': 'Antonony',
       'soil': 'Tany lonaka drainage tsara; pH 6-6,8; komposta 5 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 0,02-0,04 g/m² (≈300 voa/g)\n📏 Halaliny: 0,5-1 cm\n🌡️ Hafanana: 20-25°C (maniry 6-10 andro)\n✅ Taux germination: 80-90%\n💡 Voatabia boribory lehibe - mamy',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,02-0,04 g/m² (≈300 voa/g)
+📏 Halaliny: 0,5-1 cm
+🌡️ Hafanana: 20-25°C (maniry 6-10 andro)
+✅ Taux germination: 80-90%
+💡 Voatabia boribory lehibe - mamy''',
       'nursery': 'Tanin-ketsa 4-6 herinandro',
       'plantingGuide': '''DINGANA 1: TANIN-KETSA
 • Afafy 0,5-1 cm lalina
@@ -23377,7 +24013,13 @@ DINGANA 5: FIJINJANA
       'yield': '0,5-1 kg/m²',
       'waterNeeds': 'Antonony',
       'soil': 'Tany mangatsiaka malefaka; pH 6-7; komposta 2-3 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 40-50 g/m² (≈3-5 voa/g)\n📏 Halaliny: 3-5 cm\n🌡️ Hafanana: 8-18°C (maniry 7-14 andro) - TIA MANGATSIAKA\n✅ Taux germination: 80-90%\n💡 Tsy mila hafanana - azo afafy ririnina',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 40-50 g/m² (≈3-5 voa/g)
+📏 Halaliny: 3-5 cm
+🌡️ Hafanana: 8-18°C (maniry 7-14 andro) - TIA MANGATSIAKA
+✅ Taux germination: 80-90%
+💡 Tsy mila hafanana - azo afafy ririnina''',
       'nursery': 'Famafazana MIVANTANA',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
 • Asio komposta 2-3 kg/m²
@@ -23428,7 +24070,13 @@ DINGANA 5: FIJINJANA
       'yield': '2-4 kg/m²',
       'waterNeeds': 'Antonony - Atsaharo alohan\'ny fijinjana',
       'soil': 'Tany lonaka fasika; pH 6-7; komposta 4 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 0,8-1,2 g/m² (≈30-40 voa/g)\n📏 Halaliny: 2-3 cm\n🌡️ Hafanana: 25-30°C (maniry 5-8 andro)\n✅ Taux germination: 80-90%\n💡 Mila hafanana be',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,8-1,2 g/m² (≈30-40 voa/g)
+📏 Halaliny: 2-3 cm
+🌡️ Hafanana: 25-30°C (maniry 5-8 andro)
+✅ Taux germination: 80-90%
+💡 Mila hafanana be''',
       'nursery': 'Godet 2-3 herinandro na mivantana',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
 • Asio komposta 4 kg/m² + lavenona
@@ -23479,7 +24127,13 @@ DINGANA 5: FIJINJANA
       'yield': '3-6 kg/m²',
       'waterNeeds': 'Antonony - Atsaharo alohan\'ny fijinjana',
       'soil': 'Tany fasika lonaka; pH 6-7; komposta 4 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 0,5-0,8 g/m² (≈15-20 voa/g)\n📏 Halaliny: 2-3 cm\n🌡️ Hafanana: 25-35°C (maniry 5-10 andro)\n✅ Taux germination: 80-90%\n💡 Mila hafanana be sy toerana malalaka',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,5-0,8 g/m² (≈15-20 voa/g)
+📏 Halaliny: 2-3 cm
+🌡️ Hafanana: 25-35°C (maniry 5-10 andro)
+✅ Taux germination: 80-90%
+💡 Mila hafanana be sy toerana malalaka''',
       'nursery': 'Godet 2-3 herinandro na mivantana',
       'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
 • Asio komposta 4 kg/m² + lavenona
@@ -23530,7 +24184,13 @@ DINGANA 5: FIJINJANA
       'yield': '3-6 kg/m²',
       'waterNeeds': 'Antonony - Be',
       'soil': 'Tany lonaka; pH 6-7; komposta 4 kg/m²',
-      'seed': '📊 HO AN\'NY VAO HANOMBOKA:\n🌱 Ilaina: 0,03-0,05 g/m² (≈300 voa/g)\n📏 Halaliny: 0,5-1 cm\n🌡️ Hafanana: 15-22°C (maniry 4-7 andro)\n✅ Taux germination: 80-90%\n💡 Chou chinois lava - tahony fotsy',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,03-0,05 g/m² (≈300 voa/g)
+📏 Halaliny: 0,5-1 cm
+🌡️ Hafanana: 15-22°C (maniry 4-7 andro)
+✅ Taux germination: 80-90%
+💡 Chou chinois lava - tahony fotsy''',
       'nursery': 'Tanin-ketsa 3-4 herinandro',
       'plantingGuide': '''DINGANA 1: TANIN-KETSA
 • Afafy 0,5-1 cm lalina
@@ -23571,6 +24231,293 @@ DINGANA 5: FIJINJANA
         '🥬 Tsara amin\'ny sakafo sôsety',
       ],
     },
+    'Oviala': {
+      'emoji': '🥔',
+      'name': 'Oviala (Igname)',
+      'season': 'Martsa - Aprily',
+      'duration': '8-10 volana',
+      'climate': 'Tropical mafana sy mando',
+      'spacing': '100x40 cm',
+      'yield': '15-30 T/ha',
+      'waterNeeds': 'Antonony - Be',
+      'soil': 'Tany lalina lonaka; pH 5,5-6,5; komposta 5 kg/m²',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: Tapaka oviala (150-200 g isaky ny iray)
+📏 Halaliny: 10-15 cm
+🌡️ Hafanana: 25-30°C (mamoaka tsimoka 10-20 andro)
+✅ Taux maniry: 85-95%
+💡 Tany lalina be no ilaina (60 cm)''',
+      'nursery': 'Mivantana - tsy ilaina tanin-ketsa',
+      'plantingGuide': '''DINGANA 1: FANAMBOARANA TANY
+• Sasao lalina (50-60 cm)
+• Asio komposta 5 kg/m²
+• Tany lalina lonaka drainage tsara
+
+DINGANA 2: FANAOVANA BILLON
+• Manaova billon avo 30-40 cm
+• Elanelana: 100 cm
+• Fanamboarana tsara = vokatra be
+
+DINGANA 3: FAMAFAZANA
+• Tapaka oviala 150-200 g
+• Afafy 10-15 cm lalina
+• Elanelana: 40 cm amin'ny billon
+
+DINGANA 4: BUTTAGE
+• 2-3 volana: asio tany manodidina
+• Billon avo = oviala lehibe
+• 3 heny mandritra ny famokarana
+
+DINGANA 5: FIJINJANA
+• 8-10 volana aorian'ny famafazana
+• Rehefa malazo ny ravina
+• Lavany ny oviala rehefa jinjaina''',
+      'steps': [
+        {'week': 'V1-2', 'action': '🌱 Fanamboarana - Famafazana tapaka'},
+        {'week': 'V3-4', 'action': '🌿 Mamoaka tsimoka - Fikarakarana'},
+        {'week': 'V5-8', 'action': '💧 Buttage voalohany - Tondrahy'},
+        {'week': 'V9-10', 'action': '🥔 Fijinjana rehefa malazo ravina'},
+      ],
+      'tips': [
+        '💡 HO AN\'NY VAO HANOMBOKA:',
+        '✓ Tany lalina be (60 cm) - zava-dehibe',
+        '✓ Buttage 3 heny = oviala lehibe',
+        '✓ Tapaka misy maso 2-3 maniry tsara',
+        '🥔 Tehirizina tsara - 6 volana',
+      ],
+    },
+    'Menthe': {
+      'emoji': '🌿',
+      'name': 'Menthe / Mentha',
+      'season': 'Tontolo andro',
+      'duration': 'Tsy tapaka (maniry hatrany)',
+      'climate': 'Mangatsiaka - Mando',
+      'spacing': '30x30 cm',
+      'yield': 'Be loatra (jinjao matetika)',
+      'waterNeeds': 'Be - Toerana mando',
+      'soil': 'Tany lonaka; pH 6-7; komposta 2 kg/m²',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: Tapaka tongotra 10-15 cm (tsy voa)
+📏 Halaliny: 5-8 cm
+🌡️ Hafanana: 15-25°C (faka 7-14 andro)
+✅ Taux maniry: 90-100%
+💡 Mora ambolena - maniry haingana be''',
+      'nursery': 'Godet 2-3 herinandro na mivantana',
+      'plantingGuide': '''DINGANA 1: FANAMBOARANA
+• Tany lonaka misy komposta
+• Toerana mando (aloka madinidinika)
+• Rano tsara hatrany
+
+DINGANA 2: FAMAFAZANA TAPAKA
+• Tapaka tongotra 10-15 cm
+• Esory ravina ambany
+• Afafy 5-8 cm lalina
+
+DINGANA 3: FAKA
+• 7-14 andro mamoaka faka
+• Tondrahy tsara isan'andro
+• Maniry haingana be
+
+DINGANA 4: PINCEMENT
+• Ketipo ny tendrony
+• Mba hisampana be
+• Vokatra be kokoa
+
+DINGANA 5: FIJINJANA
+• Jinjao matetika (isaky ny 2-3 herinandro)
+• Mafy kokoa ny tsiro rehefa jinjaina
+• Maniry hatrany tsy tapaka''',
+      'steps': [
+        {'week': 'H1-2', 'action': '🌱 Famafazana tapaka - Faka'},
+        {'week': 'H3-4', 'action': '🌿 Maniry - Pincement'},
+        {'week': 'H5+', 'action': '🌿 Jinjao ravina (isaky ny 2-3 herinandro)'},
+      ],
+      'tips': [
+        '💡 HO AN\'NY VAO HANOMBOKA:',
+        '✓ TENA MORA - mora indrindra!',
+        '✓ Tapaka ao anaty rano → faka → afafy',
+        '✓ Maniry haingana be sy tsy tapaka',
+        '✓ Tsara amin\'ny tisane sy sakafo',
+        '🌿 Jinjao matetika = mafy ny tsiro',
+      ],
+    },
+    'Celeri': {
+      'emoji': '🥬',
+      'name': 'Céleri / Seleria',
+      'season': 'Martsa - Aogositra',
+      'duration': '120-150 andro',
+      'climate': 'Mangatsiaka - 15-21°C',
+      'spacing': '30x30 cm',
+      'yield': '2-4 kg/m²',
+      'waterNeeds': 'Be loatra - Tsy maintsy mando',
+      'soil': 'Tany lonaka misy organika be; pH 6-7; komposta 5 kg/m²',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,01-0,02 g/m² (≈2500 voa/g)
+📏 Halaliny: 0,5 cm (tsy saromy)
+🌡️ Hafanana: 15-21°C (maniry 10-21 andro - MIADANA)
+✅ Taux germination: 55-75%
+💡 Mila toerana mando sy mangatsiaka''',
+      'nursery': 'Tanin-ketsa 8-10 herinandro (ela)',
+      'plantingGuide': '''DINGANA 1: TANIN-KETSA
+• Voa madinika loatra - aza saromy
+• Tany malemilemy misy komposta
+• Tondrahy amin'ny spray madinidinika
+
+DINGANA 2: FIKARAKARANA KETSA
+• Maniry 10-21 andro (miadana be)
+• Karakarao 8-10 herinandro
+• Ketsa madinika - malemy
+
+DINGANA 3: FAMINDRANA
+• Afindra rehefa misy ravina 4-5
+• Elanelana: 30x30 cm
+• Toerana mando sy mangatsiaka
+
+DINGANA 4: BUTTAGE
+• 2-3 heny mandritra ny famokarana
+• Tahony fotsy sy malefaka
+• Tsy mangidy
+
+DINGANA 5: FIJINJANA
+• 120-150 andro aorian'ny famafazana
+• Jinjao rehefa avo 30-40 cm
+• Tahony fotsy = tsara''',
+      'steps': [
+        {'week': 'H1-3', 'action': '🌱 Famafazana tanin-ketsa - MIADANA'},
+        {'week': 'H4-10', 'action': '🌿 Fikarakarana ketsa'},
+        {'week': 'H11-12', 'action': '🌿 Famindrana - Elanelana 30 cm'},
+        {'week': 'H13-18', 'action': '💧 Buttage - Tondrahy be'},
+        {'week': 'H19-22', 'action': '🥬 Fijinjana rehefa avo 30-40 cm'},
+      ],
+      'tips': [
+        '💡 HO AN\'NY VAO HANOMBOKA:',
+        '✓ Miadana be maniry - manam-paharetana',
+        '✓ Tsy maintsy mando hatrany',
+        '✓ Buttage = tahony fotsy tsy mangidy',
+        '✓ Tsara amin\'ny sakafo sy lasopy',
+        '🥬 Vokatra ela saingy tsara',
+      ],
+    },
+    'Kabaro': {
+      'emoji': '🫘',
+      'name': 'Kabaro (Gombo)',
+      'season': 'Oktobra - Janoary',
+      'duration': '60-90 andro',
+      'climate': 'Mafana be - 25-35°C',
+      'spacing': '60x40 cm',
+      'yield': '8-15 T/ha',
+      'waterNeeds': 'Antonony',
+      'soil': 'Tany lonaka fasika; pH 6-6,8; komposta 3 kg/m²',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 2-3 g/m² (≈20-25 voa/g)
+📏 Halaliny: 2-3 cm
+🌡️ Hafanana: 25-35°C (maniry 7-12 andro)
+✅ Taux germination: 75-85%
+💡 Alona rano mafana 24h aloha - haingana kokoa''',
+      'nursery': 'Mivantana - tsy ilaina tanin-ketsa',
+      'plantingGuide': '''DINGANA 1: FANAMBOARANA
+• Tany lonaka fasika drainage tsara
+• Asio komposta 3 kg/m²
+• Mila hafanana be (25-35°C)
+
+DINGANA 2: FAMAFAZANA
+• Alona voa 24h amin'ny rano mafana
+• Afafy 2-3 cm lalina
+• Voa 2-3 isaky ny lavaka
+• Elanelana: 60x40 cm
+
+DINGANA 3: FIPOSAHANA
+• Maniry 7-12 andro
+• Esory ny malemy (avelao 1)
+• Karakarao tsara
+
+DINGANA 4: FIKARAKARANA
+• Asio zezika NPK rehefa misy ravina 6-8
+• Tondrahy antonony
+• Esory ahi-dratsy
+
+DINGANA 5: FIJINJANA
+• 50-60 andro voalohany
+• Jinjao rehefa 8-12 cm ny voa
+• Jinjao isaky ny 2-3 andro (voa vaovao)''',
+      'steps': [
+        {'week': 'H1-2', 'action': '🌱 Famafazana - Fiposahana'},
+        {'week': 'H3-6', 'action': '🌿 Maniry - Zezika voalohany'},
+        {'week': 'H7-10', 'action': '🌼 Voninkazo - Voa voalohany'},
+        {'week': 'H11-14', 'action': '🫘 Fijinjana matetika (2-3 andro)'},
+      ],
+      'tips': [
+        '💡 HO AN\'NY VAO HANOMBOKA:',
+        '✓ mora ambolena - vokatra be',
+        '✓ Jinjao matetika rehefa tanora (8-12 cm)',
+        '✓ Voa antitra = mafy = tsy tsara',
+        '✓ Alona 24h = maniry haingana',
+        '🫘 Vokatra 2-3 volana tsy tapaka',
+      ],
+    },
+    'Amarante Queue-de-Renard': {
+      'emoji': '🌾',
+      'name': 'Amarante Queue-de-Renard',
+      'season': 'Septambra - Desambra',
+      'duration': '90-120 andro',
+      'climate': 'Tropical mafana - 20-30°C',
+      'spacing': '50x30 cm',
+      'yield': '1-2 T/ha (graines) + ravina',
+      'waterNeeds': 'Kely - Mahazaka haintany',
+      'soil': 'Tany rehetra; pH 6-7,5; tsy mila zezika be',
+      'seed': '''📊 HO AN'NY VAO HANOMBOKA:
+
+🌱 Ilaina: 0,5-1 g/m² (≈1000-1500 voa/g - madinika)
+📏 Halaliny: 0,5-1 cm (tsy saromy loatra)
+🌡️ Hafanana: 20-30°C (maniry 5-10 andro)
+✅ Taux germination: 75-85%
+💡 Voa madinika loatra - afangaro fasika''',
+      'nursery': 'Mivantana na tanin-ketsa 2-3 herinandro',
+      'plantingGuide': '''DINGANA 1: FANAMBOARANA
+• Tany rehetra ekena (tsy mila tsara be)
+• Mahazaka haintany sy tany ratsy
+• Tsy mila zezika be (mahia tsara)
+
+DINGANA 2: FAMAFAZANA
+• Afangaro voa + fasika (madinika loatra)
+• Afafy 0,5-1 cm lalina
+• Elanelana: 50x30 cm
+• Voa 3-5 isaky ny lavaka
+
+DINGANA 3: FIPOSAHANA
+• Maniry 5-10 andro
+• Esory ny malemy (avelao 1-2)
+• Karakarao tsara
+
+DINGANA 4: FIVOARANA
+• Maniry haingana be
+• Felana mena/volon-tsa lava
+• Voa fotsy/mavo kely
+
+DINGANA 5: FIJINJANA
+• Ravina: 40-50 andro (hohanina)
+• Graines: 90-120 andro (rehefa maina)
+• Kapohina ny felana → voa miararaka''',
+      'steps': [
+        {'week': 'H1-2', 'action': '🌱 Famafazana - Fiposahana'},
+        {'week': 'H3-6', 'action': '🌿 Maniry haingana - Ravina voalohany'},
+        {'week': 'H7-12', 'action': '🌾 Felana lava - Voa miforona'},
+        {'week': 'H13-17', 'action': '🌾 Fijinjana voa (kapohina felana)'},
+      ],
+      'tips': [
+        '💡 HO AN\'NY VAO HANOMBOKA:',
+        '✓ TENA MORA - mahazaka haintany',
+        '✓ 2 vokatra: ravina + voa',
+        '✓ Voa: protein be (14-18%)',
+        '✓ Kapohina felana → voa miraraka',
+        '✓ Voa hohanina tahaka vary/quinoa',
+        '🌾 Tsy mila zezika na rano be',
+      ],
+    },
   };
 
   // Variable pour la recherche
@@ -23587,63 +24534,593 @@ DINGANA 5: FIJINJANA
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9), Color(0xFFA5D6A7)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+    return Scaffold(
+      backgroundColor: const Color(0xFFF0FDF4),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF16A34A),
+        title: const Text('🌾 Voly (Cultures)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Barre de recherche
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.green.withOpacity(0.15), blurRadius: 12, offset: const Offset(0, 6)),
+                ],
+              ),
+              child: TextField(
+                onChanged: (v) => setState(() => _searchQuery = v),
+                decoration: InputDecoration(
+                  hintText: '🔍 Fikarohana voly...',
+                  hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear_rounded, color: Color(0xFF9CA3AF)),
+                          onPressed: () => setState(() => _searchQuery = ''),
+                        )
+                      : null,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Grille des cultures
+            _buildVolyMenuSection(),
+          ],
         ),
       ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // EBOOK DESIGN METHODS
+  // ═══════════════════════════════════════════════════════════════
+  
+  Widget _buildBookHeader(List<String> cropKeys) {
+    final cropIndex = cropKeys.indexOf(_selectedCrop);
+    final totalPages = cropKeys.length;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5EFE7),
+        border: Border(
+          bottom: BorderSide(color: const Color(0xFF2C1810).withOpacity(0.1), width: 2),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Title
+          Text(
+            'Bokin\'ny Fambolena',
+            style: GoogleFonts.merriweather(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF2C1810),
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Page indicator
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                '🌱 VOLY',
-                style: TextStyle(color: Color(0xFF1B5E20), fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: 0.4),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Safidio ny voly tianao.',
-                style: TextStyle(color: Color(0xFF388E3C), fontSize: 13),
-              ),
-              const SizedBox(height: 12),
-              // 🔍 BARRE DE RECHERCHE
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF81C784)),
-                  boxShadow: [
-                    BoxShadow(color: Colors.green.withOpacity( 0.15), blurRadius: 8, offset: const Offset(0, 4)),
-                  ],
+              Text(
+                'Toko ${cropIndex + 1}',
+                style: GoogleFonts.lora(
+                  fontSize: 14,
+                  fontStyle: FontStyle.italic,
+                  color: const Color(0xFF5D4E37),
                 ),
-                child: TextField(
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                  style: const TextStyle(color: Color(0xFF1B5E20), fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: '🔍 Tadiavo ny voly... (ex: Vary, Katsaka, Tongolo)',
-                    hintStyle: const TextStyle(color: Color(0xFF81C784), fontSize: 13),
-                    prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF4CAF50)),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear_rounded, color: Color(0xFF4CAF50)),
-                            onPressed: () => setState(() => _searchQuery = ''),
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+              Text(
+                ' / ',
+                style: GoogleFonts.lora(
+                  fontSize: 14,
+                  color: const Color(0xFF5D4E37),
+                ),
+              ),
+              Text(
+                '$totalPages',
+                style: GoogleFonts.lora(
+                  fontSize: 14,
+                  color: const Color(0xFF5D4E37),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Progress dots
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              totalPages > 10 ? 10 : totalPages,
+              (index) {
+                final actualIndex = totalPages > 10 
+                    ? (cropIndex / (totalPages / 10)).floor().clamp(0, 9)
+                    : index;
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  width: cropIndex == index || (totalPages > 10 && actualIndex == index) ? 8 : 4,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: cropIndex == index || (totalPages > 10 && actualIndex == index)
+                        ? const Color(0xFF8B7355)
+                        : const Color(0xFFD4C4B0),
+                    borderRadius: BorderRadius.circular(2),
                   ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEbookPage(String cropKey, Map<String, dynamic> cropData) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Chapter header with decorative elements
+          _buildChapterHeader(cropKey, cropData),
+          const SizedBox(height: 32),
+          
+          // Overview section
+          _buildSection('Fintinana', _buildOverviewContent(cropData)),
+          const SizedBox(height: 28),
+          
+          // Planting guide section
+          if (cropData.containsKey('plantingGuide') && (cropData['plantingGuide'] as String).isNotEmpty)
+            ...[
+              _buildSection('Torolalana Fambolena', _buildPlantingGuideContent(cropData['plantingGuide'])),
+              const SizedBox(height: 28),
+            ],
+          
+          // Care instructions section
+          if (cropData.containsKey('steps') && (cropData['steps'] as List).isNotEmpty)
+            ...[
+              _buildSection('Fikarakarana', _buildCareContent(cropData['steps'])),
+              const SizedBox(height: 28),
+            ],
+          
+          // Harvesting section
+          if (cropData.containsKey('duration'))
+            ...[
+              _buildSection('Fijinjana', _buildHarvestContent(cropData)),
+              const SizedBox(height: 28),
+            ],
+          
+          // Tips section
+          if (cropData.containsKey('tips') && (cropData['tips'] as List).isNotEmpty)
+            ...[
+              _buildSection('Torohevitra', _buildTipsContent(cropData['tips'])),
+              const SizedBox(height: 40),
+            ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChapterHeader(String cropKey, Map<String, dynamic> cropData) {
+    final emoji = cropData['emoji'] as String? ?? '🌱';
+    final name = cropData['name'] as String? ?? cropKey;
+    
+    return Column(
+      children: [
+        // Decorative line top
+        Row(
+          children: [
+            Expanded(child: Container(height: 1, color: const Color(0xFF2C1810).withOpacity(0.2))),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                '✦',
+                style: TextStyle(fontSize: 16, color: const Color(0xFF2C1810).withOpacity(0.3)),
+              ),
+            ),
+            Expanded(child: Container(height: 1, color: const Color(0xFF2C1810).withOpacity(0.2))),
+          ],
+        ),
+        const SizedBox(height: 24),
+        // Emoji
+        Text(
+          emoji,
+          style: const TextStyle(fontSize: 64),
+        ),
+        const SizedBox(height: 16),
+        // Crop name
+        Text(
+          name,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.merriweather(
+            fontSize: 32,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF2C1810),
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 24),
+        // Decorative line bottom
+        Row(
+          children: [
+            Expanded(child: Container(height: 1, color: const Color(0xFF2C1810).withOpacity(0.2))),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                '✦',
+                style: TextStyle(fontSize: 16, color: const Color(0xFF2C1810).withOpacity(0.3)),
+              ),
+            ),
+            Expanded(child: Container(height: 1, color: const Color(0xFF2C1810).withOpacity(0.2))),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSection(String title, Widget content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Container(
+          padding: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: const Color(0xFF8B7355).withOpacity(0.3),
+                width: 1.5,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B7355),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: 16),
-              _buildVolyMenuSection(),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: GoogleFonts.merriweather(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF2C1810),
+                  letterSpacing: 0.5,
+                ),
+              ),
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        content,
+      ],
+    );
+  }
+
+  Widget _buildOverviewContent(Map<String, dynamic> cropData) {
+    final items = [
+      if (cropData.containsKey('season')) {'label': 'Vanim-potoana', 'value': cropData['season']},
+      if (cropData.containsKey('duration')) {'label': 'Faharetana', 'value': cropData['duration']},
+      if (cropData.containsKey('climate')) {'label': 'Toetr\'andro', 'value': cropData['climate']},
+      if (cropData.containsKey('spacing')) {'label': 'Elanelana', 'value': cropData['spacing']},
+      if (cropData.containsKey('yield')) {'label': 'Vokatra', 'value': cropData['yield']},
+      if (cropData.containsKey('waterNeeds')) {'label': 'Rano ilaina', 'value': cropData['waterNeeds']},
+      if (cropData.containsKey('soil')) {'label': 'Tany', 'value': cropData['soil']},
+    ];
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: items.map((item) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  '${item['label']}:',
+                  style: GoogleFonts.lora(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF5D4E37),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  item['value'] as String,
+                  style: GoogleFonts.lora(
+                    fontSize: 15,
+                    color: const Color(0xFF2C1810),
+                    height: 1.6,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildPlantingGuideContent(String guide) {
+    final lines = guide.split('\n')
+        .where((l) => l.trim().isNotEmpty)
+        .map((l) => l.trim())
+        .toList();
+    
+    int stepNumber = 0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: lines.map((line) {
+        // Check if it's a step header
+        if (line.toUpperCase().startsWith('DINGANA')) {
+          stepNumber++;
+          final cleanedLine = line
+              .replaceFirst(RegExp(r'^DINGANA\s*\d+\s*[:\-–]?\s*', caseSensitive: false), '')
+              .trim();
+          
+          return Padding(
+            padding: const EdgeInsets.only(top: 20, bottom: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B7355),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$stepNumber',
+                      style: GoogleFonts.merriweather(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFFFF8F0),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    cleanedLine,
+                    style: GoogleFonts.merriweather(
+                    fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF2C1810),
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else if (line.startsWith('•')) {
+          return Padding(
+            padding: const EdgeInsets.only(left: 44, bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '• ',
+                  style: GoogleFonts.lora(
+                    fontSize: 15,
+                    color: const Color(0xFF8B7355),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    line.substring(1).trim(),
+                    style: GoogleFonts.lora(
+                      fontSize: 15,
+                      color: const Color(0xFF2C1810),
+                      height: 1.6,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else {
+          return Padding(
+            padding: const EdgeInsets.only(left: 44, bottom: 8),
+            child: Text(
+              line,
+              style: GoogleFonts.lora(
+                fontSize: 15,
+                color: const Color(0xFF2C1810),
+                height: 1.6,
+              ),
+            ),
+          );
+        }
+      }).toList(),
+    );
+  }
+
+  Widget _buildCareContent(List<dynamic> steps) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: steps.asMap().entries.map((entry) {
+        final step = entry.value as Map<String, dynamic>;
+        final week = step['week'] as String;
+        final action = step['action'] as String;
+        
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF5EFE7),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: const Color(0xFF8B7355).withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B7355),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  week,
+                  style: GoogleFonts.lora(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFFFF8F0),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  action,
+                  style: GoogleFonts.lora(
+                    fontSize: 15,
+                    color: const Color(0xFF2C1810),
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildHarvestContent(Map<String, dynamic> cropData) {
+    final duration = cropData['duration'] as String? ?? '';
+    final yield = cropData['yield'] as String? ?? '';
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5EFE7),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFF8B7355).withOpacity(0.3),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (duration.isNotEmpty)
+            _buildHarvestItem('⏱️', 'Fotoana', duration),
+          if (duration.isNotEmpty && yield.isNotEmpty)
+            const SizedBox(height: 12),
+          if (yield.isNotEmpty)
+            _buildHarvestItem('📊', 'Vokatra andrasana', yield),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHarvestItem(String icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          icon,
+          style: const TextStyle(fontSize: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.lora(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF5D4E37),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: GoogleFonts.lora(
+                  fontSize: 15,
+                  color: const Color(0xFF2C1810),
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTipsContent(List<dynamic> tips) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF4E6),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFFD4A574),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: tips.asMap().entries.map((entry) {
+          final tip = entry.value as String;
+          return Padding(
+            padding: EdgeInsets.only(bottom: entry.key < tips.length - 1 ? 12 : 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '💡',
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    tip,
+                    style: GoogleFonts.lora(
+                      fontSize: 14,
+                      color: const Color(0xFF2C1810),
+                      height: 1.6,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -23788,7 +25265,7 @@ DINGANA 5: FIJINJANA
             builder: (_) => CultureDetailScreen(
               culture: Culture(
                 name: cropKey,
-                imagePath: 'assets/voly/${_slugify(cropKey)}.png',
+                imagePath: 'assets/voly/${_slugify(cropKey)}.jpg',
                 steps: steps,
                 meta: cropData,
               ),
@@ -23871,7 +25348,7 @@ DINGANA 5: FIJINJANA
   }
 
   Widget _buildCropThumb(String cropName) {
-    final path = 'assets/voly/${_slugify(cropName)}.png';
+    final path = 'assets/voly/${_slugify(cropName)}.jpg';
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
       child: Container(
@@ -23906,6 +25383,14 @@ class CultureDetailScreen extends StatefulWidget {
 }
 
 class _CultureDetailScreenState extends State<CultureDetailScreen> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23917,6 +25402,156 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
     final seedInfo = meta['seed'] as String?;
     final soilInfo = meta['soil'] as String?;
     final nurseryInfo = meta['nursery'] as String?;
+    final benefits = meta['benefits'] as String?;
+    final care = meta['care'] as String?;
+    final diseases = meta['diseases'] as String?;
+    final harvesting = meta['harvesting'] as String?;
+    final calendar = meta['calendar'] as List<dynamic>?;
+
+    // Build pages based on available content
+    final pages = <Widget>[];
+    
+    // Page 1: Overview (always present)
+    pages.add(_buildOverviewPage(c, meta));
+    
+    // Page 2: Seed/Soil/Nursery info
+    if ((seedInfo ?? '').isNotEmpty || (soilInfo ?? '').isNotEmpty || (nurseryInfo ?? '').isNotEmpty) {
+      pages.add(_buildSeedSoilPage(seedInfo, soilInfo, nurseryInfo));
+    }
+    
+    // Page 3: Planting guide
+    if ((plantingGuide ?? '').isNotEmpty) {
+      pages.add(_buildPlantingGuidePage(plantingGuide!));
+    }
+    
+    // Page 4: Steps
+    if (steps.isNotEmpty) {
+      pages.add(_buildStepsPage(steps));
+    }
+    
+    // Page 5: Tips
+    if (tips.isNotEmpty) {
+      pages.add(_buildTipsPage(tips));
+    }
+    
+    // Additional pages
+    if ((benefits ?? '').isNotEmpty) {
+      pages.add(_buildBenefitsPage(benefits!));
+    }
+    
+    if ((care ?? '').isNotEmpty) {
+      pages.add(_buildCarePage(care!));
+    }
+    
+    if ((diseases ?? '').isNotEmpty) {
+      pages.add(_buildDiseasesPage(diseases!));
+    }
+    
+    if ((harvesting ?? '').isNotEmpty) {
+      pages.add(_buildHarvestingPage(harvesting!));
+    }
+    
+    if (calendar != null && calendar.isNotEmpty) {
+      pages.add(_buildCalendarPage(calendar));
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF8F0),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF2C1810),
+        title: Text(c.name, style: GoogleFonts.merriweather(color: const Color(0xFFFFF8F0), fontWeight: FontWeight.w600)),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFFFFF8F0)),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+              itemCount: pages.length,
+              itemBuilder: (context, index) {
+                return pages[index];
+              },
+            ),
+          ),
+          // Page indicators
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8F0),
+              border: Border(
+                top: BorderSide(color: const Color(0xFF2C1810).withOpacity(0.1)),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Previous button
+                if (_currentPage > 0)
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left, color: Color(0xFF2C1810)),
+                    onPressed: () {
+                      _pageController.previousPage(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    },
+                  )
+                else
+                  const SizedBox(width: 48),
+                const SizedBox(width: 16),
+                // Page indicators
+                ...List.generate(pages.length, (index) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: index == _currentPage ? 32 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: index == _currentPage ? const Color(0xFF2C1810) : const Color(0xFF2C1810).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  );
+                }),
+                const SizedBox(width: 16),
+                // Next button
+                if (_currentPage < pages.length - 1)
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right, color: Color(0xFF2C1810)),
+                    onPressed: () {
+                      _pageController.nextPage(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    },
+                  )
+                else
+                  const SizedBox(width: 48),
+              ],
+            ),
+          ),
+          // Page number
+          Container(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Pejy ${_currentPage + 1} / ${pages.length}',
+              style: GoogleFonts.lora(
+                color: const Color(0xFF2C1810).withOpacity(0.5),
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Page 1: Overview with image and basic info
+  Widget _buildOverviewPage(Culture c, Map<String, dynamic> meta) {
     final infoItems = <Map<String, String>>[
       {'label': '📆 Vanim-potoana', 'value': meta['season']?.toString() ?? ''},
       {'label': '⏱️ Faharetana', 'value': meta['duration']?.toString() ?? ''},
@@ -23926,228 +25561,470 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
       {'label': '💧 Rano ilaina', 'value': meta['waterNeeds']?.toString() ?? ''},
     ].where((e) => (e['value'] ?? '').isNotEmpty).toList();
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0FDF4),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF16A34A),
-        title: Text(c.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFECFDF5)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF16A34A).withOpacity( 0.15),
-                    blurRadius: 16,
-                    offset: const Offset(0, 10),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Chapter header
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
                   ),
-                ],
-                border: Border.all(color: const Color(0xFF16A34A).withOpacity( 0.2)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(18), topRight: Radius.circular(18)),
-                    child: SizedBox(
-                      height: 180,
-                      width: double.infinity,
-                      child: Image.asset(
-                        c.imagePath,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: const Color(0xFFDCFCE7),
-                          alignment: Alignment.center,
-                          child: Text(c.name.isNotEmpty ? c.name.substring(0, 1).toUpperCase() : '🌱', style: const TextStyle(fontSize: 32, color: Color(0xFF16A34A))),
+                  child: Text(
+                    'Toko 1',
+                    style: GoogleFonts.merriweather(
+                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                      fontSize: 12,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  c.name,
+                  style: GoogleFonts.merriweather(
+                    color: const Color(0xFF2C1810),
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 2,
+                  width: 60,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C1810).withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Image with book-style frame
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFFFF),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2C1810).withOpacity(0.1),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1), width: 1),
+            ),
+            child: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
+                  child: SizedBox(
+                    height: 220,
+                    width: double.infinity,
+                    child: Image.asset(
+                      c.imagePath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: const Color(0xFF2C1810).withOpacity(0.05),
+                        alignment: Alignment.center,
+                        child: Text(
+                          c.name.isNotEmpty ? c.name.substring(0, 1).toUpperCase() : '🌱',
+                          style: TextStyle(fontSize: 48, color: const Color(0xFF2C1810).withOpacity(0.3)),
                         ),
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Techniques A-Z', style: TextStyle(color: Color(0xFF6B7280), fontSize: 11)),
-                        const SizedBox(height: 4),
-                        Text(c.name, style: const TextStyle(color: Color(0xFF1F2937), fontSize: 17, fontWeight: FontWeight.w800)),
-                      ],
+                ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF8F0),
+                    borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(8), bottomRight: Radius.circular(8)),
+                    border: Border(top: BorderSide(color: const Color(0xFF2C1810).withOpacity(0.1))),
+                  ),
+                  child: Text(
+                    'Sary ${_currentPage + 1}.1',
+                    style: GoogleFonts.lora(
+                      color: const Color(0xFF2C1810).withOpacity(0.5),
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Info items
+          if (infoItems.isNotEmpty) ...[
+            Text(
+              'Fampahalalana Fototra',
+              style: GoogleFonts.merriweather(
+                color: const Color(0xFF2C1810),
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...infoItems.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      item['label'] ?? '',
+                      style: GoogleFonts.lora(
+                        color: const Color(0xFF2C1810),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      item['value'] ?? '',
+                      textAlign: TextAlign.right,
+                      style: GoogleFonts.lora(
+                        color: const Color(0xFF2C1810).withOpacity(0.7),
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-            if (infoItems.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _infoCard(infoItems),
-            ],
-            // 🌱 SEMENCES/SEED INFO
-            if ((seedInfo ?? '').isNotEmpty || (soilInfo ?? '').isNotEmpty || (nurseryInfo ?? '').isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _seedCard(seedInfo, soilInfo, nurseryInfo),
-            ],
-            if ((plantingGuide ?? '').isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _plantingCard(plantingGuide!),
-            ],
-            if (steps.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _stepsCard(steps),
-            ],
-            if (tips.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _tipsCard(tips),
-            ],
+            )),
           ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _infoCard(List<Map<String, String>> items) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF16A34A).withOpacity( 0.15)),
-        boxShadow: [BoxShadow(color: const Color(0xFF16A34A).withOpacity( 0.1), blurRadius: 12, offset: const Offset(0, 8))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: items
-            .map(
-              (e) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(e['label'] ?? '', style: const TextStyle(color: Color(0xFF1F2937), fontWeight: FontWeight.w600, fontSize: 13)),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 3,
-                      child: Text(e['value'] ?? '', textAlign: TextAlign.right, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
-                    ),
-                  ],
-                ),
-              ),
-            )
-            .toList(),
-      ),
-    );
-  }
-
-  Widget _plantingCard(String guide) {
-    // Parser le guide pour créer des étapes avec des puces améliorées
-    final lines = guide.split('\n').where((l) => l.trim().isNotEmpty).toList();
-    
-    // Couleurs pour les étapes
-    final stepColors = [
-      const Color(0xFF22C55E), // Vert
-      const Color(0xFF3B82F6), // Bleu
-      const Color(0xFFF59E0B), // Orange
-      const Color(0xFF8B5CF6), // Violet
-      const Color(0xFFEC4899), // Rose
-      const Color(0xFF06B6D4), // Cyan
-      const Color(0xFFEF4444), // Rouge
-      const Color(0xFF10B981), // Emeraude
-      const Color(0xFF6366F1), // Indigo
-      const Color(0xFFF97316), // Orange vif
-    ];
-    
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFFFFF), Color(0xFFF0FDF4)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF16A34A).withOpacity( 0.2)),
-        boxShadow: [BoxShadow(color: const Color(0xFF16A34A).withOpacity( 0.1), blurRadius: 12, offset: const Offset(0, 4))],
-      ),
+  // Page 2: Seed, Soil, and Nursery information
+  Widget _buildSeedSoilPage(String? seedInfo, String? soilInfo, String? nurseryInfo) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF16A34A).withOpacity( 0.15),
-                  borderRadius: BorderRadius.circular(10),
+          // Chapter header
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                  ),
+                  child: Text(
+                    'Toko 2',
+                    style: GoogleFonts.merriweather(
+                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                      fontSize: 12,
+                      letterSpacing: 2,
+                    ),
+                  ),
                 ),
-                child: const Icon(Icons.agriculture_rounded, color: Color(0xFF16A34A), size: 18),
-              ),
-              const SizedBox(width: 10),
-              const Text('Fomba Fambolena', style: TextStyle(color: Color(0xFF1F2937), fontSize: 16, fontWeight: FontWeight.w700)),
-            ],
+                const SizedBox(height: 16),
+                Text(
+                  'Masomboly & Tany',
+                  style: GoogleFonts.merriweather(
+                    color: const Color(0xFF2C1810),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 6),
-          const Text('📋 Dingana tsirairay - Arahina tsara', style: TextStyle(color: Color(0xFF6B7280), fontSize: 11)),
-          const SizedBox(height: 14),
+          const SizedBox(height: 24),
+          // Seed info
+          if ((seedInfo ?? '').isNotEmpty) ...[
+            _buildSection('🌱 Masomboly', seedInfo!, const Color(0xFF16A34A)),
+            const SizedBox(height: 20),
+          ],
+          // Soil info
+          if ((soilInfo ?? '').isNotEmpty) ...[
+            _buildSection('🌍 Tany', soilInfo!, const Color(0xFF92400E)),
+            const SizedBox(height: 20),
+          ],
+          // Nursery info
+          if ((nurseryInfo ?? '').isNotEmpty) ...[
+            _buildSection('🏡 Tanin-ketsa', nurseryInfo!, const Color(0xFF0891B2)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // Helper to build a section with icon and text
+  Widget _buildSection(String title, String content, Color accentColor) {
+    final lines = content.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 4,
+              height: 20,
+              decoration: BoxDecoration(
+                color: accentColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: GoogleFonts.merriweather(
+                color: const Color(0xFF2C1810),
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: accentColor.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: accentColor.withOpacity(0.15)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: lines.map((line) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  line.trim(),
+                  style: GoogleFonts.lora(
+                    color: const Color(0xFF2C1810),
+                    fontSize: 13,
+                    height: 1.6,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Page 3: Planting Guide
+  Widget _buildPlantingGuidePage(String guide) {
+    final lines = guide.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Chapter header
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                  ),
+                  child: Text(
+                    'Toko 3',
+                    style: GoogleFonts.merriweather(
+                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                      fontSize: 12,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Fomba Fambolena',
+                  style: GoogleFonts.merriweather(
+                    color: const Color(0xFF2C1810),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
           ...lines.asMap().entries.map<Widget>((entry) {
             final idx = entry.key;
             final line = entry.value.trim();
-            // Enlever les numéros et préfixes comme "DINGANA 1:", "1.", "1)", "① ", etc.
+            
+            // Clean the line by removing step prefixes
             final cleanLine = line
                 .replaceFirst(RegExp(r'^DINGANA\s*\d+\s*[:\-–]?\s*', caseSensitive: false), '')
                 .replaceFirst(RegExp(r'^[\d️⃣①②③④⑤⑥⑦⑧⑨⑩]+[.)\-:\s]+'), '')
                 .replaceFirst(RegExp(r'^\d+\s*[.)\-:]\s*'), '')
                 .trim();
             
-            final color = stepColors[idx % stepColors.length];
-            
             return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity( 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.withOpacity( 0.2)),
-              ),
+              margin: const EdgeInsets.only(bottom: 16),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Step number
                   Container(
-                    width: 28,
-                    height: 28,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [color, color.withOpacity( 0.7)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
+                      color: const Color(0xFF2C1810),
+                      borderRadius: BorderRadius.circular(18),
                       boxShadow: [
-                        BoxShadow(color: color.withOpacity( 0.3), blurRadius: 6, offset: const Offset(0, 2)),
+                        BoxShadow(
+                          color: const Color(0xFF2C1810).withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
                       ],
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       '${idx + 1}',
-                      style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+                      style: GoogleFonts.merriweather(
+                        color: const Color(0xFFFFF8F0),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Step content
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2C1810).withOpacity(0.03),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                      ),
+                      child: Text(
+                        cleanLine,
+                        style: GoogleFonts.lora(
+                          color: const Color(0xFF2C1810),
+                          fontSize: 14,
+                          height: 1.6,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  // Page 4: Steps
+  Widget _buildStepsPage(List<dynamic> steps) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Chapter header
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                  ),
+                  child: Text(
+                    'Toko 4',
+                    style: GoogleFonts.merriweather(
+                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                      fontSize: 12,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Dingana',
+                  style: GoogleFonts.merriweather(
+                    color: const Color(0xFF2C1810),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          ...steps.asMap().entries.map<Widget>((e) {
+            final value = e.value;
+            final weekLabel = value is Map ? (value['week']?.toString() ?? 'H${e.key + 1}') : 'H${e.key + 1}';
+            final action = value is Map ? (value['action']?.toString() ?? '') : value.toString();
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2C1810).withOpacity(0.03),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2C1810),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      weekLabel,
+                      style: GoogleFonts.merriweather(
+                        color: const Color(0xFFFFF8F0),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      cleanLine,
-                      style: const TextStyle(color: Color(0xFF1F2937), height: 1.5, fontSize: 13),
+                      action,
+                      style: GoogleFonts.lora(
+                        color: const Color(0xFF2C1810),
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
                     ),
                   ),
                 ],
@@ -24159,300 +26036,404 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
     );
   }
 
-  // 🌱 NOUVELLE SECTION: Informations sur les semences
-  Widget _seedCard(String? seedInfo, String? soilInfo, String? nurseryInfo) {
-    // Parse seed info lines with colors
-    Widget buildSeedLine(String line) {
-      Color iconColor = Colors.greenAccent;
-      IconData iconData = Icons.eco_rounded;
-      
-      if (line.startsWith('📊')) {
-        iconColor = const Color(0xFF3B82F6);
-        iconData = Icons.analytics_rounded;
-      } else if (line.startsWith('📏')) {
-        iconColor = const Color(0xFFF59E0B);
-        iconData = Icons.straighten_rounded;
-      } else if (line.startsWith('🌡️')) {
-        iconColor = const Color(0xFFEF4444);
-        iconData = Icons.thermostat_rounded;
-      } else if (line.startsWith('✅')) {
-        iconColor = const Color(0xFF22C55E);
-        iconData = Icons.check_circle_rounded;
-      } else if (line.startsWith('💡')) {
-        iconColor = const Color(0xFFF59E0B);
-        iconData = Icons.lightbulb_rounded;
-      }
-      
-      // Remove emoji prefix for clean display
-      final cleanLine = line.replaceFirst(RegExp(r'^[📊📏🌡️✅💡]\s*'), '');
-      
-      return Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: iconColor.withOpacity( 0.08),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: iconColor.withOpacity( 0.15)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity( 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(iconData, color: iconColor, size: 14),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                cleanLine.isNotEmpty ? cleanLine : line,
-                style: const TextStyle(color: Color(0xFF1F2937), fontSize: 12, height: 1.4),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFFFFF), Color(0xFFF0FDF4)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF16A34A).withOpacity( 0.2)),
-        boxShadow: [
-          BoxShadow(color: const Color(0xFF16A34A).withOpacity( 0.1), blurRadius: 12, offset: const Offset(0, 4)),
-        ],
-      ),
+  // Page 5: Tips
+  Widget _buildTipsPage(List<dynamic> tips) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF16A34A).withOpacity( 0.15),
-                  borderRadius: BorderRadius.circular(10),
+          // Chapter header
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                  ),
+                  child: Text(
+                    'Toko 5',
+                    style: GoogleFonts.merriweather(
+                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                      fontSize: 12,
+                      letterSpacing: 2,
+                    ),
+                  ),
                 ),
-                child: const Icon(Icons.grass_rounded, color: Color(0xFF16A34A), size: 18),
-              ),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Masomboly & Tany', style: TextStyle(color: Color(0xFF1F2937), fontSize: 15, fontWeight: FontWeight.w700)),
-                    Text('Fampahalalana teknika', style: TextStyle(color: Color(0xFF6B7280), fontSize: 10)),
-                  ],
+                const SizedBox(height: 16),
+                Text(
+                  'Toro-hevitra',
+                  style: GoogleFonts.merriweather(
+                    color: const Color(0xFF2C1810),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          // Semences
-          if ((seedInfo ?? '').isNotEmpty) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFDCFCE7),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF16A34A).withOpacity( 0.2)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.spa_rounded, color: Color(0xFF16A34A), size: 16),
-                      const SizedBox(width: 6),
-                      const Text('MASOMBOLY', style: TextStyle(color: Color(0xFF16A34A), fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF16A34A).withOpacity( 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text('Semences', style: TextStyle(color: Color(0xFF16A34A), fontSize: 9, fontWeight: FontWeight.w500)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  ...seedInfo!.split('\n').where((l) => l.trim().isNotEmpty).map((line) => buildSeedLine(line.trim())),
-                ],
-              ),
+          const SizedBox(height: 24),
+          ...tips.map<Widget>((tip) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withOpacity(0.05),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.2)),
             ),
-            const SizedBox(height: 12),
-          ],
-          // Sol
-          if ((soilInfo ?? '').isNotEmpty) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF92400E).withOpacity( 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFF59E0B).withOpacity( 0.2)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withOpacity( 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.landscape_rounded, color: Color(0xFFF59E0B), size: 16),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('TANY (Sol)', style: TextStyle(color: Color(0xFFF59E0B), fontSize: 11, fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 4),
-                        Text(soilInfo!, style: const TextStyle(color: Color(0xFF1F2937), fontSize: 12, height: 1.4)),
-                      ],
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '💡',
+                  style: const TextStyle(fontSize: 18),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    tip.toString(),
+                    style: GoogleFonts.lora(
+                      color: const Color(0xFF2C1810),
+                      fontSize: 14,
+                      height: 1.6,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-          ],
-          // Pépinière
-          if ((nurseryInfo ?? '').isNotEmpty) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0891B2).withOpacity( 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF06B6D4).withOpacity( 0.2)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF06B6D4).withOpacity( 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.home_work_rounded, color: Color(0xFF06B6D4), size: 16),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('TANIN-KETSA (Pépinière)', style: TextStyle(color: Color(0xFF06B6D4), fontSize: 11, fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 4),
-                        Text(nurseryInfo!, style: const TextStyle(color: Color(0xFF1F2937), fontSize: 12, height: 1.4)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          )),
         ],
       ),
     );
   }
 
-  Widget _stepsCard(List<dynamic> steps) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFECFDF5)]),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF16A34A).withOpacity( 0.15)),
-        boxShadow: [BoxShadow(color: const Color(0xFF16A34A).withOpacity( 0.08), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
+  // Additional page: Benefits
+  Widget _buildBenefitsPage(String benefits) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('📋 Dingana amin\'ny fambolena', style: TextStyle(color: Color(0xFF1F2937), fontSize: 15, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 10),
-          ...steps.asMap().entries.map<Widget>((e) {
-            final value = e.value;
-            if (value is Map) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                  ),
+                  child: Text(
+                    'Toko ${_getCurrentChapterNumber()}',
+                    style: GoogleFonts.merriweather(
+                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                      fontSize: 12,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Tombontsoa',
+                  style: GoogleFonts.merriweather(
+                    color: const Color(0xFF2C1810),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildTextContent(benefits),
+        ],
+      ),
+    );
+  }
+
+  // Additional page: Care
+  Widget _buildCarePage(String care) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                  ),
+                  child: Text(
+                    'Toko ${_getCurrentChapterNumber()}',
+                    style: GoogleFonts.merriweather(
+                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                      fontSize: 12,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Fikarakarana',
+                  style: GoogleFonts.merriweather(
+                    color: const Color(0xFF2C1810),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildTextContent(care),
+        ],
+      ),
+    );
+  }
+
+  // Additional page: Diseases
+  Widget _buildDiseasesPage(String diseases) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                  ),
+                  child: Text(
+                    'Toko ${_getCurrentChapterNumber()}',
+                    style: GoogleFonts.merriweather(
+                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                      fontSize: 12,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Aretina sy Bibikely',
+                  style: GoogleFonts.merriweather(
+                    color: const Color(0xFF2C1810),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildTextContent(diseases),
+        ],
+      ),
+    );
+  }
+
+  // Additional page: Harvesting
+  Widget _buildHarvestingPage(String harvesting) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                  ),
+                  child: Text(
+                    'Toko ${_getCurrentChapterNumber()}',
+                    style: GoogleFonts.merriweather(
+                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                      fontSize: 12,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Fijinjana',
+                  style: GoogleFonts.merriweather(
+                    color: const Color(0xFF2C1810),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildTextContent(harvesting),
+        ],
+      ),
+    );
+  }
+
+  // Additional page: Calendar
+  Widget _buildCalendarPage(List<dynamic> calendar) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                  ),
+                  child: Text(
+                    'Toko ${_getCurrentChapterNumber()}',
+                    style: GoogleFonts.merriweather(
+                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                      fontSize: 12,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Kalandrie',
+                  style: GoogleFonts.merriweather(
+                    color: const Color(0xFF2C1810),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          ...calendar.map<Widget>((item) {
+            if (item is Map) {
+              final month = item['month']?.toString() ?? '';
+              final activity = item['activity']?.toString() ?? '';
+              
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2C1810).withOpacity(0.03),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                ),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: const Color(0xFF16A34A).withOpacity( 0.15), borderRadius: BorderRadius.circular(8)),
-                      child: Text(value['week']?.toString() ?? 'H${e.key + 1}', style: const TextStyle(color: Color(0xFF16A34A), fontWeight: FontWeight.bold, fontSize: 12)),
+                    Text(
+                      month,
+                      style: GoogleFonts.merriweather(
+                        color: const Color(0xFF2C1810),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(value['action']?.toString() ?? '', style: const TextStyle(color: Color(0xFF4B5563)))),
+                    const SizedBox(height: 6),
+                    Text(
+                      activity,
+                      style: GoogleFonts.lora(
+                        color: const Color(0xFF2C1810).withOpacity(0.7),
+                        fontSize: 13,
+                        height: 1.5,
+                      ),
+                    ),
                   ],
                 ),
               );
             }
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: const Color(0xFF16A34A).withOpacity( 0.15), borderRadius: BorderRadius.circular(8)),
-                    child: Text('H${e.key + 1}', style: const TextStyle(color: Color(0xFF16A34A), fontWeight: FontWeight.bold, fontSize: 12)),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text(value.toString(), style: const TextStyle(color: Color(0xFF4B5563)))),
-                ],
-              ),
-            );
+            return const SizedBox.shrink();
           }),
         ],
       ),
     );
   }
 
-  Widget _tipsCard(List<dynamic> tips) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)]),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF59E0B).withOpacity( 0.25)),
-        boxShadow: [BoxShadow(color: const Color(0xFFF59E0B).withOpacity( 0.1), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('💡 Toro-hevitra', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF92400E))),
-          const SizedBox(height: 10),
-          ...tips.map<Widget>((tip) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('• ', style: TextStyle(fontSize: 15, color: Color(0xFFD97706))),
-                    Expanded(child: Text(tip.toString(), style: const TextStyle(color: Color(0xFF78350F), fontSize: 13))),
-                  ],
+  // Helper to build text content with proper formatting
+  Widget _buildTextContent(String content) {
+    final lines = content.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: lines.map((line) {
+        final trimmedLine = line.trim();
+        
+        // Check if it's a section header (starts with emoji or is all caps)
+        final isSectionHeader = trimmedLine.contains(RegExp(r'^[🌟💰🌱💡📊🔪🏪📅⚠️🐛💧🌿]')) || 
+                                (trimmedLine == trimmedLine.toUpperCase() && trimmedLine.length > 3);
+        
+        if (isSectionHeader) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 8),
+            child: Text(
+              trimmedLine,
+              style: GoogleFonts.merriweather(
+                color: const Color(0xFF2C1810),
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          );
+        }
+        
+        // Regular line with bullet point
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (trimmedLine.startsWith('•') || trimmedLine.startsWith('-'))
+                const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  trimmedLine.replaceFirst(RegExp(r'^[•\-]\s*'), ''),
+                  style: GoogleFonts.lora(
+                    color: const Color(0xFF2C1810),
+                    fontSize: 13,
+                    height: 1.6,
+                  ),
                 ),
-              )),
-        ],
-      ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
+  }
+
+  // Helper to get the current chapter number based on page index
+  String _getCurrentChapterNumber() {
+    return '${_currentPage + 1}';
   }
 }
 
@@ -25487,12 +27468,107 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
         'fomba_fijinjana': "Ravina.",
         'saison': "Taona iray manontolo."
       },
-      'calc': {'seed_ha': 5.0, 'yield_ha': 10.0, 'manure_ha': 10000.0, 'npk_ha': 50.0, 'urea_ha': 50.0},
+      'calc': {'seed_ha': 5.0, 'yield_ha': 15.0, 'manure_ha': 10000.0, 'npk_ha': 50.0, 'urea_ha': 50.0},
       'tasks': [
         {'d': 0, 't': "Famafazana", 'c': Colors.green},
         {'d': 60, 't': "Fijinjana", 'c': Colors.orange}
       ],
       'windows': {'default': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
+    },
+    'oviala': {
+      'name': "Oviala (Igname)",
+      'tech': {
+        'tany': "Tany lalina lonaka (60cm+), drainage tsara. pH 5.5-6.5.",
+        'zezika': "Komposta 5 T/ha. Mila Potasse.",
+        'fomba_fambolena': "Billon avo 30-40cm. Elanelana 100x40cm. Tapaka oviala 150-200g.",
+        'fomba_fiavana': "Buttage 3 heny mandritra ny famokarana.",
+        'fomba_fijinjana': "Rehefa malazo ny ravina (8-10 volana).",
+        'saison': "Martsa - Aprily."
+      },
+      'calc': {'seed_ha': 2500.0, 'is_tige': true, 'yield_ha': 20.0, 'manure_ha': 5000.0, 'npk_ha': 300.0, 'urea_ha': 0.0},
+      'tasks': [
+        {'d': 0, 't': "Fambolena tapaka", 'c': Colors.green},
+        {'d': 60, 't': "Buttage 1", 'c': Colors.blue},
+        {'d': 120, 't': "Buttage 2", 'c': Colors.blue},
+        {'d': 180, 't': "Buttage 3", 'c': Colors.blue},
+        {'d': 270, 't': "Fihadiana", 'c': Colors.orange}
+      ],
+      'windows': {'default': [3, 4]}
+    },
+    'menthe': {
+      'name': "Menthe",
+      'tech': {
+        'tany': "Tany lonaka, mando, manankarena zezika. pH 6-7.",
+        'zezika': "Komposta 2 T/ha.",
+        'fomba_fambolena': "30x30cm. Tapaka tongotra 10-15cm.",
+        'fomba_fiavana': "Pincement ny tendrony.",
+        'fomba_fijinjana': "Ravina isaky ny 2-3 herinandro (tsy tapaka).",
+        'saison': "Taona iray manontolo."
+      },
+      'calc': {'seed_ha': 1.0, 'is_tige': true, 'yield_ha': 15.0, 'manure_ha': 2000.0, 'npk_ha': 50.0, 'urea_ha': 50.0},
+      'tasks': [
+        {'d': 0, 't': "Famafazana tapaka", 'c': Colors.green},
+        {'d': 14, 't': "Pincement", 'c': Colors.blue},
+        {'d': 30, 't': "Fijinjana 1", 'c': Colors.orange},
+        {'d': 60, 't': "Fijinjana matetika", 'c': Colors.orange}
+      ],
+      'windows': {'default': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
+    },
+    'celeri': {
+      'name': "Céleri",
+      'tech': {
+        'tany': "Tany lonaka misy organika be, mando. pH 6-7.",
+        'zezika': "Komposta 5 T/ha.",
+        'fomba_fambolena': "30x30cm. Pépinière 8-10 herinandro.",
+        'fomba_fiavana': "Buttage 2-3 heny (tahony fotsy).",
+        'fomba_fijinjana': "Rehefa avo 30-40cm (120-150 andro).",
+        'saison': "Ririnina (mangatsiaka)."
+      },
+      'calc': {'seed_ha': 0.5, 'yield_ha': 30.0, 'manure_ha': 5000.0, 'npk_ha': 200.0, 'urea_ha': 100.0},
+      'tasks': [
+        {'d': 0, 't': "Famafazana pépinière", 'c': Colors.green},
+        {'d': 70, 't': "Fanetsana", 'c': Colors.blue},
+        {'d': 100, 't': "Buttage 1", 'c': Colors.blue},
+        {'d': 130, 't': "Buttage 2", 'c': Colors.blue},
+        {'d': 150, 't': "Fijinjana", 'c': Colors.orange}
+      ],
+      'windows': {'highland': [3, 4, 5, 6, 7, 8], 'default': [4, 5, 6]}
+    },
+    'kabaro': {
+      'name': "Kabaro (Gombo)",
+      'tech': {
+        'tany': "Tany lonaka fasika, drainage tsara. pH 6-6.8.",
+        'zezika': "Komposta 3 T/ha.",
+        'fomba_fambolena': "60x40cm. Fafy mivantana. Alona voa 24h.",
+        'fomba_fiavana': "Fiavàna.",
+        'fomba_fijinjana': "Voa tanora (8-12cm) isaky ny 2-3 andro.",
+        'saison': "Lohataona (mafana)."
+      },
+      'calc': {'seed_ha': 10.0, 'yield_ha': 10.0, 'manure_ha': 3000.0, 'npk_ha': 150.0, 'urea_ha': 100.0},
+      'tasks': [
+        {'d': 0, 't': "Famafazana", 'c': Colors.green},
+        {'d': 50, 't': "Voaloham-bokatra", 'c': Colors.orange},
+        {'d': 60, 't': "Fiotazana matetika", 'c': Colors.orange}
+      ],
+      'windows': {'default': [10, 11, 12, 1]}
+    },
+    'amarante_queue_de_renard': {
+      'name': "Amarante Queue-de-Renard",
+      'tech': {
+        'tany': "Tany rehetra, mahatanty hain-tany. pH 6-7.5.",
+        'zezika': "Tsy mila be (mahia tsara).",
+        'fomba_fambolena': "50x30cm. Voa afangaro fasika (madinika).",
+        'fomba_fiavana': "Fiavàna.",
+        'fomba_fijinjana': "Ravina: 40-50 andro. Voa: 90-120 andro.",
+        'saison': "Septambra - Desambra."
+      },
+      'calc': {'seed_ha': 3.0, 'yield_ha': 1.5, 'manure_ha': 0.0, 'npk_ha': 50.0, 'urea_ha': 0.0},
+      'tasks': [
+        {'d': 0, 't': "Famafazana", 'c': Colors.green},
+        {'d': 45, 't': "Fijinjana ravina", 'c': Colors.orange},
+        {'d': 110, 't': "Fijinjana voa", 'c': Colors.orange}
+      ],
+      'windows': {'default': [9, 10, 11, 12]}
     },
   };
 
@@ -31436,13 +33512,13 @@ class OlitraSpeciesScreen extends StatelessWidget {
         'lifecycle': '45-60 andro (atody → olitra → lalitra)',
         'temperature': '25-35°C (optimal 28-30°C)',
         'humidity': '60-80%',
-        'proteine': '40-45% (olitra maina)',
-        'lipides': '30-35%',
+        'hery': '40-45% (olitra maina)',
+        'menaka': '30-35%',
         'advantages': [
           'Mihinana fako organika rehetra',
           'Tsy misy aretina (tsy toy ny lalitra mahazatra)',
           'Mitombo haingana (2 herinandro)',
-          'Protéine sy lipides betsaka',
+          'Sakafo mahery sy menaka betsaka',
           'Mora tezaina - tsy mila fitaovana lafo',
         ],
         'uses': ['Sakafo akoho', 'Sakafo trondro', 'Sakafo kisoa', 'Zezika (frass)'],
@@ -31462,10 +33538,10 @@ class OlitraSpeciesScreen extends StatelessWidget {
         'lifecycle': '90-120 andro (atody → olitra → nymphe → scarabée)',
         'temperature': '25-30°C (optimal 27°C)',
         'humidity': '50-70%',
-        'proteine': '50-55% (olitra maina)',
-        'lipides': '25-30%',
+        'hery': '50-55% (olitra maina)',
+        'menaka': '25-30%',
         'advantages': [
-          'Protéine ambony indrindra',
+          'Sakafo mahery indrindra',
           'Tsy misy fofona',
           'Azo atao sakafo olona koa',
           'Mora tehirizina (maina)',
@@ -31482,14 +33558,14 @@ class OlitraSpeciesScreen extends StatelessWidget {
         'name': 'Grillons (Acheta domesticus)',
         'emoji': '🦗',
         'localName': 'Valala trano',
-        'description': 'Bibikely misy protéine betsaka. Azo atao sakafo olona.',
+        'description': 'Bibikely misy sakafo mahery betsaka. Azo atao sakafo olona.',
         'lifecycle': '60-90 andro',
         'temperature': '28-32°C',
         'humidity': '40-60%',
-        'proteine': '60-70% (maina)',
-        'lipides': '15-20%',
+        'hery': '60-70% (maina)',
+        'menaka': '15-20%',
         'advantages': [
-          'Protéine ambony indrindra',
+          'Sakafo mahery indrindra',
           'Tsara ho sakafo olona',
           'Mora tezaina',
         ],
@@ -31561,14 +33637,14 @@ class OlitraSpeciesScreen extends StatelessWidget {
                   children: [
                     Text('🌍', style: TextStyle(fontSize: 20)),
                     SizedBox(width: 8),
-                    Text('NAHOANA FIOMPIANA OLITRA?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text('TOMBOTSOA AZO AVY AMIN\'NY OLITRA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   ],
                 ),
                 const SizedBox(height: 12),
-                _buildWhyItem('🌱 Eco-friendly', 'Tsy mila tany be, rano kely, tsy misy gaz'),
-                _buildWhyItem('💰 Tsy lafo', 'Fitaovana tsotra, sakafo fako organika'),
-                _buildWhyItem('🥩 Protéine be', '40-70% protéine - ambony noho ny hena'),
-                _buildWhyItem('♻️ Recycling', 'Mamadika fako ho sakafo sy zezika'),
+                _buildWhyItem('🌱 Tsy manimba ny tontolo', 'Tsy mila tany be, rano kely, tsy misy gazy fako'),
+                _buildWhyItem('💰 Tsy mila vola be', 'Fitaovana tsotra, sakafo fako organika'),
+                _buildWhyItem('🥩 Sakafo mahery', 'Misy hery 40-70% - ambony noho ny hena'),
+                _buildWhyItem('♻️ Fanodinana fako', 'Mamadika fako ho sakafo sy zezika'),
                 _buildWhyItem('📈 Mitombo haingana', '2-4 herinandro dia vonona'),
               ],
             ),
@@ -31604,7 +33680,7 @@ class OlitraSpeciesScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(color: Colors.red.shade100, borderRadius: BorderRadius.circular(6)),
-                          child: Text('🥩 ${sp['proteine']}', style: TextStyle(fontSize: 9, color: Colors.red.shade800)),
+                          child: Text('🥩 ${sp['hery']}', style: TextStyle(fontSize: 9, color: Colors.red.shade800)),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -31631,19 +33707,19 @@ class OlitraSpeciesScreen extends StatelessWidget {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Expanded(child: _buildInfoCard('💧 Hamandoana', sp['humidity'] as String)),
+                            Expanded(child: _buildInfoCard('💧 Hamandoam-drivotra', sp['humidity'] as String)),
                             const SizedBox(width: 8),
                             Expanded(child: _buildInfoCard('📊 Vokatra', sp['production'] as String)),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        const Text('✅ Tombony:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.green)),
+                        const Text('✅ Tombotsoa:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.green)),
                         ...(sp['advantages'] as List).map((adv) => Padding(
                           padding: const EdgeInsets.only(left: 8, top: 3),
                           child: Text('• $adv', style: TextStyle(fontSize: 10, color: Colors.grey.shade700)),
                         )),
                         const SizedBox(height: 12),
-                        const Text('💰 Vidiny:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                        const Text('💰 Vidin\'ny fivarotana:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                         ...(sp['price'] as Map).entries.map((entry) => Container(
                           margin: const EdgeInsets.only(top: 4),
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -32486,18 +34562,18 @@ class ZezikaTypesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final zezikaTypes = [
       {
-        'name': 'ZEZIMAITSO (Engrais Vert)',
+        'name': 'ZEZIMAITSO',
         'emoji': '🌿',
-        'description': 'Teknika tsotra indrindra - tsy mila fermentation',
+        'description': 'Teknika tsotra indrindra - tsy mila fahalovana',
         'duration': 'Avy hatrany',
         'difficulty': 'Mora indrindra',
         'color': Colors.green,
         'method': 'Tapahana ny ravina dia atototra avy hatrany any anaty tany miaraka amin\'ny masomboly na alohan\'ny hambolena.',
         'plants': [
-          {'name': 'Bemangidy (Tithonia)', 'benefit': 'Potassium betsaka'},
-          {'name': 'Tephrosia', 'benefit': 'Azote betsaka'},
-          {'name': 'Voandelaka', 'benefit': 'Nutriments isan-karazany'},
-          {'name': 'Tsikafona', 'benefit': 'Azote sy mineraly'},
+          {'name': 'Bemangidy (Tithonia)', 'benefit': 'Sira potasa betsaka'},
+          {'name': 'Tephrosia', 'benefit': 'Azota betsaka'},
+          {'name': 'Voandelaka', 'benefit': 'Otrikaina isan-karazany'},
+          {'name': 'Tsikafona', 'benefit': 'Azota sy mineraly'},
           {'name': 'Zozoro', 'benefit': 'Avy amin\'ny rano'},
         ],
       },
@@ -32529,14 +34605,14 @@ class ZezikaTypesScreen extends StatelessWidget {
           {'item': 'Ravina maitso', 'qty': '1.5 sarety'},
           {'item': 'Ravina maina', 'qty': '1.5 sarety'},
           {'item': 'Akofa', 'qty': '1 sobika'},
-          {'item': 'Akofa may (carbonisé)', 'qty': '1 sobika'},
+          {'item': 'Akofa may (vita may)', 'qty': '1 sobika'},
           {'item': 'Apombo malemy', 'qty': '0.5 sobika'},
           {'item': 'Rano', 'qty': '150 litatra'},
           {'item': 'Activateur', 'qty': '2 litatra'},
         ],
       },
       {
-        'name': 'RANONJEZIKA (Purin)',
+        'name': 'RANONJEZIKA',
         'emoji': '💧',
         'description': 'Zezika ranony mahery vaika',
         'duration': '15 andro',
@@ -32544,10 +34620,10 @@ class ZezikaTypesScreen extends StatelessWidget {
         'color': Colors.teal,
         'method': 'Fahalovan\'ny ravina anaty rano mandritra ny 15 andro.',
         'plants': [
-          {'name': 'Bemangidy (Tithonia)', 'benefit': 'Potassium'},
-          {'name': 'Tephrosia', 'benefit': 'Azote'},
+          {'name': 'Bemangidy (Tithonia)', 'benefit': 'Sira potasa'},
+          {'name': 'Tephrosia', 'benefit': 'Azota'},
           {'name': 'Voandelaka', 'benefit': 'Mineraly'},
-          {'name': 'Consoude', 'benefit': 'Potassium sy phosphore'},
+          {'name': 'Consoude', 'benefit': 'Sira potasa sy fosfora'},
         ],
       },
     ];
@@ -33724,9 +35800,9 @@ class _HolatraSpeciesScreenState extends State<HolatraSpeciesScreen> {
       'hafanana': '20-28°C',
       'hamandoana': '80-90%',
       'fotoana': '3-4 herinandro',
-      'vokatra': '25-35% ny lanjan\'ny substrat',
+      'vokatra': '25-35% ny lanjan\'ny harena',
       'sakafo': 'Mololo, bozaka maina, taim-bary',
-      'tombony': ['Mora ambolena', 'Tsy lafo ny substrat', 'Mafy tsara', 'Vokatra haingana'],
+      'tombony': ['Mora ambolena', 'Tsy lafo ny harena', 'Mafy tsara', 'Vokatra haingana'],
       'fady': ['Tsy tia hafanana ambony 30°C', 'Tsy tia rivotra maina'],
     },
     'Shiitake': {
@@ -33737,10 +35813,10 @@ class _HolatraSpeciesScreenState extends State<HolatraSpeciesScreen> {
       'hafanana': '15-25°C',
       'hamandoana': '75-85%',
       'fotoana': '6-12 volana (hazo)',
-      'vokatra': '20-30% ny lanjan\'ny substrat',
+      'vokatra': '20-30% ny lanjan\'ny harena',
       'sakafo': 'Hazo oak, hazo mafy hafa, sciure',
       'tombony': ['Vidiny lafo tsena', 'Maharitra ela', 'Tsiro tsara indrindra'],
-      'fady': ['Mila fotoana lava', 'Mila substrat manokana'],
+      'fady': ['Mila fotoana lava', 'Mila harena manokana'],
     },
     'Champignon de Paris': {
       'emoji': '🍄‍🟫',
@@ -33750,10 +35826,10 @@ class _HolatraSpeciesScreenState extends State<HolatraSpeciesScreen> {
       'hafanana': '14-18°C',
       'hamandoana': '85-90%',
       'fotoana': '6-8 herinandro',
-      'vokatra': '20-25% ny lanjan\'ny substrat',
+      'vokatra': '20-25% ny lanjan\'ny harena',
       'sakafo': 'Taim-biby (soavaly), mololo voapoizina',
       'tombony': ['Tsena lehibe', 'Mpividy betsaka', 'Maharitra ela'],
-      'fady': ['Mila hafanana ambany', 'Mila substrat manokana'],
+      'fady': ['Mila hafanana ambany', 'Mila harena manokana'],
     },
     'Holatra Lovia (Volvariella)': {
       'emoji': '🍄‍🟫',
@@ -33763,9 +35839,9 @@ class _HolatraSpeciesScreenState extends State<HolatraSpeciesScreen> {
       'hafanana': '28-35°C',
       'hamandoana': '80-90%',
       'fotoana': '2-3 herinandro',
-      'vokatra': '10-15% ny lanjan\'ny substrat',
+      'vokatra': '10-15% ny lanjan\'ny harena',
       'sakafo': 'Mololo vary, bozaka, ravim-boankazo',
-      'tombony': ['Tia hafanana (tsara ho an\'i Madagasikara)', 'Vokatra haingana indrindra', 'Substrat mora hita'],
+      'tombony': ['Tia hafanana (tsara ho an\'i Madagasikara)', 'Vokatra haingana indrindra', 'Harena mora hita'],
       'fady': ['Tsy maharitra ela', 'Mila hamandoana avo'],
     },
     'Holatra Fanahy (Reishi)': {
@@ -33776,7 +35852,7 @@ class _HolatraSpeciesScreenState extends State<HolatraSpeciesScreen> {
       'hafanana': '24-28°C',
       'hamandoana': '80-95%',
       'fotoana': '3-6 volana',
-      'vokatra': '5-10% ny lanjan\'ny substrat',
+      'vokatra': '5-10% ny lanjan\'ny harena',
       'sakafo': 'Hazo mafy, sciure',
       'tombony': ['Vidiny ambony dia ambony', 'Fanafody malaza', 'Maharitra ela rehefa maina'],
       'fady': ['Tsy fihinana mivantana', 'Mila fotoana lava'],
@@ -33789,7 +35865,7 @@ class _HolatraSpeciesScreenState extends State<HolatraSpeciesScreen> {
       'hafanana': '22-30°C',
       'hamandoana': '80-90%',
       'fotoana': '3-4 herinandro',
-      'vokatra': '20-30% ny lanjan\'ny substrat',
+      'vokatra': '20-30% ny lanjan\'ny harena',
       'sakafo': 'Mololo, bozaka maina, taim-bary',
       'tombony': ['Tsara tarehy (mavo)', 'Tia hafanana', 'Tsiro manokana'],
       'fady': ['Tsy maharitra ela', 'Mora simba'],
@@ -33822,7 +35898,7 @@ class _HolatraSpeciesScreenState extends State<HolatraSpeciesScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('KARAZAN\'NY HOLATRA', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('Champignons comestibles', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      Text('Holatra azo hanina', style: TextStyle(color: Colors.white70, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -33885,7 +35961,7 @@ class _HolatraSpeciesScreenState extends State<HolatraSpeciesScreen> {
                   _buildConditionRow('💧', 'Hamandoana', species['hamandoana']),
                   _buildConditionRow('⏱️', 'Fotoana fitomboana', species['fotoana']),
                   _buildConditionRow('📦', 'Vokatra azo', species['vokatra']),
-                  _buildConditionRow('🌾', 'Sakafo (Substrat)', species['sakafo']),
+                  _buildConditionRow('🌾', 'Sakafo (Harena)', species['sakafo']),
                 ],
               ),
             ),

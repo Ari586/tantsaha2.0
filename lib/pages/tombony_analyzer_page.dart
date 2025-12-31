@@ -4,21 +4,21 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 // ==========================================
-// 1. DESIGN SYSTEM (V36.1 INSIGHTS THEME)
-// ==========================================
+// 1. DESIGN SYSTEM (V36.1 CRÈME DOUX)
+// ==========================================ter
 class AppColors {
-  static const Color bgTop = Color(0xFF064E3B); // Deep Green
-  static const Color bgBottom = Color(0xFF0F172A); // Midnight Blue
-  static const Color surface = Color.fromRGBO(15, 23, 42, 0.85);
-  static const Color glass = Color.fromRGBO(15, 23, 42, 0.6);
-  static const Color primaryGreen = Color(0xFF34D399);
-  static const Color primaryOrange = Color(0xFFFB923C);
-  static const Color accentBlue = Color(0xFF60A5FA);
-  static const Color accentPurple = Color(0xFFC084FC);
-  static const Color textMain = Colors.white;
-  static const Color textMuted = Color(0xFF94A3B8);
-  static const Color glassBorder = Color.fromRGBO(255, 255, 255, 0.12);
-  static const Color border = Color.fromRGBO(255, 255, 255, 0.1);
+  static const Color bgTop = Color(0xFFFFF8DC); // Crème
+  static const Color bgBottom = Color(0xFFF5F5DC); // Beige clair
+  static const Color surface = Color.fromRGBO(245, 235, 220, 0.90); // Beige rosé
+  static const Color glass = Color.fromRGBO(250, 240, 230, 0.75);
+  static const Color primaryGreen = Color(0xFF2E7D32); // Vert foncé
+  static const Color primaryOrange = Color(0xFFE65100); // Orange foncé
+  static const Color accentBlue = Color(0xFF0277BD); // Bleu foncé
+  static const Color accentPurple = Color(0xFF7B1FA2); // Violet foncé
+  static const Color textMain = Color(0xFF3E2723); // Marron foncé
+  static const Color textMuted = Color(0xFF6D4C41); // Marron moyen
+  static const Color glassBorder = Color.fromRGBO(139, 110, 99, 0.3);
+  static const Color border = Color.fromRGBO(139, 110, 99, 0.2);
 }
 
 // ==========================================
@@ -79,6 +79,12 @@ final Map<String, Map<String, AgriItem>> database = {
     "Voasary (Mandarine)": const AgriItem(cost: 600, rev: 2500, weeks: 150, ratio: [0.5, 0.2, 0.3], cat: "Arbres", tip: "Tia masoandro. Saro-pady."),
     "Voasary (Clémentine)": const AgriItem(cost: 650, rev: 2800, weeks: 150, ratio: [0.5, 0.2, 0.3], cat: "Arbres", tip: "Vokatra lafo vidy."),
     "Voasary Grefy (Greffé)": const AgriItem(cost: 1200, rev: 4500, weeks: 100, ratio: [0.6, 0.2, 0.2], cat: "Arbres", tip: "Miakatra haingana (2-3 taona) ary mamy."),
+    // NOUVEAUX - 2025
+    "Oviala (Igname)": const AgriItem(cost: 1500, rev: 4000, weeks: 36, ratio: [0.3, 0.2, 0.5], cat: "Tubercules", tip: "Mila buttage 3 heny. Tany lalina."),
+    "Menthe": const AgriItem(cost: 200, rev: 1000, weeks: 8, ratio: [0.1, 0.3, 0.6], cat: "Herbes", tip: "Maniry haingana. Tsingerina fohy."),
+    "Céleri": const AgriItem(cost: 350, rev: 1200, weeks: 20, ratio: [0.15, 0.35, 0.5], cat: "Légumes", tip: "Mila buttage sy rano be."),
+    "Kabaro (Gombo)": const AgriItem(cost: 180, rev: 700, weeks: 12, ratio: [0.1, 0.35, 0.55], cat: "Légumes", tip: "Jinjao matetika. Mora ambolena."),
+    "Amarante Queue-de-Renard": const AgriItem(cost: 100, rev: 400, weeks: 14, ratio: [0.05, 0.2, 0.75], cat: "Grains", tip: "Mahatanty haintany. Protein be."),
   },
   'fiompiana': {
     // POISSONS
@@ -114,7 +120,7 @@ class MadaAgriApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mada-Agri V36.1 Insights',
+      title: 'Tombony Analyzer',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: AppColors.bgBottom,
@@ -433,39 +439,44 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
 
   // --- WIDGETS ---
   Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "MADA AGRI",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-                color: Colors.white,
-                shadows: [Shadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 2))],
-              ),
+        const Text(
+          "MADA AGRI",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+            color: Color(0xFF000000),
+            shadows: [Shadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 2))],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF000000).withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Text(
+            "TOMBONY ANALYZER",
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF000000),
             ),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                "V36.1 INSIGHTS",
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.glassBorder, width: 1),
+          ),
+          child: Row(children: [_tabItem('fambolena', "FAMBOLENA"), _tabItem('fiompiana', "FIOMPIANA")]),
         ),
       ],
     );
@@ -494,22 +505,35 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
             ),
           ),
           const SizedBox(height: 8),
-          TextField(
-            controller: _budgetController,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 38,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              shadows: [Shadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 2))],
-            ),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
-            onChanged: (v) => _runCalculation(false),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return SizedBox(
+                width: constraints.maxWidth,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: SizedBox(
+                    width: constraints.maxWidth,
+                    child: TextField(
+                      controller: _budgetController,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 38,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF8D6E63),
+                        shadows: [Shadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 2))],
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      onChanged: (v) => _runCalculation(false),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
           if (_strat == 'std') ...[
             const SizedBox(height: 15),
@@ -547,7 +571,11 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFA1887F), Color(0xFF8D6E63)],
+            ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1),
           ),
@@ -558,7 +586,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
               const SizedBox(width: 6),
               Text(
                 '${item['label']}: ',
-                style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                style: const TextStyle(fontSize: 11, color: Color(0xFF000000), fontWeight: FontWeight.w700),
               ),
               Text(
                 item['value']!,
@@ -628,19 +656,13 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
   Widget _buildStandardControls() {
     return Column(children: [
       Container(
-        padding: const EdgeInsets.all(5),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.glassBorder, width: 1),
-        ),
-        child: Row(children: [_tabItem('fambolena', "FAMBOLENA"), _tabItem('fiompiana', "FIOMPIANA")]),
-      ),
-      const SizedBox(height: 15),
-      Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF78909C), Color(0xFF546E7A)],
+          ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.glassBorder, width: 1),
           boxShadow: const [
@@ -651,7 +673,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
           child: DropdownButton<String>(
             value: database[_mode]!.containsKey(_selectedKey) ? _selectedKey : database[_mode]!.keys.first,
             isExpanded: true,
-            dropdownColor: const Color(0xFF0F172A),
+            dropdownColor: const Color(0xFF546E7A),
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white),
             items: _buildGroupedDropdownItems(),
             onChanged: (v) => setState(() { _selectedKey = v!; _updateMatContext(); }),
@@ -664,7 +686,6 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
   Widget _tabItem(String id, String label) {
     bool active = _mode == id;
     Color activeBg = id == 'fambolena' ? AppColors.primaryGreen : AppColors.primaryOrange;
-    Color activeText = id == 'fambolena' ? const Color(0xFF022C22) : const Color(0xFF431407);
     
     return Expanded(child: GestureDetector(
       onTap: () => setState(() { _mode = id; _selectedKey = database[id]!.keys.first; _updateMatContext(); }),
@@ -687,7 +708,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
           style: TextStyle(
             fontSize: 13, 
             fontWeight: FontWeight.w700, 
-            color: active ? activeText : const Color(0xFF94A3B8),
+            color: active ? const Color(0xFF0C4A6E) : const Color(0xFF000000),
           ),
         ),
       ),
@@ -702,14 +723,14 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
             "👷 MPIASA",
             DropdownButton<double>(
               value: _laborFactor,
-              dropdownColor: AppColors.bgBottom,
+              dropdownColor: const Color(0xFF546E7A),
               isExpanded: true,
               underline: Container(),
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
               items: const [
-                DropdownMenuItem(value: 1.0, child: Text("Karama (100%)")),
-                DropdownMenuItem(value: 0.5, child: Text("Fanampiana (50%)")),
-                DropdownMenuItem(value: 0.0, child: Text("Asa Tena (0%)")),
+                DropdownMenuItem(value: 1.0, child: Text("Karama (100%)", style: TextStyle(color: Colors.white))),
+                DropdownMenuItem(value: 0.5, child: Text("Fanampiana (50%)", style: TextStyle(color: Colors.white))),
+                DropdownMenuItem(value: 0.0, child: Text("Asa Tena (0%)", style: TextStyle(color: Colors.white))),
               ],
               onChanged: (v) => setState(() {
                 _laborFactor = v!;
@@ -726,12 +747,12 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                 : (_selectedKey.contains('Tantely') ? "🌳 TONTOLO" : "🥣 SAKAFO"),
             DropdownButton<String>(
               value: _matType,
-              dropdownColor: AppColors.bgBottom,
+              dropdownColor: const Color(0xFF546E7A),
               isExpanded: true,
               underline: Container(),
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
               items: _getMatOptions()
-                  .map((e) => DropdownMenuItem(value: e['k'], child: Text(e['v']!)))
+                  .map((e) => DropdownMenuItem(value: e['k'], child: Text(e['v']!, style: const TextStyle(color: Colors.white))))
                   .toList(),
               onChanged: (v) => setState(() {
                 _matType = v!;
@@ -748,7 +769,11 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF78909C), Color(0xFF546E7A)],
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.glassBorder),
         boxShadow: const [
@@ -763,7 +788,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
             style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF94A3B8),
+              color: Color(0xFF000000),
             ),
           ),
           const SizedBox(height: 5),
@@ -812,7 +837,11 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF78909C), Color(0xFF546E7A)],
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.glassBorder),
       ),
@@ -833,7 +862,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                 const SizedBox(height: 4),
                 Text(
                   descLabor,
-                  style: const TextStyle(fontSize: 11, color: Color(0xFFE2E8F0), height: 1.35),
+                  style: const TextStyle(fontSize: 11, color: Colors.white, height: 1.35),
                 ),
               ],
             ),
@@ -854,7 +883,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                 const SizedBox(height: 4),
                 Text(
                   descMat,
-                  style: const TextStyle(fontSize: 11, color: Color(0xFFE2E8F0), height: 1.35),
+                  style: const TextStyle(fontSize: 11, color: Colors.white, height: 1.35),
                 ),
               ],
             ),
@@ -888,7 +917,11 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
           child: Container(
             padding: const EdgeInsets.fromLTRB(5, 12, 5, 12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFA1887F), Color(0xFF6D4C41)],
+              ),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.glassBorder),
             ),
@@ -935,7 +968,11 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     return Container(
       padding: const EdgeInsets.fromLTRB(5, 12, 5, 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFA1887F), Color(0xFF6D4C41)],
+        ),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.glassBorder),
       ),
@@ -977,12 +1014,12 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF8FAFC), Color(0xFFCBD5E1)],
+          colors: [Color(0xFF87CEEB), Color(0xFF00BFFF)],
         ),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.white.withValues(alpha: 0.2),
+            color: const Color(0xFF00BFFF).withValues(alpha: 0.3),
             blurRadius: 25,
             spreadRadius: -5,
             offset: const Offset(0, 10),
@@ -1063,9 +1100,9 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                   style: const TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.primaryGreen,
+                    color: Color(0xFF00D4FF),
                     shadows: [
-                      Shadow(color: Color.fromRGBO(52, 211, 153, 0.3), blurRadius: 40),
+                      Shadow(color: Color.fromRGBO(0, 212, 255, 0.3), blurRadius: 40),
                     ],
                   ),
                 ),
@@ -1290,7 +1327,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF94A3B8),
+              color: Color(0xFF1A237E),
             ),
           ),
         ),
