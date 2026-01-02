@@ -1,8 +1,17 @@
 #!/bin/bash
 set -e
 
-echo "Installing Flutter..."
-git clone https://github.com/flutter/flutter.git -b stable --depth 1
+echo "Checking for Flutter..."
+if [ -d "flutter" ]; then
+  echo "Flutter directory exists. Pulling latest changes..."
+  cd flutter
+  git pull
+  cd ..
+else
+  echo "Installing Flutter..."
+  git clone https://github.com/flutter/flutter.git -b stable --depth 1
+fi
+
 export PATH="$PATH:`pwd`/flutter/bin"
 
 echo "Flutter version:"
@@ -15,6 +24,6 @@ echo "Getting dependencies..."
 flutter pub get
 
 echo "Building web..."
-flutter build web --release
+flutter build web --release --no-tree-shake-icons
 
 echo "Build complete!"
