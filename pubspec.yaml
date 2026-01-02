@@ -42,6 +42,7 @@ dependencies:
   google_fonts: ^6.2.1
   firebase_core: any
   supabase_flutter: ^1.0.0
+  webview_flutter: ^4.9.0
 
 # If a transitive plugin (sign_in_with_apple) causes Android/Kotlin build errors,
 # force a newer compatible version here. This is a temporary override for debug.

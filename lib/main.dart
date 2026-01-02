@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
@@ -12,6 +13,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'pages/tombony_analyzer_page.dart';
 import 'pages/akoho_ebook_page.dart';
+import 'pages/tilapia_nilotica_page.dart';
+import 'pages/carpe_commune_page.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -543,7 +546,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }
   
   Future<void> _checkExistingAccess() async {
-    final isUnlocked = await CodeManager.isAppUnlocked();
+    // TEMPORAIRE : On force l'affichage de l'accueil pour voir les changements
+    // final isUnlocked = await CodeManager.isAppUnlocked();
+    final isUnlocked = false; 
+    
     if (isUnlocked && mounted) {
       // L'app est déjà déverrouillée, aller directement à l'app
       Navigator.of(context).pushReplacement(
@@ -1113,33 +1119,93 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               colors: [Colors.white, Color(0xFFF5F5F5)],
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.primary, width: 4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity( 0.3),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/arie.JPG',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: AppColors.primary.withOpacity( 0.1),
+                          child: const Icon(
+                            Icons.person,
+                            size: 60,
+                            color: AppColors.primary,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Ari Havana',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity( 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Développeur, Créateur',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              
+              // Contributor Section
               Container(
-                width: 120,
-                height: 120,
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primary, width: 4),
+                  border: Border.all(color: AppColors.primary, width: 3),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity( 0.3),
-                      blurRadius: 20,
-                      spreadRadius: 5,
+                      color: AppColors.primary.withOpacity( 0.2),
+                      blurRadius: 15,
+                      spreadRadius: 3,
                     ),
                   ],
                 ),
                 child: ClipOval(
                   child: Image.asset(
-                    'assets/images/arie.JPG',
+                    'assets/images/steeven.jpeg',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: AppColors.primary.withOpacity( 0.1),
                         child: const Icon(
                           Icons.person,
-                          size: 60,
+                          size: 50,
                           color: AppColors.primary,
                         ),
                       );
@@ -1147,31 +1213,32 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               const Text(
-                'Ari Havana',
+                'Steeven A.',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity( 0.1),
+                  color: Colors.orange.withOpacity( 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
-                  'Développeur Web, Apps',
+                  'Créateur',
                   style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.primary,
+                    fontSize: 12,
+                    color: Colors.orange,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
+
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 16),
@@ -1213,8 +1280,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSocialIcon(IconData icon, String tooltip) {
     return Tooltip(
@@ -1553,58 +1621,118 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
                     const SizedBox(height: 40),
 
-                    // Développeur
+                    // Développeurs
                     GestureDetector(
                       onTap: _showDeveloperInfo,
-                      child: Column(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 3),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity( 0.3),
-                                  blurRadius: 15,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                            child: ClipOval(
-                              child: Image.asset(
-                                'assets/images/arie.JPG',
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    color: Colors.white.withOpacity( 0.2),
-                                    child: const Icon(
-                                      Icons.person,
-                                      color: Colors.white,
-                                      size: 45,
+                          // Ari Havana
+                          Column(
+                            children: [
+                              Container(
+                                width: 70,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity( 0.3),
+                                      blurRadius: 10,
+                                      spreadRadius: 2,
                                     ),
-                                  );
-                                },
+                                  ],
+                                ),
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'assets/images/arie.JPG',
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.white.withOpacity( 0.2),
+                                        child: const Icon(
+                                          Icons.person,
+                                          color: Colors.white,
+                                          size: 40,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
                               ),
-                            ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Ari Havana',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Développeur, Créateur',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity( 0.7),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Ari Havana',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Développeur Web, Apps',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity( 0.7),
-                              fontSize: 13,
-                            ),
+                          const SizedBox(width: 30),
+                          // Steeven A.
+                          Column(
+                            children: [
+                              Container(
+                                width: 70,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity( 0.3),
+                                      blurRadius: 10,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'assets/images/steeven.jpeg',
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.white.withOpacity( 0.2),
+                                        child: const Icon(
+                                          Icons.person,
+                                          color: Colors.white,
+                                          size: 40,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Steeven A.',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Créateur',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity( 0.7),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -2288,6 +2416,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
+  bool _showGrid = true;
   late final AnimationController _bgCtrl;
 
   String get _appTitle {
@@ -2348,7 +2477,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         const TrondroTeknikaScreen(),
         const TrondroFeedScreen(),
         const TrondroHealthScreen(),
-        const TrondroWaterScreen(),
+        const TrondroPricesScreen(),
         const FinanceScreen(),
       ];
     } else if (widget.category == 'tantely') {
@@ -2425,7 +2554,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     } else if (widget.category == 'fambolena') {
       return ['Voly', 'Tetiandro', 'Tany', 'Bibikely', 'Vola'];
     } else if (widget.category == 'trondro') {
-      return ['Karazany', 'Teknika', 'Sakafo', 'Fahasalamana', 'Rano', 'Vola'];
+      return ['Karazany', 'Teknika', 'Sakafo', 'Fahasalamana', 'Vidin\'ny', 'Vola'];
     } else if (widget.category == 'tantely') {
       return ['Toho', 'Vokatra', 'Fahasalamana', 'Tetiandro', 'Vola'];
     } else if (widget.category == 'olitra') {
@@ -2472,7 +2601,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         {'icon': '🔧', 'label': 'Teknika'},
         {'icon': '🦐', 'label': 'Sakafo'},
         {'icon': '🩺', 'label': 'Fahasalamana'},
-        {'icon': '💧', 'label': 'Rano'},
+        {'icon': '🏷️', 'label': 'Vidin\'ny'},
         {'icon': '💰', 'label': 'Vola'},
       ];
     } else if (widget.category == 'tantely') {
@@ -2892,13 +3021,153 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
+  LinearGradient _getGradient(String category) {
+    switch (category) {
+      case 'akoho':
+        return LinearGradient(
+          colors: [Colors.orange.shade100, Colors.orange.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'vorona':
+        return LinearGradient(
+          colors: [Colors.cyan.shade100, Colors.cyan.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'bitro':
+        return LinearGradient(
+          colors: [Colors.pink.shade100, Colors.pink.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'kisoa':
+        return LinearGradient(
+          colors: [Colors.red.shade100, Colors.red.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'fambolena':
+        return LinearGradient(
+          colors: [Colors.green.shade100, Colors.green.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'trondro':
+        return LinearGradient(
+          colors: [Colors.blue.shade100, Colors.blue.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'tantely':
+        return LinearGradient(
+          colors: [Colors.amber.shade100, Colors.amber.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'olitra':
+        return LinearGradient(
+          colors: [Colors.lime.shade100, Colors.lime.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'zezika':
+        return LinearGradient(
+          colors: [Colors.brown.shade100, Colors.brown.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'holatra':
+        return LinearGradient(
+          colors: [Colors.blueGrey.shade100, Colors.blueGrey.shade50],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      default:
+        return const LinearGradient(
+          colors: [Colors.white, Colors.white],
+        );
+    }
+  }
+
+  Widget _buildGridMenu() {
+    final items = _navItems;
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 1.1,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _currentIndex = index;
+              _showGrid = false;
+            });
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: _getGradient(widget.category),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity( 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              border: Border.all(color: AppColors.primary.withOpacity( 0.1)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  item['icon'],
+                  style: const TextStyle(fontSize: 40),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  item['label'],
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (!_showGrid) {
+          setState(() {
+            _showGrid = true;
+          });
+        } else {
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        }
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [AppColors.gradientStart, AppColors.gradientEnd],
                 begin: Alignment.topLeft,
@@ -2939,6 +3208,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
                 child: Row(
                   children: [
+                    if (!_showGrid)
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () => setState(() => _showGrid = true),
+                      ),
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -3009,25 +3283,30 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 child: Container(
                   margin: const EdgeInsets.fromLTRB(4, 0, 4, 0),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity( 0.9),
+                    // Effet 3D Transparent (Glassmorphism)
+                    color: Colors.white.withOpacity(0.25),
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                    border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity( 0.05),
-                        blurRadius: 20,
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 30,
+                        spreadRadius: 5,
                         offset: const Offset(0, -5),
                       ),
                     ],
                   ),
                   child: ClipRRect(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: Container(
-                        key: ValueKey<int>(_currentIndex),
-                        child: _pages[_currentIndex],
-                      ),
-                    ),
+                    child: _showGrid
+                        ? _buildGridMenu()
+                        : AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: Container(
+                              key: ValueKey<int>(_currentIndex),
+                              child: _pages[_currentIndex],
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -3121,30 +3400,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         label: const Text('Hanampy'),
         backgroundColor: AppColors.primary,
       ) : null,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withOpacity( 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: NavigationBar(
-          selectedIndex: _currentIndex,
-          onDestinationSelected: (int index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          destinations: _navItems.map((item) => NavigationDestination(
-            icon: Text(item['icon'] as String, style: const TextStyle(fontSize: 22)),
-            selectedIcon: Text(item['icon'] as String, style: const TextStyle(fontSize: 24)),
-            label: item['label'] as String,
-          )).toList(),
-        ),
+bottomNavigationBar: null,
       ),
     );
   }
@@ -26450,6 +26706,7 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
   String _selectedCrop = 'vary_fohy';
   DateTime _selectedDate = DateTime.now();
   double _surfaceArea = 1000;
+  double _pricePerKg = 0;
   late TabController _tabController;
   DateTime _currentCalendarView = DateTime.now();
   DateTime? _selectedCalendarDay;
@@ -27978,6 +28235,86 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.blue.shade700, Colors.blue.shade500]),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                const Text("💰 Kajy Tombony (Bénéfice)", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Vidin'ny Vokatra (Ar/Kg)", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        initialValue: _pricePerKg.toStringAsFixed(0),
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          suffixText: "Ar/Kg",
+                          isDense: true,
+                          hintText: "Ohatra: 1500",
+                        ),
+                        onChanged: (v) => setState(() => _pricePerKg = double.tryParse(v) ?? 0),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (_pricePerKg > 0) ...[
+                  const Divider(color: Colors.white54),
+                  const SizedBox(height: 8),
+                  _buildBenefitRow("Vokatra:", "$yieldVal T (${(double.parse(yieldVal) * 1000).toStringAsFixed(0)} Kg)", Colors.white70),
+                  _buildBenefitRow("Vidiny:", "${_pricePerKg.toStringAsFixed(0)} Ar/Kg", Colors.white70),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: _buildBenefitRow(
+                      "TOMBONY TOTAL:",
+                      "${(double.parse(yieldVal) * 1000 * _pricePerKg).toStringAsFixed(0)} Ar",
+                      Colors.white,
+                      isBold: true,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Kajy: ${(double.parse(yieldVal) * 1000).toStringAsFixed(0)} Kg × ${_pricePerKg.toStringAsFixed(0)} Ar = ${(double.parse(yieldVal) * 1000 * _pricePerKg).toStringAsFixed(0)} Ar",
+                    style: const TextStyle(color: Colors.white70, fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBenefitRow(String label, String value, Color color, {bool isBold = false, double fontSize = 14}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: color, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, fontSize: fontSize)),
+          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: fontSize)),
         ],
       ),
     );
@@ -29971,14 +30308,14 @@ class TrondroSystemsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final fishSpecies = [
       {
-        'name': 'Tilapia Nilotica',
+        'name': 'Tilapia : Nilotica (gris), Red (mena)',
         'emoji': '🐟',
         'localName': 'Tilapia, Fiha',
         'growthTime': '5-7 volana',
         'harvestWeight': '400-600g',
         'temperature': '25-30°C',
         'priceKg': '18,000-25,000 Ar/kg',
-        'color': const Color(0xFF00BCD4),
+        'color': Colors.orange,
         'advantages': ['Mora tezaina', 'Mahatanty aretina', 'Mitombo haingana', 'Lafo vidiny amin\'izao'],
         'feed': 'Provende 28-32% protéine, kankana, apombombary, katsaka',
         'densityPerM3': '50-100 (tsy misy aérateur) / 150-300 (misy aérateur)',
@@ -29992,33 +30329,14 @@ class TrondroSystemsScreen extends StatelessWidget {
         ],
       },
       {
-        'name': 'Tilapia Rouge (Red Tilapia)',
-        'emoji': '🐠',
-        'localName': 'Tilapia mena',
-        'growthTime': '6-8 volana',
-        'harvestWeight': '400-700g',
-        'temperature': '26-32°C',
-        'priceKg': '22,000-30,000 Ar/kg',
-        'color': const Color(0xFFFF5722),
-        'advantages': ['Vidiny lafo kokoa', 'Tsara bika', 'Tiana any ivelany'],
-        'feed': 'Provende 30-35% protéine, sakafo kalitao ambony',
-        'densityPerM3': '40-80 (tsy misy aérateur) / 100-200 (misy aérateur)',
-        'fcr': '1.6-2.0',
-        'alevins': [
-          {'size': 'Fingerling 3-5cm (3-8g)', 'price': '600-800 Ar/iray'},
-          {'size': 'Fingerling 6-10cm (15-40g)', 'price': '1,000-1,500 Ar/iray'},
-          {'size': 'Géniteur (400-600g)', 'price': '25,000-40,000 Ar/iray'},
-        ],
-      },
-      {
-        'name': 'Carpe Commune',
+        'name': 'Carpe : Royale , Commune , Chinoise',
         'emoji': '🐡',
         'localName': 'Karpa, Besisika',
         'growthTime': '8-12 volana',
         'harvestWeight': '800-2000g',
         'temperature': '20-28°C',
         'priceKg': '20,000-28,000 Ar/kg',
-        'color': const Color(0xFF795548),
+        'color': Colors.green,
         'advantages': ['Lanja mavesatra', 'Tsy sarotra sakafo', 'Mahazaka hatsiaka'],
         'feed': 'Kankana, apombombary, ravina, mofo maina',
         'densityPerM3': '20-40',
@@ -30027,25 +30345,6 @@ class TrondroSystemsScreen extends StatelessWidget {
           {'size': 'Fingerling 3-5cm (2-5g)', 'price': '350-500 Ar/iray'},
           {'size': 'Fingerling 6-10cm (15-40g)', 'price': '600-900 Ar/iray'},
           {'size': 'Géniteur (1-2kg)', 'price': '25,000-45,000 Ar/iray'},
-        ],
-      },
-      {
-        'name': 'Carpe Chinoise (Amour blanc)',
-        'emoji': '🐋',
-        'localName': 'Karpa fotsy',
-        'growthTime': '10-14 volana',
-        'harvestWeight': '1.5-4 kg',
-        'temperature': '22-28°C',
-        'priceKg': '22,000-32,000 Ar/kg',
-        'color': const Color(0xFF4CAF50),
-        'advantages': ['Lanja mavesatra be', 'Mihinana ahitra/ravina', 'Manadio dobo'],
-        'feed': 'Ahitra, ravina, zava-maniry anaty rano (Herbivore)',
-        'densityPerM3': '15-30',
-        'fcr': '2.5-3.5 (ahitra)',
-        'alevins': [
-          {'size': 'Fingerling 5-8cm (5-15g)', 'price': '500-700 Ar/iray'},
-          {'size': 'Juvenile 10-15cm (50-100g)', 'price': '900-1,400 Ar/iray'},
-          {'size': 'Géniteur (2-4kg)', 'price': '50,000-80,000 Ar/iray'},
         ],
       },
       {
@@ -30233,6 +30532,20 @@ class TrondroSystemsScreen extends StatelessWidget {
   }
 
   void _showFishDetails(BuildContext context, Map<String, dynamic> fish) {
+    if (fish['name'] == 'Tilapia : Nilotica (gris), Red (mena)') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const TilapiaNiloticaPage()),
+      );
+      return;
+    }
+    if (fish['name'] == 'Carpe : Royale , Commune , Chinoise') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const CarpeCommunePage()),
+      );
+      return;
+    }
     final color = fish['color'] as Color? ?? Colors.cyan;
     showModalBottomSheet(
       context: context,
@@ -30973,6 +31286,287 @@ class TrondroTeknikaScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                ],
+              ),
+            ),
+          )),
+
+          const SizedBox(height: 24),
+          
+          // Water Section Header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.cyan.shade600]),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                const Text('💧', style: TextStyle(fontSize: 30)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('KALITAON\'NY RANO',
+                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text('Paramètres sy loharano',
+                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Water Parameters
+          ...[
+            {
+              'name': 'Temperature',
+              'emoji': '🌡️',
+              'optimal': '25-30°C (Tilapia), 20-28°C (Carpe)',
+              'danger': '<18°C na >35°C',
+              'tips': 'Alokaloka amin\'ny masoandro mafana, ampio rano mangatsiaka rehefa mafana loatra',
+            },
+            {
+              'name': 'pH',
+              'emoji': '⚗️',
+              'optimal': '6.5-8.5',
+              'danger': '<6 na >9',
+              'tips': 'Ampio calcium (coquille) raha ambany loatra, ovao ny rano raha ambony loatra',
+            },
+            {
+              'name': 'Oxygène dissous',
+              'emoji': '💨',
+              'optimal': '>5 mg/L',
+              'danger': '<3 mg/L',
+              'tips': 'Ampio aérateur, aza mamahana be loatra, ahena ny trondro raha be loatra',
+            },
+            {
+              'name': 'Ammoniaque (NH3)',
+              'emoji': '⚠️',
+              'optimal': '<0.02 mg/L',
+              'danger': '>0.1 mg/L (poizina!)',
+              'tips': 'Ovao ny rano matetika, aza mamahana be, esory ny fako sy trondro maty',
+            },
+            {
+              'name': 'Transparence',
+              'emoji': '👁️',
+              'optimal': '30-40 cm',
+              'danger': '<15 cm (mainty)',
+              'tips': 'Raha mainty loatra = plancton be, ovao ny rano 20-30%. Raha mazava loatra = tsy ampy sakafo.',
+            },
+          ].map((param) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
+              border: Border.all(color: Colors.blue.shade50),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Text(param['emoji']!, style: const TextStyle(fontSize: 24)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(param['name']!, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blue.shade800)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('✅ Tsara:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          Text(param['optimal']!, style: TextStyle(fontSize: 12, color: Colors.green.shade700, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('⚠️ Loza:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          Text(param['danger']!, style: TextStyle(fontSize: 12, color: Colors.red.shade700, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text('💡 ${param['tips']}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontStyle: FontStyle.italic)),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+}
+
+// ========== Trondro Prices Screen ==========
+class TrondroPricesScreen extends StatelessWidget {
+  const TrondroPricesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final prices = [
+      {
+        'species': 'Tilapia',
+        'emoji': '🐟',
+        'color': Colors.orange,
+        'marketPrice': '18,000 - 25,000 Ar/kg',
+        'items': [
+          {'name': 'Fingerling 2-3cm (1-3g)', 'price': '300-400 Ar/iray'},
+          {'name': 'Fingerling 5-7cm (8-15g)', 'price': '500-700 Ar/iray'},
+          {'name': 'Juvenile 8-12cm (30-60g)', 'price': '800-1,200 Ar/iray'},
+          {'name': 'Géniteur Lahy (300-500g)', 'price': '15,000-25,000 Ar/iray'},
+          {'name': 'Géniteur Vavy (250-400g)', 'price': '12,000-20,000 Ar/iray'},
+        ]
+      },
+      {
+        'species': 'Carpe (Royale, Commune, Chinoise)',
+        'emoji': '🐡',
+        'color': Colors.green,
+        'marketPrice': '20,000 - 28,000 Ar/kg',
+        'items': [
+          {'name': 'Fingerling 3-5cm (2-5g)', 'price': '350-500 Ar/iray'},
+          {'name': 'Fingerling 6-10cm (15-40g)', 'price': '600-900 Ar/iray'},
+          {'name': 'Géniteur (1-2kg)', 'price': '25,000-45,000 Ar/iray'},
+        ]
+      },
+      {
+        'species': 'Clarias (Trondro gasy)',
+        'emoji': '🐍',
+        'color': const Color(0xFF607D8B),
+        'marketPrice': '15,000 - 22,000 Ar/kg',
+        'items': [
+          {'name': 'Fingerling 3-5cm (2-6g)', 'price': '400-600 Ar/iray'},
+          {'name': 'Fingerling 8-12cm (30-80g)', 'price': '800-1,200 Ar/iray'},
+          {'name': 'Géniteur (800g-1.5kg)', 'price': '20,000-35,000 Ar/iray'},
+        ]
+      },
+      {
+        'species': 'Heterotis (Marakely)',
+        'emoji': '🐳',
+        'color': const Color(0xFF9C27B0),
+        'marketPrice': '18,000 - 25,000 Ar/kg',
+        'items': [
+          {'name': 'Fingerling 8-12cm (20-50g)', 'price': '800-1,200 Ar/iray'},
+          {'name': 'Juvenile 15-20cm (100-200g)', 'price': '1,500-2,500 Ar/iray'},
+          {'name': 'Géniteur (3-5kg)', 'price': '60,000-100,000 Ar/iray'},
+        ]
+      },
+    ];
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.green.shade700, Colors.teal.shade600]),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                const Text('💰', style: TextStyle(fontSize: 40)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('VIDIN\'NY TRONDRO',
+                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text('Vidin\'ny zanany (Fingerling) sy Géniteur',
+                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          ...prices.map((group) => Card(
+            margin: const EdgeInsets.only(bottom: 16),
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(group['emoji'] as String, style: const TextStyle(fontSize: 24)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              group['species'] as String,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: group['color'] as Color,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: (group['color'] as Color).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: (group['color'] as Color).withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.store, size: 14, color: Colors.grey),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Tsena: ${group['marketPrice']}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey.shade800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  ...(group['items'] as List<Map<String, String>>).map((item) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(child: Text(item['name']!, style: const TextStyle(fontWeight: FontWeight.w500))),
+                        Text(item['price']!, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                      ],
+                    ),
+                  )),
                 ],
               ),
             ),
@@ -33497,20 +34091,1988 @@ class TantelyCalendarScreen extends StatelessWidget {
 
 // ==================== OLITRATECH - INSECT FARMING ====================
 
-// ========== Olitra Species Screen ==========
-class OlitraSpeciesScreen extends StatelessWidget {
-  const OlitraSpeciesScreen({super.key});
+// ========== Olitra Stage Details Page ==========
+class OlitraStageDetailsPage extends StatelessWidget {
+  final Map<String, dynamic> stage;
+  final Map<String, dynamic> guide;
+
+  const OlitraStageDetailsPage({
+    super.key,
+    required this.stage,
+    required this.guide,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final species = [
+    final stageName = stage['stage'] as String;
+    final stageColor = stage['color'] as Color;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Text(guide['icon'] as String, style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                stageName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: stageColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          if (guide.containsKey('images'))
+            ...(guide['images'] as List).map((imgPath) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  imgPath as String,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(Icons.broken_image, size: 40, color: Colors.grey.shade400),
+                        const SizedBox(height: 8),
+                        Text('Tsy hita: ${imgPath.split('/').last}', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )).toList()
+          else if (guide.containsKey('image'))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  guide['image'] as String,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(Icons.broken_image, size: 40, color: Colors.grey.shade400),
+                        const SizedBox(height: 8),
+                        Text('Tsy hita: ${guide['image']}', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: 16),
+          const Text('Torolàlana:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          ...(guide['items'] as List).map((item) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Icon(Icons.arrow_forward_ios, size: 14, color: Colors.green.shade700),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    item as String,
+                    style: TextStyle(fontSize: 15, color: Colors.grey.shade800, height: 1.5),
+                  ),
+                ),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+}
+
+// ========== Cricket Guide Ebook Page ==========
+
+class CricketGuideEbookPage extends StatefulWidget {
+  const CricketGuideEbookPage({super.key});
+
+  @override
+  State<CricketGuideEbookPage> createState() => _CricketGuideEbookPageState();
+}
+
+class _CricketGuideEbookPageState extends State<CricketGuideEbookPage> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+  final int _totalPages = 8;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _nextPage() {
+    if (_currentPage < _totalPages - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _prevPage() {
+    if (_currentPage > 0) {
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Torolalana Fiompiana'),
+        backgroundColor: Colors.green[700],
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Text(
+                'Pejy ${_currentPage + 1}/$_totalPages',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+              children: [
+                _buildCoverPage(),
+                _buildToolsPage(),
+                _buildFoodPage(),
+                _buildEnvironmentPage(),
+                _buildBreeding1Page(),
+                _buildBreeding2Page(),
+                _buildBox3Page(),
+                _buildTipsPage(),
+              ],
+            ),
+          ),
+          _buildBottomNavigation(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigation() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          ElevatedButton.icon(
+            onPressed: _currentPage > 0 ? _prevPage : null,
+            icon: const Icon(Icons.arrow_back),
+            label: const Text('Teo aloha'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey[200],
+              foregroundColor: Colors.black87,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: _currentPage < _totalPages - 1 ? _nextPage : null,
+            icon: const Icon(Icons.arrow_forward),
+            label: const Text('Manaraka'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green[700],
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCoverPage() {
+    return Container(
+      color: const Color(0xFFFFFDF5),
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.green[600],
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.eco, size: 50, color: Colors.white),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              'Torolalana momba ny Fiompiana',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.brown[800],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: 60,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.green[500],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Torolalana Feno sy "Boaty 3"',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.lato(
+                fontSize: 18,
+                fontStyle: FontStyle.italic,
+                color: Colors.brown[600],
+              ),
+            ),
+            const SizedBox(height: 64),
+            Text(
+              'Fanontana 2025',
+              style: TextStyle(color: Colors.grey[500]),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Natokana ho an\'i Vatosarobidy',
+              style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildToolsPage() {
+    return _buildPageLayout(
+      title: '1. Ny Fitaovana Ilaina',
+      icon: Icons.build,
+      color: Colors.green,
+      children: [
+        const Text(
+          "Alohan'ny hanombohana dia mila manomana ireto ianao:",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        const SizedBox(height: 16),
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '🏠 Ny Trano (Vivarium)',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[800],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/images/17.jpg',
+                    width: double.infinity,
+                    fit: BoxFit.fitWidth,
+                    errorBuilder: (c, o, s) => Container(
+                      height: 200,
+                      color: Colors.grey[200],
+                      child: const Center(child: Icon(Icons.image_not_supported)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "Boaty plastika na aquarium fitaratra. Ny habeny tsara dia eo amin'ny 60cm x 30cm ary ny haavony tokony ho 30 ka hatramin'ny 40cm.",
+                  style: TextStyle(height: 1.5),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red[100]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded, color: Colors.red[700]),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          "Tandremo: Tokony ho malama ny rindrin'ny boaty mba tsy hahafahan'izy ireo mianika sy mandositra.",
+                          style: TextStyle(color: Colors.red[900], fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildListItem(Icons.grid_on, 'Sarony', 'Asio "moustiquaire" na makarakara vy ny sarony mba hidiran\'ny rivotra tsara.'),
+        _buildListItem(Icons.home, 'Fierena (Abri)', 'Baoritra atody (boîtes d\'œufs) no tsara indrindra. Apetraka mitsangana na mifanongoa.'),
+        _buildListItem(Icons.block, 'Tsy mila tany', 'Tsara raha tsy asiana tany ny fanambanin\'ny boaty fiompiana mba ho mora ny manadio azy.'),
+      ],
+    );
+  }
+
+  Widget _buildFoodPage() {
+    return _buildPageLayout(
+      title: '2. Sakafo sy Rano',
+      icon: Icons.restaurant,
+      color: Colors.orange,
+      children: [
+        const Text(
+          "Ny sahobaka dia mpihinana ny zava-drehetra, saingy mila sakafo voalanjalanja mba tsy hifampihinana izy ireo.",
+          style: TextStyle(fontSize: 16, height: 1.5),
+        ),
+        const SizedBox(height: 16),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.asset(
+            'assets/images/18.jpg',
+            width: double.infinity,
+            fit: BoxFit.fitWidth,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.grass, size: 16, color: Colors.orange[800]),
+                        const SizedBox(width: 8),
+                        Text('Sakafo Maina', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange[900])),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Sakafom-borona manatody (granulés) satria be kalsioma.', style: TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.eco, size: 16, color: Colors.green[800]),
+                        const SizedBox(width: 8),
+                        Text('Sakafo Lena', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green[900])),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Karaoty, voasary, paoma, ovy (mitondra rano).', style: TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.blue[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border(left: BorderSide(color: Colors.blue[400]!, width: 4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.water_drop, color: Colors.blue[700]),
+                  const SizedBox(width: 8),
+                  Text('Rano', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue[900])),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Mila rano foana izy ireo. Mampiasà vilia kely asiana landihazo (coton) mando mba tsy ho rendrika sy maty ao anatiny ny sakoririka.',
+                style: TextStyle(height: 1.4),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnvironmentPage() {
+    return _buildPageLayout(
+      title: '3. Tontolo Iainana',
+      icon: Icons.wb_sunny,
+      color: Colors.orange,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.asset(
+            'assets/images/21.jpg',
+            width: double.infinity,
+            height: 200,
+            fit: BoxFit.cover,
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text('Hafanana', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.blue[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.blue[100]!),
+          ),
+          child: Row(
+            children: [
+              Text('20°C', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue[600])),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Miadana', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Velona izy ireo fa miadana be ny fitomboany.', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.orange[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.orange[100]!),
+          ),
+          child: Row(
+            children: [
+              Text('27-32°C', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.orange[600])),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Tsara indrindra! ⭐', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Hampitombo taranaka haingana sy hahazo atody betsaka.', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text('Hazavana', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.yellow[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.yellow[100]!),
+          ),
+          child: const Text(
+            "Ny hazavan'ny andro tsotra dia ampy, satria biby mazoto amin'ny andro izy ireo.",
+            style: TextStyle(color: Colors.black87),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBreeding1Page() {
+    return _buildPageLayout(
+      title: '4. Fampitomboana (1/2)',
+      icon: Icons.favorite,
+      color: Colors.pink,
+      children: [
+        const Text(
+          "Ity no dingana lehibe indrindra raha te hanana biby maro ianao.",
+          style: TextStyle(fontStyle: FontStyle.italic),
+        ),
+        const SizedBox(height: 16),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.asset(
+            'assets/images/20.jpg',
+            width: double.infinity,
+            fit: BoxFit.fitWidth,
+          ),
+        ),
+        const SizedBox(height: 24),
+        const Text('A. Mahay manavaka ny Lahy sy Vavy', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
+                child: Column(
+                  children: [
+                    Icon(Icons.male, size: 32, color: Colors.blue[600]),
+                    const SizedBox(height: 8),
+                    Text('Ny Lahy', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue[800])),
+                    const SizedBox(height: 4),
+                    const Text('Elatra mafy. Mikiririoka. Tsy misy "tige".', textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
+                child: Column(
+                  children: [
+                    Icon(Icons.female, size: 32, color: Colors.pink[600]),
+                    const SizedBox(height: 8),
+                    Text('Ny Vavy', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.pink[800])),
+                    const SizedBox(height: 4),
+                    const Text('Elatra malama. Manana "tige" mainty lava (ovipositeur).', textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        const Text('B. Ny Toerana Fanatodizana', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text('• Boaty: Makà boaty kely (ohatra: boaty margarine).'),
+                SizedBox(height: 8),
+                Text('• Tany: Fenoy tany mando (3-4 cm).'),
+                SizedBox(height: 8),
+                Text('• Sarony: Asio makarakara (grillage) ny sarony.'),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBreeding2Page() {
+    return _buildPageLayout(
+      title: '4. Fampitomboana (2/2)',
+      icon: Icons.child_care,
+      color: Colors.purple,
+      children: [
+        const Text('C. Fikarakarana ny Atody sy Zanany', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 24),
+        _buildTimelineItem('1. Fiandrasana', 'Avelao ao anatin\'ny vivarium mandritra ny andro vitsivitsy ilay boaty kely mba ho feno atody.', Icons.access_time, Colors.green),
+        _buildTimelineItem('2. Fanasarahana', 'Rehefa feno atody, esory ary afindrao any anaty boaty hafa (élevage des petits) mitovy hafanana (25°C+).', Icons.call_split, Colors.blue),
+        _buildTimelineItem('3. Fahaterahana', 'Foy ny atody afaka 9 hatramin\'ny 13 andro. Omeo sakafo voatoto madinika izy ireo.', Icons.auto_awesome, Colors.purple),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.red[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border(left: BorderSide(color: Colors.red[500]!, width: 4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.red[800]),
+                  const SizedBox(width: 8),
+                  Text('Zava-dehibe!', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red[900])),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tsy maintsy sarahina ny zanaka sy ny ray aman-dreny, raha tsy izany dia hohanin\'ny lehibe ny zanany.',
+                style: TextStyle(color: Colors.red[800]),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBox3Page() {
+    return _buildPageLayout(
+      title: '5. Famintinana: Boaty 3',
+      icon: Icons.inventory_2,
+      color: Colors.brown,
+      children: [
+        const Text("Mba hampahomby ny fiompiana dia tsara raha manana boaty 3 ianao:", style: TextStyle(fontSize: 16)),
+        const SizedBox(height: 16),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.asset(
+            'assets/images/22.jpg',
+            width: double.infinity,
+            fit: BoxFit.fitWidth,
+          ),
+        ),
+        const SizedBox(height: 24),
+        _buildBoxItem('1', 'Boaty Lehibe', 'Misy ireo sakoririka efa afaka manatody.', Colors.blue),
+        const SizedBox(height: 12),
+        _buildBoxItem('2', 'Boaty Mopanatody', 'Asiana ireo boaty kely misy atody, miandry ny fahafoizana (Incubation).', Colors.orange),
+        const SizedBox(height: 12),
+        _buildBoxItem('3', 'Boaty Fitomboana', 'Toerana hibeazan\'ireo vao teraka mandrapahalehibeny.', Colors.green),
+        const SizedBox(height: 24),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: const [
+              Text('TSINGERINA FENO', style: TextStyle(color: Colors.grey, fontSize: 12, letterSpacing: 2)),
+              SizedBox(height: 8),
+              Text('5-6 Volana', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              Text('Avy amin\'ny atody ka hatramin\'ny fahafatesana.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTipsPage() {
+    return _buildPageLayout(
+      title: '6. Torohevitra Fanampiny',
+      icon: Icons.check_circle,
+      color: Colors.teal,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.teal[50],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.teal[100]!),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.clean_hands, color: Colors.teal[700]),
+                  const SizedBox(width: 12),
+                  Text('Fahadiovana', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal[900])),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                "Esory isan'andro ny sisa tsy lany amin'ny legioma sy ny biby maty mba hisorohana ny aretina sy ny fofona.",
+                style: TextStyle(fontSize: 15, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.lightBlue[50],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.lightBlue[100]!),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.water, color: Colors.lightBlue[700]),
+                  const SizedBox(width: 12),
+                  Text('Fando (Hamandoana)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.lightBlue[900])),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                "Tandremo fa raha mando loatra ny rivotra ao anaty boaty dia hisy acariens (bibikely kely ratsy) hipoitra.",
+                style: TextStyle(fontSize: 15, height: 1.5),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.air, size: 16, color: Colors.lightBlue[700]),
+                    const SizedBox(width: 8),
+                    Text('Vahaolana: Ataovy tsara ny fidiran\'ny rivotra.', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.lightBlue[800], fontSize: 12)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Spacer(),
+        const Center(
+          child: Text(
+            '"Mazotoa mampihatra ary mirary fahombiazana!"',
+            style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey, fontSize: 16, fontFamily: 'Serif'),
+          ),
+        ),
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  Widget _buildPageLayout({required String title, required IconData icon, required Color color, required List<Widget> children}) {
+    return Container(
+      color: const Color(0xFFFFFDF5),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 32, color: color),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.brown[800],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 32, thickness: 1),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildListItem(IconData icon, String title, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 16, color: Colors.grey[700]),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 4),
+                Text(description, style: TextStyle(color: Colors.grey[700], fontSize: 14)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineItem(String title, String description, IconData icon, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: color),
+                ),
+                child: Icon(icon, size: 16, color: color),
+              ),
+              Container(width: 2, height: 40, color: Colors.grey[300]),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 16)),
+                const SizedBox(height: 4),
+                Text(description, style: const TextStyle(height: 1.4)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBoxItem(String number, String title, String description, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2)),
+        ],
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(child: Text(number, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18))),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(description, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ========== Olitra Species Screen ==========
+class OlitraSpeciesScreen extends StatefulWidget {
+  const OlitraSpeciesScreen({super.key});
+
+  @override
+  State<OlitraSpeciesScreen> createState() => _OlitraSpeciesScreenState();
+}
+
+class _OlitraSpeciesScreenState extends State<OlitraSpeciesScreen> {
+  double _bsfEggs = 1.0;
+
+  final Map<String, Map<String, dynamic>> _bsfStageGuides = {
+    'Atody': {
+      'icon': '🥚',
+      'image': 'assets/images/1.png',
+      'items': [
+        'Apetraka ao anaty tapaka bidon ny sakafo',
+        'Potehina malemy tsara ilay sakafo. Ampiana rano raha maina loatra',
+        'Kikisana eo ambony sivana koba ny atody',
+        'Apetraka ambony sakafo ny sivana koba misy atody',
+        'Milatsaka ho azy ao anaty sakafo ireo zanany foy',
+        'Afaka saromana lay manify mba tsy hidiran\'ny lalitra hafa',
+        'Otazana isaky ny 2-4 andro ny atody',
+      ]
+    },
+    'Zanany': {
+      'icon': '🪱',
+      'image': 'assets/images/2.png',
+      'items': [
+        'Potehina tsara ny sakafo ary ampiana rano raha maina loatra',
+        'Afangaro matetika ny sakafo',
+        'Rehefa feno 5 andro, zaraina fatra mitovy anaty bidons efa misy sakafo (+5kg sakafo)',
+        'Ampiana ampombo na tain\'akoho maina raha be rano loatra',
+        'Tandremo: Ny zanany dia tsy tia hazavana ary miloko fotsy',
+      ]
+    },
+    'Fiotazana': {
+      'icon': '☀️',
+      'images': ['assets/images/3.1.png', 'assets/images/3.2.png'],
+      'items': [
+        'Manomboka misy miova ho mainty ny lokony',
+        'Apetraka eo ambony koveta ny sivana vy',
+        'Araraka eo ambony sivana vy: sakafo + zanany',
+        'Avela eo amin\'ny masoandro (toerana mazava) mandrapahafindran\'ny zanany rehetra anaty koveta',
+        'Na tsimponina amin\'ny tanana ny zanany sy ny prepupe (sarahina amin\'ny zezika)',
+      ]
+    },
+    'Prépupe': {
+      'icon': '🐛',
+      'image': 'assets/images/4.png',
+      'items': [
+        'Manomboka miova ho mainty ny lokony',
+        'Tsy misakafo fa mbola mihetsika',
+        'Mila toerana maizina sy maina',
+        'Miova loko, mitady toerana hiova',
+        'Faharetan\'ny prépupe ho lasa soherina: 2-4 andro',
+      ]
+    },
+    'Soherina': {
+      'icon': '🛡️',
+      'image': 'assets/images/5.png',
+      'items': [
+        'Miloko mainty, tsy misakafo ary tsy mihetsika intsony',
+        'Teknika: Maka koveta, rarahana akofa na vovo-kazo',
+        'Apetraka ao ny prépupe',
+        'Saromana tapaka bidon na koveta faharoa (Sandwich)',
+        'Asiana malalaka kely eo anelanelan\'ireo koveta roa mba hivoahan\'ireo lalitra foy',
+        'Atsofoka ao anaty lay fanatodizana',
+        'Soherina ho lasa lalitra: 5-14 andro',
+      ]
+    },
+    'Lalitra': {
+      'icon': '🪰',
+      'images': ['assets/images/6.png', 'assets/images/7.png'],
+      'items': [
+        'Fanatodizana (Pondoir): Maka tapakazo 3 na 4, fantsihana "punaise" isaky ny zorony sy eo afovoany, atambatra amin\'ny fingotra',
+        'Fisarihana (Attractant): Atao anaty koveta ny fako lo mamofona (voankazo...), ampiana rano, saromana lay',
+        'Fisotroan-drano: Maka barquette misarona, fenoina rano, tatahina ny sarony, atsofoka eo ny lamba kely hitroka ny rano',
+        'Tsaratsara kokoa raha asiana tafo mba hiarovana amin\'ny orana sy ny hafanana be loatra',
+        'Ny lalitra dia tia hazavana, tsy misakafo fa misotro rano. Faharetan\'ny fivelomany: 2-14 andro.',
+      ]
+    },
+  };
+
+  final Map<String, Map<String, dynamic>> _mealwormStageGuides = {
+      'Atody': {
+        'icon': '🥚',
+        'image': 'assets/images/12.png',
+        'items': [
+          'Dingana voalohany, marefo sy sarotra hita maso (fotsy madinika).',
+          'Fikarakarana: Apetraka @ 25-27°C. Tsy mila kitihina.',
+          'Toerana: Apetraky ny vavy anaty substrat (lafarina, soka-bary).',
+          'Fahamandoana: 55-65%, tsy tondrahana rano mivantana.',
+          'Faharetana: Foy ao anatin\'ny 48 ora - 18 andro.',
+        ]
+      },
+      'Larve': {
+        'icon': '🪱',
+        'image': 'assets/images/13.png',
+        'items': [
+            'Ity no tena "ver de farine", dingana ela indrindra (2-10 volana).',
+            'Sakafo: Soka-bary na oats no trano sy sakafony.',
+            'Rano: Omena sombiny karoty na paoma.',
+            'Fikojakojana: Miova hoditra in-15-20. Sarahina amin\'ny voangory lehibe.',
+        ]
+      },
+      'Nymphe': {
+        'icon': '🐛',
+        'image': 'assets/images/14.png',
+        'items': [
+            'Rehefa lehibe ny olitra, miova ho nymphe fotsy, avy eo mavo.',
+            'Toetra: Tsy mihinana, tsy mihetsika.',
+            'Fiarovana: TSY MAINTSY sarahina ao anaty boaty mitokana fa marefo.',
+            'Faharetana: 6-13 andro vao miova ho voangory.',
+        ]
+      },
+      'Imago': {
+        'icon': '🐞',
+        'image': 'assets/images/15.png',
+        'items': [
+            'Ilay voangory lehibe. Lasa mainty rehefa matoy.',
+            'Tanjona: Manatody hanohy ny taranaka.',
+            'Sakafo: Legioma sy soka-bary.',
+            'Fitantanana: Sarahina amin\'ny atody vao foy.',
+            'Ny tainy (frass) dia zezika tsara ho an\'ny fambolena.',
+        ]
+      },
+  };
+
+  final Map<String, Map<String, dynamic>> _cricketStageGuides = {
+    'Atody': {
+      'icon': '🥚',
+      'items': [
+        'Fametrahana: Ny grillon vavy dia mampiasa ny "ovipositeur" (ilay fanjaitra lava ao amin\'ny vodiny) mba handevonana ny tany mando na lamba mando ary mametraka ny atodiny ao.',
+        'Endrika: Fotsy kely lavalava ny atodiny, mitovitovy endrika amin\'ny vary kely.',
+        'Faharetana: Maharitra 10 ka hatramin\'ny 14 andro ny fipoiran\'ny zanany raha toa ka mety tsara ny hafanana (eo amin\'ny 30°C eo).',
+      ]
+    },
+    'Nymphe': {
+      'icon': '🪱',
+      'items': [
+        'Fahaterahana: Rehefa foy ny atody, dia mivoaka ny zanany (mbola antsoina hoe "micro-grillons"). Mitovy endrika tanteraka amin\'ny grillon lehibe izy ireo fa kely dia kely ary tsy mbola misy elatra.',
+        'Fivoarana: Mihalehibe izy ireo amin\'ny alalan\'ny fiovana hoditra (mue). Miova hoditra im-pito na im-balo eo ho eo izy ireo vao tonga olon-dehibe.',
+        'Faharetana: Maharitra eo amin\'ny iray volana sy tapany ka hatramin\'ny roa volana (45-60 andro) ity dingana ity, arakaraka ny hafanana sy ny sakafo omena azy.',
+      ]
+    },
+    'Lehibe': {
+      'icon': '🦗',
+      'items': [
+        'Famantarana: Efa manana elatra feno ny grillon lehibe.',
+        'Ny Lahy: Manomboka maneno (stridulation) amin\'ny alalan\'ny fikikisana ny elany mba hiantsoana ny vavy.',
+        'Ny Vavy: Vonona hanatody rehefa avy miray amin\'ny lahy (3-4 andro aorian\'ny naha-lehibe azy).',
+        'Fahafatesana: Miaina mandritra ny 2 na 3 volana eo ho eo ny grillon lehibe alohan\'ny hahafatesany.',
+      ]
+    },
+  };
+
+
+
+  Widget _buildTimelineSection(String imagePath) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Tsingerim-piainana', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Image.asset(
+            imagePath,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => Container(
+              height: 150,
+              color: Colors.grey.shade200,
+              child: const Center(
+                child: Text('Tsy hita ny sary.'),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        backgroundColor: Colors.brown.shade800,
+        elevation: 0,
+        title: const Text('Karazana Olitra', style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 1,
+                mainAxisSpacing: 16,
+                childAspectRatio: 2.5,
+                children: [
+                  _buildSpeciesCard(
+                    context,
+                    'BSF (Lalitra Mainty)',
+                    'Hermetia illucens',
+                    Icons.bug_report,
+                    Colors.green,
+                    'assets/images/8.png',
+                    () => _buildBSFTab(),
+                  ),
+                  _buildSpeciesCard(
+                    context,
+                    'Ver de Farine (Kankana)',
+                    'Tenebrio molitor',
+                    Icons.grain,
+                    Colors.orange,
+                    'assets/images/13.png',
+                    () => _buildMealwormTab(),
+                  ),
+                  _buildSpeciesCard(
+                    context,
+                    'Sahobaka (Grillon)',
+                    'Acheta domesticus',
+                    Icons.music_note,
+                    Colors.brown,
+                    'assets/images/17.jpg',
+                    () => _buildCricketTab(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSpeciesCard(BuildContext context, String title, String subtitle, IconData icon, Color color, String? imagePath, Widget Function() builder) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => Scaffold(
+            appBar: AppBar(title: Text(title), backgroundColor: color),
+            body: builder(),
+          )));
+        },
+        child: Stack(
+          children: [
+            if (imagePath != null)
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0.1,
+                  child: Image.asset(
+                    imagePath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (c, o, s) => Container(color: color.withOpacity(0.1)),
+                  ),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, size: 40, color: color),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.brown[800],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios, color: Colors.grey[400]),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===== BSF TAB =====
+  Widget _buildBSFTab() {
+    final bsfLifecycleStages = [
+      {'stage': 'Atody', 'time': '4 andro', 'desc': 'Atao amin\'ny toerana maina', 'icon': Icons.egg, 'color': Colors.yellow.shade600},
+      {'stage': 'Zanany', 'time': '14-21 andro', 'desc': 'Mihinana, mitombo', 'icon': Icons.bug_report, 'color': Colors.green.shade600},
+      {'stage': 'Fiotazana', 'time': '18-21 andro', 'desc': 'Sivana + masoandro', 'icon': Icons.wb_sunny, 'color': Colors.orange.shade600},
+      {'stage': 'Prépupe', 'time': '2-4 andro', 'desc': 'Miova loko mainty', 'icon': Icons.spa, 'color': Colors.amber.shade800},
+      {'stage': 'Soherina', 'time': '5-14 andro', 'desc': 'Tsy mihetsika', 'icon': Icons.shield, 'color': Colors.grey.shade700},
+      {'stage': 'Lalitra', 'time': '2-14 andro', 'desc': 'Manatody dia maty', 'icon': Icons.flight_takeoff, 'color': Colors.black},
+    ];
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildHero(
+          'BSF - Lalitra Mainty',
+          'Hermetia illucens',
+          'Mpanodina fako voajanahary, manome olitra be proteina ary zezika tsara kalitao.',
+          Colors.green,
+          'assets/images/8.png',
+        ),
+        const SizedBox(height: 16),
+        _buildTimelineSection('assets/images/0.png'),
+        const SizedBox(height: 16),
+        _buildLifecycleSection('BSF', bsfLifecycleStages),
+        const SizedBox(height: 16),
+        _buildBSFCalculator(),
+        const SizedBox(height: 16),
+        _buildTipsSection([
+          {'title': 'Biby Mpanimba', 'icon': Icons.warning, 'color': Colors.red, 'items': [
+            'Vitsika: Asiana rano ny tongotry ny lay',
+            'Voalavo: Asiana grillage vy',
+          ]},
+          {'title': 'Toerana', 'icon': Icons.thermostat, 'color': Colors.blue, 'items': [
+            'Hafanana: 27-35°C',
+            'Raha mangatsiaka: Atambatra ny koveta',
+          ]},
+          {'title': 'Fahasalamana', 'icon': Icons.check_circle, 'color': Colors.green, 'items': [
+            'Sakafo: Tsy misy simika',
+            'Rano: Rano madio',
+          ]},
+        ]),
+      ],
+    );
+  }
+
+  // ===== MEALWORM TAB =====
+  Widget _buildMealwormTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildHero(
+          'Ver de Farine',
+          'Tenebrio molitor',
+          'Mora ompiana sy be otrikaina.',
+          Colors.amber,
+          'assets/images/10.png',
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.amber.shade50,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Tsingerim-pianana',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber.shade900,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Image.asset('assets/images/11.png'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildLifecycleSection('Mealworm', [
+          {'stage': 'Atody', 'time': '2-18 andro', 'desc': 'Kely fotsy', 'icon': Icons.egg, 'color': Colors.white},
+          {'stage': 'Larve', 'time': '2-10 volana', 'desc': 'Miova hoditra', 'icon': Icons.bug_report, 'color': Colors.amber.shade600},
+          {'stage': 'Nymphe', 'time': '6-13 andro', 'desc': 'Tsy mihetsika', 'icon': Icons.layers, 'color': Colors.amber.shade300},
+          {'stage': 'Imago', 'time': '2-3 volana', 'desc': 'Voangory', 'icon': Icons.bug_report, 'color': Colors.grey.shade800},
+        ]),
+        const SizedBox(height: 16),
+        _buildMealwormGuide(),
+        const SizedBox(height: 16),
+        _buildTipsSection([
+          {'title': 'Olana', 'icon': Icons.warning, 'color': Colors.red, 'items': ['Bobongolo: Esory ny legioma lo', 'Cannibalisme: Sarahana']},
+          {'title': 'Fampiasana', 'icon': Icons.check_circle, 'color': Colors.green, 'items': ['Sakafo: Vorona, trondro', 'Zezika: Frass']},
+        ]),
+      ],
+    );
+  }
+
+  // ===== CRICKET TAB =====
+  Widget _buildCricketTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildHero(
+          'Sahobaka',
+          'Acheta domesticus',
+          'Bibikely mavitrika sy be proteina.',
+          Colors.orange,
+          'assets/images/9.png',
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade50,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Tsingerim-piaianana',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange.shade900,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Image.asset('assets/images/16png.png'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildLifecycleSection('Cricket', [
+          {'stage': 'Atody', 'time': '10-14 andro', 'desc': 'Anaty tany', 'icon': Icons.egg, 'color': Colors.white},
+          {'stage': 'Nymphe', 'time': '6-8 herinandro', 'desc': 'Tsy misy elatra', 'icon': Icons.bug_report, 'color': Colors.orange.shade600},
+          {'stage': 'Lehibe', 'time': '2-3 volana', 'desc': 'Maneno', 'icon': Icons.music_note, 'color': Colors.orange.shade900},
+        ]),
+        const SizedBox(height: 16),
+        ElevatedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CricketGuideEbookPage(),
+              ),
+            );
+          },
+          icon: const Icon(Icons.menu_book),
+          label: const Text('📘 Paika Feno'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange.shade700,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildTipsSection([
+          {'title': 'Hafanana', 'icon': Icons.thermostat, 'color': Colors.red, 'items': ['28-30°C', 'Raha mangatsiaka: Tsy manatody']},
+          {'title': 'Fitandremana', 'icon': Icons.air, 'color': Colors.blue, 'items': ['Mila rivotra', 'Maneno mafy']},
+        ]),
+      ],
+    );
+  }
+
+  Widget _buildHero(String name, String scientific, String desc, MaterialColor color, String imagePath) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [color.shade100, color.shade50]),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            child: imagePath.startsWith('http')
+                ? Image.network(
+                    imagePath,
+                    height: 200,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      height: 200,
+                      color: color.shade200,
+                      child: Icon(Icons.image, size: 80, color: color.shade400),
+                    ),
+                  )
+                : Image.asset(
+                    imagePath,
+                    height: 200,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      height: 200,
+                      color: color.shade200,
+                      child: Icon(Icons.image_not_supported, size: 80, color: color.shade400),
+                    ),
+                  ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(color: color.shade200, borderRadius: BorderRadius.circular(20)),
+                  child: Text(scientific, style: TextStyle(fontSize: 11, color: color.shade900, fontWeight: FontWeight.w600)),
+                ),
+                const SizedBox(height: 8),
+                Text(name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color.shade900)),
+                const SizedBox(height: 8),
+                Text(desc, style: TextStyle(color: Colors.grey.shade700)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLifecycleSection(String type, List<Map<String, dynamic>> stages) {
+    final stageGuides = (type == 'BSF') ? _bsfStageGuides : (type == 'Cricket') ? _cricketStageGuides : _mealwormStageGuides;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Torolalana', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 0.85,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: stages.length,
+            itemBuilder: (context, i) {
+              final stage = stages[i];
+              final stageName = stage['stage'] as String;
+              final guide = stageGuides[stageName];
+              
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: guide != null ? () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => OlitraStageDetailsPage(
+                          stage: stage,
+                          guide: guide,
+                        ),
+                      ),
+                    );
+                  } : null,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: stage['color'],
+                            shape: BoxShape.circle,
+                            border: stage['color'] == Colors.white ? Border.all(color: Colors.grey.shade300, width: 2) : null,
+                          ),
+                          child: Icon(stage['icon'] as IconData, color: stage['color'] == Colors.white ? Colors.grey.shade700 : Colors.white, size: 18),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(stageName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10), textAlign: TextAlign.center),
+                        Text(stage['time'] as String, style: TextStyle(fontSize: 8, color: Colors.green.shade700)),
+                        const SizedBox(height: 2),
+                        Text(stage['desc'] as String, style: TextStyle(fontSize: 8, color: Colors.grey.shade600), textAlign: TextAlign.center),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBSFCalculator() {
+    final feed = _bsfEggs * 15;
+    final larvae = _bsfEggs * 4;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [Colors.green.shade900, Colors.green.shade700]),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.calculate, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Kajy Vokatra', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Atody (grama)', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      initialValue: _bsfEggs.toString(),
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.2),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                        suffixText: 'g',
+                        suffixStyle: const TextStyle(color: Colors.white70),
+                      ),
+                      onChanged: (v) => setState(() => _bsfEggs = double.tryParse(v) ?? 1.0),
+                    ),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Icon(Icons.arrow_forward, color: Colors.white70, size: 32),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text('Sakafo', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                          Text('${feed.toStringAsFixed(1)} kg', style: const TextStyle(color: Colors.yellow, fontSize: 16, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text('Vokatra', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                          Text('${larvae.toStringAsFixed(1)} kg', style: const TextStyle(color: Colors.greenAccent, fontSize: 16, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuideSection(String type, MaterialColor color) {
+    if (type != 'BSF') return const SizedBox.shrink();
+    
+    final steps = [
       {
-        'name': 'BSF - Black Soldier Fly (Hermetia illucens)',
+        'title': '1. Fanatodizana (Atody)',
+        'icon': '🥚',
+        'items': [
+          'Apetraka ao anaty tapaka bidon ny sakafo',
+          'Potehina malemy tsara ilay sakafo. Ampiana rano raha maina loatra',
+          'Kikisana eo ambony sivana koba ny atody',
+          'Apetraka ambony sakafo ny sivana koba misy atody',
+          'Milatsaka ho azy ao anaty sakafo ireo zanany foy',
+          'Afaka saromana lay manify mba tsy hidiran\'ny lalitra hafa',
+          'Otazana isaky ny 2-4 andro ny atody',
+        ]
+      },
+      {
+        'title': '2. Fitomboan\'ny Zanany',
+        'icon': '🪱',
+        'items': [
+          'Potehina tsara ny sakafo ary ampiana rano raha maina loatra',
+          'Afangaro matetika ny sakafo',
+          'Rehefa feno 5 andro, zaraina fatra mitovy anaty bidons efa misy sakafo (+5kg sakafo)',
+          'Ampiana ampombo na tain\'akoho maina raha be rano loatra',
+          'Tandremo: Ny zanany dia tsy tia hazavana ary miloko fotsy',
+        ]
+      },
+      {
+        'title': '3. Fiotazana (Fiotazana ny zanany)',
+        'icon': '☀️',
+        'items': [
+          'Manomboka misy miova ho mainty ny lokony',
+          'Apetraka eo ambony koveta ny sivana vy',
+          'Araraka eo ambony sivana vy: sakafo + zanany',
+          'Avela eo amin\'ny masoandro (toerana mazava) mandrapahafindran\'ny zanany rehetra anaty koveta',
+          'Na tsimponina amin\'ny tanana ny zanany sy ny prepupe (sarahina amin\'ny zezika)',
+        ]
+      },
+      {
+        'title': '4. Prépupe',
+        'icon': '🐛',
+        'items': [
+          'Manomboka miova ho mainty ny lokony',
+          'Tsy misakafo fa mbola mihetsika',
+          'Mila toerana maizina sy maina',
+          'Miova loko, mitady toerana hiova',
+          'Faharetan\'ny prépupe ho lasa soherina: 2-4 andro',
+        ]
+      },
+      {
+        'title': '5. Soherina (Pupe)',
+        'icon': '🛡️',
+        'items': [
+          'Miloko mainty, tsy misakafo ary tsy mihetsika intsony',
+          'Teknika: Maka koveta, rarahana akofa na vovo-kazo',
+          'Apetraka ao ny prépupe',
+          'Saromana tapaka bidon na koveta faharoa (Sandwich)',
+          'Asiana malalaka kely eo anelanelan\'ireo koveta roa mba hivoahan\'ireo lalitra foy',
+          'Atsofoka ao anaty lay fanatodizana',
+          'Soherina ho lasa lalitra: 5-14 andro',
+        ]
+      },
+      {
+        'title': '6. Lalitra (Setup Cage)',
+        'icon': '🪰',
+        'items': [
+          'Fanatodizana (Pondoir): Maka tapakazo 3 na 4, fantsihana "punaise" isaky ny zorony sy eo afovoany, atambatra amin\'ny fingotra',
+          'Fisarihana (Attractant): Atao anaty koveta ny fako lo mamofona (voankazo...), ampiana rano, saromana lay',
+          'Fisotroan-drano: Maka barquette misarona, fenoina rano, tatahina ny sarony, atsofoka eo ny lamba kely hitroka ny rano',
+          'Tsaratsara kokoa raha asiana tafo mba hiarovana amin\'ny orana sy ny hafanana be loatra',
+          'Ny lalitra dia tia hazavana, tsy misakafo fa misotro rano. Faharetan\'ny fivelomany: 2-14 andro.',
+        ]
+      },
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: color.shade50, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Torolàlana', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color.shade900)),
+          const SizedBox(height: 16),
+          ...steps.map((step) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(step['title'] as String, style: TextStyle(fontWeight: FontWeight.bold, color: color.shade700)),
+                const SizedBox(height: 8),
+                ...(step['items'] as List).map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.chevron_right, size: 16, color: color.shade600),
+                      const SizedBox(width: 4),
+                      Expanded(child: Text(item as String, style: TextStyle(fontSize: 12, color: Colors.grey.shade700))),
+                    ],
+                  ),
+                )),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMealwormGuide() {
+    final steps = [
+      {'title': '1. Fanomanana', 'items': ['Hafanana: 25-27°C', 'Substrat: Son + koba']},
+      {'title': '2. Fitomboana', 'items': ['Miova hoditra in-15-20', 'Legioma ho rano']},
+      {'title': '3. Adulte', 'items': ['Sarahana ny nymphe', 'Manatody 100-600']},
+    ];
+   
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Torolàlana', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber.shade900)),
+          const SizedBox(height: 16),
+          ...steps.map((step) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(step['title'] as String, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber.shade700)),
+                const SizedBox(height: 8),
+                ...(step['items'] as List).map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.chevron_right, size: 16, color: Colors.amber.shade600),
+                      const SizedBox(width: 4),
+                      Expanded(child: Text(item as String, style: TextStyle(fontSize: 12, color: Colors.grey.shade700))),
+                    ],
+                  ),
+                )),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCricketGuide() {
+    final steps = [
+      {'title': '1. Ny Atody (L\'œuf)', 'items': [
+        'Fametrahana: Ny grillon vavy dia mampiasa ny "ovipositeur" (ilay fanjaitra lava ao amin\'ny vodiny) mba handevonana ny tany mando na lamba mando ary mametraka ny atodiny ao.',
+        'Endrika: Fotsy kely lavalava ny atodiny, mitovitovy endrika amin\'ny vary kely.',
+        'Faharetana: Maharitra 10 ka hatramin\'ny 14 andro ny fipoiran\'ny zanany raha toa ka mety tsara ny hafanana (eo amin\'ny 30°C eo).'
+      ]},
+      {'title': '2. Ny Zanany na "Nymphe" (Larve)', 'items': [
+        'Fahaterahana: Rehefa foy ny atody, dia mivoaka ny zanany (mbola antsoina hoe "micro-grillons"). Mitovy endrika tanteraka amin\'ny grillon lehibe izy ireo fa kely dia kely ary tsy mbola misy elatra.',
+        'Fivoarana: Mihalehibe izy ireo amin\'ny alalan\'ny fiovana hoditra (mue). Miova hoditra im-pito na im-balo eo ho eo izy ireo vao tonga olon-dehibe.',
+        'Faharetana: Maharitra eo amin\'ny iray volana sy tapany ka hatramin\'ny roa volana (45-60 andro) ity dingana ity, arakaraka ny hafanana sy ny sakafo omena azy.'
+      ]},
+      {'title': '3. Ny Lehibe (Adulte)', 'items': [
+        'Famantarana: Efa manana elatra feno ny grillon lehibe.',
+        'Ny Lahy: Manomboka maneno (stridulation) amin\'ny alalan\'ny fikikisana ny elany mba hiantsoana ny vavy.',
+        'Ny Vavy: Vonona hanatody rehefa avy miray amin\'ny lahy (3-4 andro aorian\'ny naha-lehibe azy).',
+        'Fahafatesana: Miaina mandritra ny 2 na 3 volana eo ho eo ny grillon lehibe alohan\'ny hahafatesany.'
+      ]},
+    ];
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Torolàlana', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange.shade900)),
+          const SizedBox(height: 16),
+          ...steps.map((step) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(step['title'] as String, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700)),
+                const SizedBox(height: 8),
+                ...(step['items'] as List).map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.chevron_right, size: 16, color: Colors.orange.shade600),
+                      const SizedBox(width: 4),
+                      Expanded(child: Text(item as String, style: TextStyle(fontSize: 12, color: Colors.grey.shade700))),
+                    ],
+                  ),
+                )),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTipsSection(List<Map<String, dynamic>> tips) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Fikajiana', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          ...tips.map((tip) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: (tip['color'] as MaterialColor).shade200, width: 2),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(tip['icon'] as IconData, color: tip['color'] as MaterialColor, size: 20),
+                    const SizedBox(width: 8),
+                    Text(tip['title'] as String, style: TextStyle(fontWeight: FontWeight.bold, color: (tip['color'] as MaterialColor).shade900)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ...(tip['items'] as List).map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text('• $item', style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                )),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWhyItem(String title, String desc) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            margin: const EdgeInsets.only(top: 6, right: 8),
+            decoration: const BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(desc, style: TextStyle(fontSize: 10, color: Colors.grey.shade700)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ========== Karazana Olitra Screen (Species Comparison) ==========
+class OlitraSpeciesComparisonScreen extends StatelessWidget {
+  const OlitraSpeciesComparisonScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final speciesData = [
+      {
+        'name': 'Black Soldier Fly (BSF)',
         'emoji': '🪰',
-        'localName': 'Lalitra mainty miaramila',
         'description': 'Olitra tsara indrindra ho an\'ny fiompiana. Mihinana fako organika.',
-        'lifecycle': '45-60 andro (atody → olitra → lalitra)',
-        'temperature': '25-35°C (optimal 28-30°C)',
+        'lifecycle': '45 andro (atody → olitra → lalitra)',
+        'lifecycleDetails': [
+          {'stage': 'Atody', 'time': '5-14 andro', 'desc': 'Manomboka ny tsingerina', 'color': 0xFFFBBF24},
+          {'stage': 'Zanany (Larve)', 'time': '14-21 andro', 'desc': 'Otazana rehefa feno 45 andro ny tsingerina', 'color': 0xFF10B981},
+          {'stage': 'Prépupe', 'time': 'Mampitohy', 'desc': 'Miova loko, mitady toerana maizina', 'color': 0xFFD97706},
+          {'stage': 'Soherina (Pupe)', 'time': '5-14 andro', 'desc': 'Lasa soherina alohan\'ny hivadika lalitra', 'color': 0xFF6B7280},
+          {'stage': 'Lalitra', 'time': '2-4 andro', 'desc': 'Lalitra lehibe, manatody dia maty', 'color': 0xFF000000},
+        ],
+        'temperature': '27-35°C (optimal 28-30°C)',
         'humidity': '60-80%',
         'hery': '40-45% (olitra maina)',
         'menaka': '30-35%',
@@ -33523,9 +36085,108 @@ class OlitraSpeciesScreen extends StatelessWidget {
         ],
         'uses': ['Sakafo akoho', 'Sakafo trondro', 'Sakafo kisoa', 'Zezika (frass)'],
         'production': '5-10 kg olitra/m²/volana',
+        'calculator': {'eggs': 1.0, 'feed': 15.0, 'larvae': 4.0},
+        'guide': [
+          {
+            'step': 1,
+            'title': 'Fanatodizana (Atody)',
+            'needs': ['Antsy kely na Kiso', 'Sivana koba', 'Tapaka bidon na Koveta', 'Lay manify'],
+            'food': ['Voankazo lo', 'Vary masaka', 'Provandy'],
+            'instructions': [
+              'Apetraka ao anaty tapaka bidon ny sakafo',
+              'Potehina malemy tsara ilay sakafo. Ampiana rano raha maina loatra',
+              'Kikisana eo ambony sivana koba ny atody',
+              'Apetraka ambony sakafo ny sivana koba misy atody',
+              'Milatsaka ho azy ao anaty sakafo ireo zanany foy',
+              'Afaka saromana lay manify mba tsy hidiran\'ny lalitra hafa',
+              'Otazana isaky ny 2-4 andro ny atody',
+            ],
+            'extraInfo': 'Fahafoizan\'ny atody: 2-4 andro. Mila toerana mafana.',
+          },
+          {
+            'step': 2,
+            'title': 'Fitomboan\'ny Zanany',
+            'needs': ['Sotrobe na hazo kely', 'Tapaka bidon na Koveta', 'Pulvérisateur (famendrehana rano)'],
+            'food': ['Sakafo mora lo', 'Ambin-tsakafo', 'Apombo'],
+            'instructions': [
+              'Potehina tsara ny sakafo ary ampiana rano raha maina loatra',
+              'Afangaro matetika ny sakafo',
+              'Rehefa feno 5 andro, zaraina fatra mitovy anaty bidons efa misy sakafo (+5kg sakafo)',
+              'Ampiana ampombo na tain\'akoho maina raha be rano loatra',
+              'Tandremo: Ny zanany dia tsy tia hazavana ary miloko fotsy',
+            ],
+            'extraInfo': 'Faharetan\'ny fitomboany: 14-21 andro. Matavy tsara ary mbola mihetsika tsara.',
+          },
+          {
+            'step': 3,
+            'title': 'Fiotazana (Fiotazana ny zanany)',
+            'needs': ['Sivana vy (3 mm)', 'Sotrobe', 'Koveta'],
+            'instructions': [
+              'Manomboka misy miova ho mainty ny lokony',
+              'Apetraka eo ambony koveta ny sivana vy',
+              'Araraka eo ambony sivana vy: sakafo + zanany',
+              'Avela eo amin\'ny masoandro (toerana mazava) mandrapahafindran\'ny zanany rehetra anaty koveta',
+              'Na tsimponina amin\'ny tanana ny zanany sy ny prepupe (sarahina amin\'ny zezika)',
+            ],
+            'extraInfo': 'Ny BSF dia tsy tia hazavana, ka handositra any anaty koveta rehefa tratran\'ny masoandro.',
+          },
+          {
+            'step': 4,
+            'title': 'Prépupe & Soherina',
+            'needs': ['Koveta na tapaka bidon 2', 'Lamba mainty', 'Lay fanatodizana', 'Akofam-bary na vovo-kazo maina'],
+            'instructions': [
+              'Prépupe: Manopy ho mainty, tsy misakafo fa mbola mihetsika. Mila toerana maizina sy maina',
+              'Soherina (Pupe): Miloko mainty, tsy misakafo ary tsy mihetsika intsony',
+              'Teknika: Maka koveta, rarahana akofa na vovo-kazo. Apetraka ao ny prépupe',
+              'Saromana tapaka bidon na koveta faharoa (Sandwich)',
+              'Asiana malalaka kely eo anelanelan\'ireo koveta roa mba hivoahan\'ireo lalitra foy',
+              'Atsofoka ao anaty lay fanatodizana',
+            ],
+            'extraInfo': 'Faharetan\'ny prépupe ho lasa soherina: 2-4 andro. Soherina ho lasa lalitra: 5-14 andro.',
+          },
+          {
+            'step': 5,
+            'title': 'Lalitra (Setup Cage)',
+            'needs': ['Lay', 'Fanatodizana (Pondoir)', 'Fisarihana (Attractant)', 'Fisotroan-drano (Abreuvoir)'],
+            'food': ['Rano madio', 'Fako lo mamofona'],
+            'instructions': [
+              'Fanatodizana (Pondoir): Maka tapakazo 3 na 4, fantsihana "punaise" isaky ny zorony sy eo afovoany, atambatra amin\'ny fingotra',
+              'Fisarihana (Attractant): Atao anaty koveta ny fako lo mamofona (voankazo...), ampiana rano, saromana lay',
+              'Fisotroan-drano: Maka barquette misarona, fenoina rano, tatahina ny sarony, atsofoka eo ny lamba kely hitroka ny rano',
+              'Tsaratsara kokoa raha asiana tafo mba hiarovana amin\'ny orana sy ny hafanana be loatra',
+            ],
+            'extraInfo': 'Ny lalitra dia tia hazavana, tsy misakafo fa misotro rano. Faharetan\'ny fivelomany: 2-14 andro.',
+          },
+        ],
+        'tips': [
+          {
+            'category': 'Biby Mpanimba',
+            'items': [
+              'Vitsika: Asiana rano manodidina ny tongotry ny lay fanatodizana na hosorana vidange na menaka jirofo',
+              'Voalavo: Asiana grillage vy na bararata hiarovana ny toeram-piompiana na miompy saka',
+            ],
+          },
+          {
+            'category': 'Fanarahana isan\'andro',
+            'items': [
+              'Toerana: Hafanana (27-35°C), hamandoana, hazavana, fahadiovana',
+              'Mangatsiaka ny andro: Atambatra ireo koveta, apetraka ao ambanin\'ny lay fanatodizana',
+              'Mafana ny andro: Asiana varavarakely ho an\'ny rivotra',
+            ],
+          },
+          {
+            'category': 'Sakafo & Rano',
+            'items': [
+              'Sakafo: fako voajanahary, tsy misy fanafody na simika',
+              'Tandremo: Raha ahiana misy fanafody dia andrahoina kely aloha',
+              'Lay: madio, tsy misy odimoka',
+              'Rano: rano fisotro madio no ampiasaina',
+            ],
+          },
+        ],
         'price': {
-          'larvae': '15,000-25,000 Ar/kg (olitra velona)',
-          'dried': '40,000-60,000 Ar/kg (olitra maina)',
+          'olitra': '15,000-25,000 Ar/kg (olitra velona)',
+          'maina': '40,000-60,000 Ar/kg (olitra maina)',
           'eggs': '50,000-100,000 Ar/g (atody)',
           'frass': '5,000-10,000 Ar/kg (zezika)',
         },
@@ -33549,8 +36210,8 @@ class OlitraSpeciesScreen extends StatelessWidget {
         'uses': ['Sakafo akoho', 'Sakafo trondro', 'Sakafo vorona', 'Sakafo olona', 'Pet food'],
         'production': '2-4 kg olitra/m²/volana',
         'price': {
-          'larvae': '25,000-40,000 Ar/kg (olitra velona)',
-          'dried': '60,000-100,000 Ar/kg (olitra maina)',
+          'olitra': '25,000-40,000 Ar/kg (olitra velona)',
+          'maina': '60,000-100,000 Ar/kg (olitra maina)',
           'adults': '30,000-50,000 Ar/100 (scarabée mpanampy)',
         },
       },
@@ -33572,8 +36233,8 @@ class OlitraSpeciesScreen extends StatelessWidget {
         'uses': ['Sakafo olona (lafarinina)', 'Sakafo biby fiompy', 'Sakafo reptile'],
         'production': '1-2 kg/m²/volana',
         'price': {
-          'live': '30,000-50,000 Ar/kg (velona)',
-          'dried': '80,000-120,000 Ar/kg (maina)',
+          'velona': '30,000-50,000 Ar/kg (velona)',
+          'maina': '80,000-120,000 Ar/kg (maina)',
         },
       },
     ];
@@ -33656,7 +36317,7 @@ class OlitraSpeciesScreen extends StatelessWidget {
           const Text('KARAZANA OLITRA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 12),
 
-          ...species.map((sp) => Container(
+          ...speciesData.map((sp) => Container(
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -33820,17 +36481,14 @@ class OlitraSpeciesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard(String title, String value) {
+  Widget _buildInfoCard(String icon, String value) {
     return Container(
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(color: Colors.brown.shade50, borderRadius: BorderRadius.circular(6)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: TextStyle(fontSize: 9, color: Colors.brown.shade600)),
-          Text(value, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500)),
-        ],
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
       ),
+      child: Text('$icon $value', style: const TextStyle(fontSize: 10), textAlign: TextAlign.center),
     );
   }
 }
@@ -34051,240 +36709,613 @@ class OlitraFeedScreen extends StatelessWidget {
 }
 
 // ========== Olitra Production Screen ==========
-class OlitraProductionScreen extends StatelessWidget {
+class OlitraProductionScreen extends StatefulWidget {
   const OlitraProductionScreen({super.key});
 
   @override
+  State<OlitraProductionScreen> createState() => _OlitraProductionScreenState();
+}
+
+class _OlitraProductionScreenState extends State<OlitraProductionScreen> {
+  String _activeTab = 'biby'; // 'biby' or 'olona'
+  String _activeInsect = 'bsf'; // 'bsf', 'mealworm', 'cricket'
+
+  final Map<String, dynamic> _insects = {
+    'bsf': {
+      'id': 'bsf',
+      'name': 'BSF (Black Soldier Fly)',
+      'scientificName': 'Hermetia illucens',
+      'malagasyName': 'Moka miaramila',
+      'color': Colors.green[800]!,
+      'bgLight': Colors.green.shade50,
+      'bgDark': Colors.green.shade700,
+      'description': 'Solon-tsakafo be otrikaina, mampihena ny fandaniana, ary manatsara ny fahasalaman\'ny biby fiompy sy ny olona.',
+      'nutrients': [
+        {'name': 'Proteinina', 'value': '38.5 - 63%', 'icon': Icons.monitor_heart, 'desc': 'Manampy amin\'ny fitomboana sy famokarana (ronono, hena, atody).'},
+        {'name': 'Menaka (Lipida)', 'value': '6.6 - 39%', 'icon': Icons.water_drop, 'desc': 'Manome angovo sy manatsara ny kalitaon\'ny hena.'},
+        {'name': 'Kalsioma', 'value': '1.7 - 3.2 g/kg', 'icon': Icons.health_and_safety, 'desc': 'Manamafy taolana sy ilaina amin\'ny atody.'},
+        {'name': 'Fosfora', 'value': '3 - 4.5 g/kg', 'icon': Icons.health_and_safety, 'desc': 'Manamafy taolana.'},
+        {'name': 'Methionine', 'value': '6-8 mg/g', 'icon': Icons.shield, 'desc': 'Manamafy ny hery fiarovana.'},
+      ],
+      'animalFeed': {
+        'tips': [
+          {'title': 'Fanombohana', 'text': 'Aza ovaina tampoka ny sakafo. Atomboka amin\'ny 10% amin\'ny sakafo mahazatra no soloina BSF.'},
+          {'title': 'Fatra', 'text': 'Ny 10-50% amin\'ny sakafo mahazatra dia azo soloina BSF. Tsy atao mihoatra ny 75%.'},
+          {'title': 'Karazana Biby', 'text': 'Mety tsara ho an\'ny akoho, trondro, ary kisoa.'},
+        ],
+        'substitutes': ['Vovo-trondro', 'Soja', 'Katsaka', 'Apombo'],
+        'forms': [
+          {'name': 'BSF Velona', 'desc': 'Zanany vao notazana. Omena mivantana ny biby.', 'icon': Icons.bug_report},
+          {'name': 'BSF Nampangotrahana', 'desc': 'Hamonoana azy sy hanamora ny fandevonan-kanina. Avela mangotraka 3-5min.', 'icon': Icons.water_drop},
+          {'name': 'BSF Maina', 'desc': 'Hanamora ny fitahirizana sy fanaovana vovoka. Avela ho maina 2-3 andro.', 'icon': Icons.wb_sunny},
+          {'name': 'Vovoka BSF', 'desc': 'Afangaro amin\'ny sakafo. Tehirizina anaty fitoerana mihidy tsara (3-6 volana).', 'icon': Icons.archive}
+        ]
+      },
+      'fertilizer': {
+        'title': 'Zezika BSF (Frass)',
+        'description': 'Ny taim-biby sy hoditra maty tavela dia zezika natoraly mahery vaika kokoa noho ny tain\'omby.',
+        'benefits': [
+          {'element': 'Azota (N)', 'role': 'Manampy ny ravina hitombo sy ho maitso tsara. Mampitombo ny haavon\'ny zavamaniry.'},
+          {'element': 'Fosfora (P)', 'role': 'Manamafy ny fakany. Manatsara ny fitomboan\'ny fototra sy ny vokatra (voa/legioma).'},
+          {'element': 'Potasioma (K)', 'role': 'Manatsara ny fahasalaman\'ny zavamaniry. Miaro amin\'ny aretina.'}
+        ],
+        'table': [
+          {'nutrient': 'Azota (N)', 'bsf': '0.6 - 5.1%', 'cow': '0.3 - 1.6%', 'chicken': '0.6 - 1.6%'},
+          {'nutrient': 'Fosfora (P)', 'bsf': '0.2 - 5.2%', 'cow': '0.1 - 0.3%', 'chicken': '0.1 - 0.7%'},
+          {'nutrient': 'Potasioma (K)', 'bsf': '0.2 - 4.5%', 'cow': '0.2 - 1.1%', 'chicken': '0.1 - 0.7%'},
+        ]
+      },
+      'humanFood': {
+        'benefits': [
+          {'title': 'Proteinina', 'subtitle': 'Fitomboana'},
+          {'title': 'Menaka', 'subtitle': 'Angovo'},
+          {'title': 'Ca & P', 'subtitle': 'Taolana'},
+          {'title': 'Zinc & Fer', 'subtitle': 'Hery fiarovana'}
+        ],
+        'processingSteps': [
+          {'step': '1. Fanadiovana', 'desc': 'Avela 24h tsy homena sakafo mba hiala ny loto anaty kibony, avy eo sasana amin\'ny rano madio.'},
+          {'step': '2. Fampangotrahana', 'desc': 'Ampangotrahina 3-5 minitra mba hamonoana mikraoba.'},
+          {'step': '3. Fanamainana', 'desc': 'Atapy andro 2-3 na atao anaty lafaoro.'},
+          {'step': '4. Fitotoana', 'desc': 'Totoina ho lasa vovoka.'},
+        ],
+        'recipes': [
+          {
+            'title': 'BSF Frit (Endasina)',
+            'ingredients': ['BSF voadio', 'Sira', 'Menaka'],
+            'steps': ['Asiana sira ny BSF.', 'Hafanaina ny menaka.', 'Arotsaka ary endasina mandra-pikarepoka.']
+          },
+          {
+            'title': 'BSF Saosy',
+            'ingredients': ['BSF', 'Voatabia', 'Tongolo', 'Sira', 'Menaka'],
+            'steps': ['Endasina ny tongolo sy voatabia.', 'Arotsaka ny BSF.', 'Asiana rano kely dia avela hitanehaka.']
+          },
+          {
+            'title': 'Mofo BSF Masira',
+            'ingredients': ['1 vera Lafarinina', '2-3 sotro vovoka BSF', '1 atody', 'Rano', 'Sira & Dipoavatra'],
+            'steps': ['Afangaro ny lafarinina sy vovoka BSF.', 'Ampiana atody sy rano.', 'Endasina toy ny mofo mahazatra.']
+          }
+        ],
+        'warnings': [
+          'Mety hisy olona tsy mahazaka (allergie), indrindra ireo tsy mahazaka hazan-dranomasina.',
+          'Afangaro amin\'ny sakamalaho na tamotamo mba hampihenana ny allergie.',
+          'Diovy tsara foana ny fitaovana.'
+        ]
+      }
+    },
+    'mealworm': {
+      'id': 'mealworm',
+      'name': 'Ver de Farine',
+      'scientificName': 'Tenebrio molitor',
+      'malagasyName': 'Olitra (Kankana fihinam-bary)',
+      'color': Colors.yellow[800]!,
+      'bgLight': Colors.yellow.shade50,
+      'bgDark': Colors.yellow.shade700,
+      'description': 'Kankana mora ompiana, manankarena proteinina sy menaka tsara. Tian\'ny akoho sy ny biby mandady (reptiles).',
+      'nutrients': [
+        {'name': 'Proteinina', 'value': '45 - 60%', 'icon': Icons.monitor_heart, 'desc': 'Mifaninana tsara amin\'ny hena mahazatra.'},
+        {'name': 'Menaka', 'value': '25 - 40%', 'icon': Icons.water_drop, 'desc': 'Manankarena asidra matavy (Omega-3, Omega-6).'},
+        {'name': 'Fibre', 'value': 'Be Chitin', 'icon': Icons.shield, 'desc': 'Manatsara ny fandevonan-kanina (Prebiotic).'},
+        {'name': 'Vitamina', 'value': 'B12, B5', 'icon': Icons.monitor_heart, 'desc': 'Ilaina amin\'ny fiasan\'ny vatana.'}
+      ],
+      'animalFeed': {
+        'tips': [
+          {'title': 'Velona', 'text': 'Tena tian\'ny akoho amam-borona ny mihinana azy velona. Mandrisika azy ireo hihetsika.'},
+          {'title': 'Maina', 'text': 'Azo tehirizina ela ary afangaro amin\'ny vovo-katsaka na soza.'},
+          {'title': 'Reptiles', 'text': 'Sakafo fototra ho an\'ny andrigo sy biby mandady maro.'},
+        ],
+        'substitutes': ['Sakafo velona', 'Menaka trondro', 'Vovo-taolana'],
+      },
+      'humanFood': {
+        'benefits': [
+          {'title': 'Tsiro', 'subtitle': 'Toy ny voanjo'},
+          {'title': 'Vitamina', 'subtitle': 'B12 & Fer'},
+          {'title': 'Proteinina', 'subtitle': 'Avo lenta'},
+          {'title': 'Fibre', 'subtitle': 'Fandevonana'}
+        ],
+        'processingSteps': [
+          {'step': '1. Fifadian-kanina', 'desc': 'Avela 24h tsy homena sakafo (carotte ihany).'},
+          {'step': '2. Famonoana', 'desc': 'Atao anaty vata fampangatsiahana na ampangotrahana vetivety.'},
+          {'step': '3. Fanatsarana tsiro', 'desc': 'Endasina na atao anaty lafaoro (Torréfaction).'},
+          {'step': '4. Fampiasana', 'desc': 'Atao tsakitsaky na totoina ho lafarinina.'},
+        ],
+        'recipes': [
+          {
+            'title': 'Olitra Voaendy (Snack)',
+            'ingredients': ['Ver de farine', 'Menaka oliva', 'Sira', 'Vovo-sakay'],
+            'steps': ['Afangaro amin\'ny episy ny olitra.', 'Atsofoka lafaoro (180°C) mandritra ny 10-15 minitra mandra-pikarepoka.']
+          },
+          {
+            'title': 'Mofomamy Proteinina',
+            'ingredients': ['Lafarinina varimbazaha', 'Vovoka Ver de farine (20%)', 'Siramamy', 'Atody'],
+            'steps': ['Soloy 20% amin\'ny lafarinina mahazatra ny vovoka olitra.', 'Karakarao toy ny mofomamy mahazatra (Cookies/Cake).']
+          }
+        ],
+        'warnings': [
+          'Mety hiteraka allergie ho an\'ny olona tsy mahazaka crustacés (crevettes).',
+          'Aza mihinana olitra maty (tsy fantatra ny antony nahafaty azy).',
+          'Mila masaka tsara foana.'
+        ]
+      }
+    },
+    'cricket': {
+      'id': 'cricket',
+      'name': 'Sahobaka',
+      'scientificName': 'Acheta domesticus',
+      'malagasyName': 'Grillon',
+      'color': Colors.amber[900]!,
+      'bgLight': Colors.amber.shade50,
+      'bgDark': Colors.amber.shade800,
+      'description': 'Tena ambony proteinina ary kely menaka kokoa noho ny olitra.',
+      'nutrients': [
+        {'name': 'Proteinina', 'value': '60 - 70%', 'icon': Icons.monitor_heart, 'desc': 'Ambony lavitra noho ny hena omby (maina).'},
+        {'name': 'Vy (Fer)', 'value': 'Avo be', 'icon': Icons.health_and_safety, 'desc': 'Tsara ho an\'ny olona tsy ampy ra.'},
+        {'name': 'Vitamina B12', 'value': 'Tena be', 'icon': Icons.monitor_heart, 'desc': 'Ilaina amin\'ny fiasan\'ny atidoha.'},
+        {'name': 'Menaka', 'value': '15 - 30%', 'icon': Icons.water_drop, 'desc': 'Kely menaka kokoa noho ny BSF sy Olitra.'}
+      ],
+      'animalFeed': {
+        'tips': [
+          {'title': 'Kalitao', 'text': 'Sakafo avo lenta (Premium) ho an\'ny biby fiompy sy trondro.'},
+          {'title': 'Fitomboana', 'text': 'Haingana be ny fitomboan\'ny biby omena sahobaka noho ny habetsahan\'ny proteinina.'},
+          {'title': 'Velona', 'text': 'Mandrisika ny fihazana (instinct de chasse) ho an\'ny biby mpihaza.'},
+        ],
+        'substitutes': ['Hena avo lenta', 'Vovo-trondro'],
+      },
+      'humanFood': {
+        'benefits': [
+          {'title': 'Proteinina', 'subtitle': 'Tena Avo'},
+          {'title': 'Vy (Fer)', 'subtitle': 'Miady Anémie'},
+          {'title': 'B12', 'subtitle': 'Hery'},
+          {'title': 'Tontolo iainana', 'subtitle': 'Kely rano'}
+        ],
+        'processingSteps': [
+          {'step': '1. Fanadiovana', 'desc': 'Avela 24h vao sasana.'},
+          {'step': '2. Blanchir', 'desc': 'Ampangotrahina 1-2 minitra.'},
+          {'step': '3. Fanamainana', 'desc': 'Hamainina tsara.'},
+          {'step': '4. Vovoka', 'desc': 'Totoina ho "Lafarinina Sahobaka" (Cricket Flour) izay tena malaza.'},
+        ],
+        'recipes': [
+          {
+            'title': 'Lafarinina Super-Food',
+            'ingredients': ['Vovoka Sahobaka'],
+            'steps': ['Azo ampiasaina amin\'ny Smoothie, na afangaro amin\'ny lafarinina hanaovana Pain na Pâtes.', 'Tsy manova ny tsiron-tsakafo be fa manampy otrikaina.']
+          },
+          {
+            'title': 'Sahobaka Apéro',
+            'ingredients': ['Sahobaka manontolo', 'Tongolo gasy', 'Sira', 'Menaka'],
+            'steps': ['Endasina ny tongolo gasy.', 'Arotsaka ny sahobaka mandra-paha-maina azy.', 'Tsakitsaky tonga lafatra miaraka amin\'ny zava-pisotro.']
+          }
+        ],
+        'warnings': [
+          'Mitovy amin\'ny hazan-dranomasina ny allergie mety haterany.',
+          'Esorina ny elany sy ny tongony maranitra (raha hohanina manontolo) mba tsy hanaratra tenda.',
+        ]
+      }
+    }
+  };
+
+  @override
   Widget build(BuildContext context) {
-    final bsfCycle = [
-      {'stage': 'Atody', 'duration': '3-4 andro', 'emoji': '🥚', 'action': 'Tehirizo amin\'ny toerana mafana (28-30°C)'},
-      {'stage': 'Olitra kely', 'duration': '5-7 andro', 'emoji': '🐛', 'action': 'Omeo sakafo madinika, tsy be loatra'},
-      {'stage': 'Olitra antonony', 'duration': '7-10 andro', 'emoji': '🪱', 'action': 'Ampitomboy ny sakafo isan\'andro'},
-      {'stage': 'Prepupa', 'duration': '5-7 andro', 'emoji': '🟤', 'action': 'VONONA HIJINJA - loko mainty, tsy misakafo'},
-      {'stage': 'Pupa → Lalitra', 'duration': '14-21 andro', 'emoji': '🪰', 'action': 'Ampidiro cage, miteraka atody'},
-    ];
-
-    final harvestTips = [
-      {'title': 'Fotoana tsara', 'desc': 'Rehefa prepupa (mainty, tsy mihinana) - protéine ambony indrindra', 'emoji': '⏰'},
-      {'title': 'Fomba fijinjana', 'desc': 'Ampiasao tamis (harato) hanavahana amin\'ny sakafo sisa', 'emoji': '🕸️'},
-      {'title': 'Fanadiovana', 'desc': 'Sasao amin\'ny rano, avelao hihamaina 24h', 'emoji': '💧'},
-      {'title': 'Fanaovana maina', 'desc': 'Hafanao 60-80°C mandritra 4-6 ora na atao masoandro', 'emoji': '☀️'},
-      {'title': 'Fitahirizana', 'desc': 'Tehirizo maina ao anaty vata mihiboka, maharitra 6-12 volana', 'emoji': '📦'},
-    ];
-
-    final productionCalc = {
-      'input': '10 kg fako/andro',
-      'output': '2-3 kg olitra velona/andro',
-      'conversion': '20-30% conversion rate',
-      'monthly': '60-90 kg olitra/volana',
-      'revenue': '900,000 - 2,250,000 Ar/volana',
-    };
+    final insect = _insects[_activeInsect];
+    final Color primaryColor = insect['color'];
+    final Color bgLight = insect['bgLight'];
+    final Color bgDark = insect['bgDark'];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.brown.shade700, Colors.brown.shade500]),
-              borderRadius: BorderRadius.circular(16),
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
+        top: false,
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 135.0,
+              floating: false,
+              pinned: true,
+              backgroundColor: bgDark,
+              automaticallyImplyLeading: false,
+              flexibleSpace: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [bgDark, Colors.grey.shade700],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Vokatra Bibikely',
+                          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: _insects.values.map<Widget>((item) {
+                            final bool isActive = _activeInsect == item['id'];
+                            return Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () => setState(() => _activeInsect = item['id']),
+                                    borderRadius: BorderRadius.circular(10),
+                                    splashColor: Colors.white24,
+                                    child: Ink(
+                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: isActive ? Colors.white : Colors.white.withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: isActive ? Colors.white : Colors.white30,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          item['name'],
+                                          style: TextStyle(
+                                            color: isActive ? bgDark : Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
-            child: Row(
+          SliverToBoxAdapter(
+            child: Column(
               children: [
-                const Text('📦', style: TextStyle(fontSize: 40)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                // Banner
+                Container(
+                  color: bgLight,
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
                     children: [
-                      const Text('VOKATRA & FIJINJANA',
-                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('Cycle fiainana sy fomba fijinjana',
-                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
+                      CircleAvatar(
+                        backgroundColor: bgDark,
+                        child: const Icon(Icons.bug_report, color: Colors.white),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${insect['name']}',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor),
+                            ),
+                            Text(
+                              '${insect['malagasyName']} - ${insect['scientificName']}',
+                              style: TextStyle(fontSize: 12, color: Colors.grey[700], fontStyle: FontStyle.italic),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(insect['description'], style: const TextStyle(fontSize: 14)),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
+                ),
+                // Tabs
+                Row(
+                  children: [
+                    Expanded(child: _buildTabButton('Biby Fiompy', 'biby', primaryColor)),
+                    Expanded(child: _buildTabButton('Olona', 'olona', Colors.orange)),
+                  ],
+                ),
+                // Content
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20.0),
+                  child: _activeTab == 'biby' ? _buildAnimalContent(insect, primaryColor, bgLight) : _buildHumanContent(insect, Colors.orange, Colors.orange.shade50),
                 ),
               ],
             ),
           ),
+        ],
+      ), // Closes CustomScrollView
+    ), // Closes SafeArea  
+    ); // Closes Scaffold
+  }
 
-          const SizedBox(height: 20),
-
-          // BSF Lifecycle
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+  Widget _buildTabButton(String title, String id, Color color) {
+    final bool isActive = _activeTab == id;
+    return InkWell(
+      onTap: () => setState(() => _activeTab = id),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: isActive ? color : Colors.transparent, width: 4)),
+          color: isActive ? color.withOpacity(0.1) : Colors.transparent,
+        ),
+        child: Center(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isActive ? color : Colors.grey,
+              fontSize: 16,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimalContent(Map<String, dynamic> insect, Color color, Color bgLight) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle('Otrikaina & Tombotsoa', Icons.eco, color),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          childAspectRatio: 1.5,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          children: (insect['nutrients'] as List).map<Widget>((n) {
+            return Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(8), border: Border.all(color: color.withOpacity(0.2))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(children: [Icon(n['icon'], size: 16, color: color), const SizedBox(width: 4), Expanded(child: Text(n['name'], style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 12)))]),
+                  const SizedBox(height: 4),
+                  Text(n['value'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(n['desc'], style: TextStyle(fontSize: 10, color: Colors.grey[700]), maxLines: 2, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
+        _buildSectionTitle('Fomba Fampiasana', Icons.info, color),
+        ...(insect['animalFeed']['tips'] as List).map((tip) => Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
-                  children: [
-                    Text('🔄', style: TextStyle(fontSize: 24)),
-                    SizedBox(width: 8),
-                    Text('CYCLE FIAINAN\'NY BSF', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
+                Text(tip['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 4),
+                Text(tip['text']),
+              ],
+            ),
+          ),
+        )),
+        if (insect['animalFeed']['forms'] != null) ...[
+          const SizedBox(height: 16),
+          const Text('Endrika azo omena:', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            childAspectRatio: 1.8,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            children: (insect['animalFeed']['forms'] as List).map<Widget>((f) {
+              return Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
                 ),
-                const Divider(),
-                ...bsfCycle.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final stage = entry.value;
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
                       children: [
-                        Column(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.brown.shade100,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Center(child: Text(stage['emoji'] as String, style: const TextStyle(fontSize: 20))),
-                            ),
-                            if (i < bsfCycle.length - 1)
-                              Container(width: 2, height: 20, color: Colors.brown.shade200),
-                          ],
-                        ),
-                        const SizedBox(width: 12),
+                        Icon(f['icon'], size: 18, color: color),
+                        const SizedBox(width: 6),
                         Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: (stage['stage'] == 'Prepupa') ? Colors.green.shade50 : Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                              border: (stage['stage'] == 'Prepupa') ? Border.all(color: Colors.green.shade300) : null,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(stage['stage'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(color: Colors.brown.shade100, borderRadius: BorderRadius.circular(4)),
-                                      child: Text(stage['duration'] as String, style: const TextStyle(fontSize: 9)),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(stage['action'] as String, style: TextStyle(fontSize: 10, color: Colors.grey.shade700)),
-                              ],
-                            ),
+                          child: Text(
+                            f['name'],
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
-                  );
-                }),
-              ],
-            ),
+                    const SizedBox(height: 4),
+                    Expanded(
+                      child: Text(
+                        f['desc'],
+                        style: const TextStyle(fontSize: 9),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
           ),
-
-          const SizedBox(height: 20),
-
-          // Production Calculator
+        ],
+        const SizedBox(height: 24),
+        if (insect['fertilizer'] != null) ...[
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.green.shade50,
+              gradient: LinearGradient(colors: [Colors.green.shade50, Colors.green.shade100]),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.green.shade200),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
-                  children: [
-                    Text('📊', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('KAJY VOKATRA (BSF)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _buildCalcRow('📥 Fako miditra', productionCalc['input']!),
-                _buildCalcRow('📤 Olitra mivoaka', productionCalc['output']!),
-                _buildCalcRow('🔄 Taha conversion', productionCalc['conversion']!),
-                _buildCalcRow('📅 Isam-bolana', productionCalc['monthly']!),
-                Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Text('💰 ', style: TextStyle(fontSize: 16)),
-                      Expanded(child: Text('Vola miditra: ${productionCalc['revenue']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                    ],
+                Row(children: [const Icon(Icons.grass, color: Colors.green), const SizedBox(width: 8), Text(insect['fertilizer']['title'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[800]))]),
+                const SizedBox(height: 8),
+                Text(insect['fertilizer']['description']),
+                const SizedBox(height: 16),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    columns: const [DataColumn(label: Text('Otrikaina')), DataColumn(label: Text('BSF')), DataColumn(label: Text('Omby')), DataColumn(label: Text('Akoho'))],
+                    rows: (insect['fertilizer']['table'] as List).map<DataRow>((row) {
+                      return DataRow(cells: [
+                        DataCell(Text(row['nutrient'], style: const TextStyle(fontWeight: FontWeight.bold))),
+                        DataCell(Text(row['bsf'], style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green[800]))),
+                        DataCell(Text(row['cow'])),
+                        DataCell(Text(row['chicken'])),
+                      ]);
+                    }).toList(),
                   ),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: 20),
-
-          // Harvest Tips
-          const Text('TOROHEVITRA FIJINJANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
-
-          ...harvestTips.map((tip) => Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
-            ),
-            child: Row(
-              children: [
-                Text(tip['emoji'] as String, style: const TextStyle(fontSize: 28)),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(tip['title'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                      Text(tip['desc'] as String, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          )),
         ],
+      ], // Closes the Column's children list
+    ), // Closes Column
+    ); // Closes Padding and return statement
+  }
+
+  Widget _buildHumanContent(Map<String, dynamic> insect, Color color, Color bgLight) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+        _buildSectionTitle('Sakafo ho an\'ny Olona', Icons.restaurant_menu, color),
+        const Text('Sakafo mahasalama, miaro ny tontolo iainana ary matsiro.', style: TextStyle(color: Colors.grey)),
+        const SizedBox(height: 16),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          childAspectRatio: 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          children: (insect['humanFood']['benefits'] as List).map<Widget>((b) {
+            return Container(
+              decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(8), border: Border.all(color: color.withOpacity(0.2))),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(b['title'], style: TextStyle(fontWeight: FontWeight.bold, color: color)),
+                  Text(b['subtitle'], style: TextStyle(color: color.withOpacity(0.8))),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
+        _buildSectionTitle('Fikarakarana', Icons.list, Colors.grey[800]!),
+        ...(insect['humanFood']['processingSteps'] as List).map((step) => ListTile(
+          leading: CircleAvatar(backgroundColor: color, child: Text(step['step'].substring(0, 1), style: const TextStyle(color: Colors.white))),
+          title: Text(step['step'], style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(step['desc']),
+        )),
+        const SizedBox(height: 24),
+        _buildSectionTitle('Hevitra Nahandro', Icons.book, color),
+        ...(insect['humanFood']['recipes'] as List).map((recipe) => Card(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(height: 4, color: color),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(recipe['title'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    const Text('Akora:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
+                    ... (recipe['ingredients'] as List).map((i) => Text('• $i')),
+                    const SizedBox(height: 8),
+                    const Text('Fikarakarana:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
+                    ... (recipe['steps'] as List).asMap().entries.map((e) => Text('${e.key + 1}. ${e.value}')),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        )),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.red[200]!)),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.warning, color: Colors.red),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Tandremo', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                    const SizedBox(height: 8),
+                    ...(insect['humanFood']['warnings'] as List).map((w) => Text('• $w', style: TextStyle(color: Colors.red[900]))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
       ),
     );
   }
 
-  Widget _buildCalcRow(String label, String value) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
+  Widget _buildSectionTitle(String title, IconData icon, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11)),
-          Text(value, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+          Icon(icon, color: color),
+          const SizedBox(width: 8),
+          Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
         ],
       ),
     );
   }
 }
+
 
 // ========== Olitra Uses Screen ==========
 class OlitraUsesScreen extends StatelessWidget {
@@ -34292,78 +37323,119 @@ class OlitraUsesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final uses = [
+    // Prix par kg pour chaque espèce
+    final insectPrices = [
       {
-        'category': 'Sakafo Akoho',
-        'emoji': '🐔',
-        'description': 'Olitra = protéine tsara indrindra ho an\'ny akoho',
-        'benefits': [
-          'Mampitombo ny vokatra atody',
-          'Mampahery ny akoho',
-          'Natural - tsy misy chimique',
-          'Tsy lafo noho ny provandy',
+        'name': 'BSF (Black Soldier Fly)',
+        'emoji': '🪰',
+        'color': Colors.green,
+        'prices': [
+          {'form': 'Olitra velona', 'price': '4,500 Ar/kg'},
+          {'form': 'Olitra maina', 'price': '40,000 - 60,000 Ar/kg'},
+          {'form': 'Poudre (vovoka)', 'price': '50,000 - 80,000 Ar/kg'},
+          {'form': 'Menaka (huile)', 'price': '80,000 - 120,000 Ar/kg'},
         ],
-        'dosage': '10-20% ao amin\'ny sakafo (50-100g/akoho/andro)',
-        'form': 'Velona, maina, na lafarinina',
       },
       {
-        'category': 'Sakafo Trondro',
-        'emoji': '🐟',
-        'description': 'Olitra BSF = sakafo tsara indrindra ho an\'ny Tilapia sy Carpe',
-        'benefits': [
-          'Protéine 40-45% - ambony noho ny provandy',
-          'Lipides betsaka - energia',
-          'Azo atao velona na maina',
-          'Mampitombo haingana',
+        'name': 'Ver de Farine (Mealworm)',
+        'emoji': '🐛',
+        'color': Colors.yellow.shade800,
+        'prices': [
+          {'form': 'Olitra velona', 'price': '25,000 - 40,000 Ar/kg'},
+          {'form': 'Olitra maina', 'price': '60,000 - 100,000 Ar/kg'},
+          {'form': 'Poudre (vovoka)', 'price': '80,000 - 120,000 Ar/kg'},
         ],
-        'dosage': '20-40% ao amin\'ny ration',
-        'form': 'Velona (manidina eo ambony rano) na lafarinina',
       },
       {
-        'category': 'Sakafo Kisoa',
-        'emoji': '🐷',
-        'description': 'Olitra = famenon-tsakafo tsara ho an\'ny kisoa',
-        'benefits': [
-          'Protéine betsaka',
-          'Manamafy ny nofo',
-          'Vitamina sy mineraly',
+        'name': 'Sahobaka (Grillon)',
+        'emoji': '🦗',
+        'color': Colors.amber.shade900,
+        'prices': [
+          {'form': 'Velona', 'price': '30,000 - 50,000 Ar/kg'},
+          {'form': 'Maina', 'price': '80,000 - 150,000 Ar/kg'},
+          {'form': 'Poudre', 'price': '100,000 - 180,000 Ar/kg'},
         ],
-        'dosage': '5-15% ao amin\'ny sakafo',
-        'form': 'Velona, maina, na lafarinina',
-      },
-      {
-        'category': 'Zezika (Frass)',
-        'emoji': '🌱',
-        'description': 'Tain\'olitra BSF = zezika organika tsara indrindra',
-        'benefits': [
-          'NPK voajanahary',
-          'Mampitombo ny tany',
-          'Tsy misy fofona ratsy',
-          'Azo ampiasaina mivantana',
-        ],
-        'dosage': '100-200g/m² tany',
-        'form': 'Maina - tehirizo maharitra',
-      },
-      {
-        'category': 'Sakafo Olona (futur)',
-        'emoji': '👤',
-        'description': 'Vers de farine = protéine azo hanin\'ny olona',
-        'benefits': [
-          'Protéine 50%+ - ambony noho ny hena',
-          'Durable - tsy manimba ny tontolo iainana',
-          'Vitamina B12 sy fer betsaka',
-          'Azo atao lafarinina, biscuit, sns',
-        ],
-        'dosage': 'Miovaova',
-        'form': 'Lafarinina, grillé, entier',
       },
     ];
 
-    final marketOpportunities = [
-      {'market': 'Mpamokatra akoho', 'demand': 'Ambony', 'price': '15,000-25,000 Ar/kg'},
-      {'market': 'Mpamokatra trondro', 'demand': 'Ambony', 'price': '20,000-30,000 Ar/kg'},
-      {'market': 'Pet shops (vorona, reptile)', 'demand': 'Antonony', 'price': '30,000-50,000 Ar/kg'},
-      {'market': 'Mpamboly (zezika)', 'demand': 'Ambony', 'price': '5,000-10,000 Ar/kg'},
+    // Sakafo biby - utilisations pour animaux
+    final animalFeeds = [
+      {
+        'animal': 'Akoho (Volaille)',
+        'emoji': '🐔',
+        'color': Colors.orange,
+        'benefits': [
+          'Protéine 40-50% - tsara ho an\'ny fitomboana',
+          'Calcium ho an\'ny atody matanjaka',
+          'Manampy amin\'ny loko mavo ny atody',
+          'Ahazoana akoho salama sy matanjaka',
+        ],
+        'dosage': '10-15% amin\'ny sakafo andavanandro',
+        'insects': ['BSF', 'Ver de Farine', 'Sahobaka'],
+      },
+      {
+        'animal': 'Trondro (Poisson)',
+        'emoji': '🐟',
+        'color': Colors.blue,
+        'benefits': [
+          'Solon\'ny farina trondro (fishmeal)',
+          'Protein ambony ho an\'ny fitomboana haingana',
+          'Omega-3 avy amin\'ny menaka BSF',
+          'Tsy mila granulés lafo',
+        ],
+        'dosage': '20-30% amin\'ny sakafo',
+        'insects': ['BSF', 'Ver de Farine'],
+      },
+      {
+        'animal': 'Kisoa (Porc)',
+        'emoji': '🐷',
+        'color': Colors.pink,
+        'benefits': [
+          'Protéine betsaka ho an\'ny nofo',
+          'Lysine naturel - manampy fitomboana',
+          'Tsy mila provende lafo',
+          'Nofo matsiro sy salama',
+        ],
+        'dosage': '5-10% amin\'ny sakafo',
+        'insects': ['BSF'],
+      },
+      {
+        'animal': 'Gana (Canard)',
+        'emoji': '🦆',
+        'color': Colors.teal,
+        'benefits': [
+          'Sakafo naturel tian\'ny gana',
+          'Atody betsaka sy matanjaka',
+          'Volom-borona manganohano',
+          'Fitomboana haingana',
+        ],
+        'dosage': '15-20% amin\'ny sakafo',
+        'insects': ['BSF', 'Ver de Farine'],
+      },
+      {
+        'animal': 'Vorona (Oiseaux)',
+        'emoji': '🐦',
+        'color': Colors.purple,
+        'benefits': [
+          'Sakafo voajanahary ho an\'ny vorona',
+          'Vitamina sy mineraly betsaka',
+          'Manampy amin\'ny fiterahana',
+        ],
+        'dosage': '20-30% amin\'ny sakafo',
+        'insects': ['Ver de Farine', 'Sahobaka'],
+      },
+      {
+        'animal': 'Tantely (Appât pêche)',
+        'emoji': '🎣',
+        'color': Colors.indigo,
+        'benefits': [
+          'Appât naturel tsara indrindra',
+          'Trondro tia olitra velona',
+          'Mora fitahirizana',
+        ],
+        'dosage': 'Olitra velona na prepupa',
+        'insects': ['BSF', 'Ver de Farine'],
+      },
     ];
 
     return Scaffold(
@@ -34375,12 +37447,12 @@ class OlitraUsesScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.teal.shade600, Colors.green.shade600]),
+              gradient: LinearGradient(colors: [Colors.teal.shade700, Colors.teal.shade500]),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
               children: [
-                const Text('🎯', style: TextStyle(fontSize: 40)),
+                const Text('🍽️', style: TextStyle(fontSize: 40)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -34388,8 +37460,8 @@ class OlitraUsesScreen extends StatelessWidget {
                     children: [
                       const Text('FAMPIASANA OLITRA',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('Sakafo biby, zezika, orinasa...',
-                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
+                      Text('Sakafo biby sy vidiny',
+                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -34399,62 +37471,129 @@ class OlitraUsesScreen extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // Uses
-          ...uses.map((use) => Container(
-            margin: const EdgeInsets.only(bottom: 16),
+          // Prix par espèce
+          const Text('💰 VIDINY ISAKY NY KILAO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 12),
+
+          ...insectPrices.map((insect) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
-                leading: Text(use['emoji'] as String, style: const TextStyle(fontSize: 32)),
-                title: Text(use['category'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                subtitle: Text(use['description'] as String, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                leading: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: (insect['color'] as Color).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(child: Text(insect['emoji'] as String, style: const TextStyle(fontSize: 24))),
+                ),
+                title: Text(insect['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: Column(
+                      children: (insect['prices'] as List).map<Widget>((p) => Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: (insect['color'] as Color).withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(p['form'] as String, style: const TextStyle(fontSize: 12)),
+                            Text(p['price'] as String, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: insect['color'] as Color)),
+                          ],
+                        ),
+                      )).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )),
+
+          const SizedBox(height: 20),
+
+          // Sakafo Biby
+          const Text('🐾 SAKAFO HO AN\'NY BIBY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 12),
+
+          ...animalFeeds.map((feed) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5)],
+            ),
+            child: Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                leading: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: (feed['color'] as Color).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(child: Text(feed['emoji'] as String, style: const TextStyle(fontSize: 24))),
+                ),
+                title: Text(feed['animal'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                subtitle: Text('Olitra: ${(feed['insects'] as List).join(", ")}', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('✅ Tombony:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.green)),
-                        ...(use['benefits'] as List).map((b) => Padding(
-                          padding: const EdgeInsets.only(left: 8, top: 4),
-                          child: Text('• $b', style: TextStyle(fontSize: 11, color: Colors.grey.shade700)),
-                        )),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
-                                child: Column(
+                        // Tombotsoa
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: (feed['color'] as Color).withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Tombotsoa:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: feed['color'] as Color)),
+                              const SizedBox(height: 6),
+                              ...(feed['benefits'] as List).map((b) => Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('📊 Dosage:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                                    Text(use['dosage'] as String, style: const TextStyle(fontSize: 10)),
+                                    Text('✓ ', style: TextStyle(color: feed['color'] as Color, fontWeight: FontWeight.bold)),
+                                    Expanded(child: Text(b as String, style: const TextStyle(fontSize: 11))),
                                   ],
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(8)),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('📦 Endrika:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                                    Text(use['form'] as String, style: const TextStyle(fontSize: 10)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                              )),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Dosage
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.info_outline, size: 16, color: Colors.grey),
+                              const SizedBox(width: 8),
+                              Expanded(child: Text('Fatran-danja: ${feed['dosage']}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500))),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -34465,87 +37604,6 @@ class OlitraUsesScreen extends StatelessWidget {
           )),
 
           const SizedBox(height: 20),
-
-          // Market Opportunities
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Text('💼', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('TSENA SY MPANJIFA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ...marketOpportunities.map((market) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: Text(market['market'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500)),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: (market['demand'] == 'Ambony') ? Colors.green.shade100 : Colors.amber.shade100,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(market['demand'] as String, style: TextStyle(fontSize: 9, color: (market['demand'] == 'Ambony') ? Colors.green.shade800 : Colors.amber.shade800)),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(market['price'] as String, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green.shade700)),
-                    ],
-                  ),
-                )),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Business Tip
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.amber.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Text('💡', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('HEVITRA ORINASA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Ny fiompiana olitra dia orinasa vaovao sy tsara eto Madagasikara:\n\n'
-                  '• Tsy misy concurrence be\n'
-                  '• Fako organika betsaka (sakafo maimaim-poana)\n'
-                  '• Demand betsaka (mpamokatra akoho, trondro)\n'
-                  '• Fitaovana tsotra - tsy mila vola be\n'
-                  '• Azo atao ao an-trano na tany kely\n\n'
-                  'Manomboka amin\'ny BSF dia tsara indrindra!',
-                  style: TextStyle(fontSize: 11, height: 1.5),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -39732,13 +42790,83 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Développeur',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity( 0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.red.withOpacity(0.5)),
+              ),
+              child: const Text(
+                'Développeur, Créateur',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
+            const SizedBox(height: 20),
+            
+            // Contributor Section
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity( 0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/steeven.jpeg',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.white.withOpacity( 0.2),
+                      child: const Icon(
+                        Icons.person,
+                        size: 50,
+                        color: Colors.white,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Steeven A.',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity( 0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.orange.withOpacity(0.5)),
+              ),
+              child: const Text(
+                'Créateur',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.orangeAccent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+
             const SizedBox(height: 16),
             const Text(
               'Tantsaha - Application ho an\'ny tantsaha malagasy mba hanampy azy ireo amin\'ny fiompiana sy fambolena.',
