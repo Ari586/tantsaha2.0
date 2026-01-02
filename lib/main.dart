@@ -546,9 +546,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }
   
   Future<void> _checkExistingAccess() async {
-    // TEMPORAIRE : On force l'affichage de l'accueil pour voir les changements
-    // final isUnlocked = await CodeManager.isAppUnlocked();
-    final isUnlocked = false; 
+    // Vérification normale de l'accès
+    final isUnlocked = await CodeManager.isAppUnlocked();
     
     if (isUnlocked && mounted) {
       // L'app est déjà déverrouillée, aller directement à l'app
