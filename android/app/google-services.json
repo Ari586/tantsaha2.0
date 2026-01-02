@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "236458882874",
+    "project_id": "tantsaha2",
+    "storage_bucket": "tantsaha2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:236458882874:android:8fb8b673e34860bfcc0203",
+        "android_client_info": {
+          "package_name": "com.arihavana.tantsaha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPNs9BaxgFHhhsk542BJ3pxfWxboBmxis"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
