@@ -3,7 +3,7 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"flutter_bootstrap.js": "548faa8a7bae6dd9eb7339d990f0b61b",
+const RESOURCES = {"flutter_bootstrap.js": "c56735b9055f2fbf5ac62b405b066730",
 "version.json": "019a553992907603f03a68fb26d8c2cc",
 "index.html": "ee5ef169f4a9022fe9445b2d2f000cbd",
 "/": "ee5ef169f4a9022fe9445b2d2f000cbd",
@@ -16,11 +16,11 @@ const RESOURCES = {"flutter_bootstrap.js": "548faa8a7bae6dd9eb7339d990f0b61b",
 "assets/NOTICES": "bd3e34cc958b8f1cbbb49f55a599d57c",
 "assets/FontManifest.json": "949e02c7439d47497312eed4b116802a",
 "assets/AssetManifest.bin.json": "4caeb4d1b92dfea92416ac2064fe209b",
-"assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "33b7d9392238c04c131b6ce224e13711",
+"assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "b93248a553f9e8bc17f1065929d5934b",
 "assets/shaders/ink_sparkle.frag": "ecc85a2e95f5e9f53123dcaf8cb9b6ce",
 "assets/shaders/stretch_effect.frag": "40d68efbbf360632f614c731219e95f0",
 "assets/AssetManifest.bin": "b74a340ca773c1a0de26c8b6bde51807",
-"assets/fonts/MaterialIcons-Regular.otf": "e9b9e0c220330a0a37b537c5448338ce",
+"assets/fonts/MaterialIcons-Regular.otf": "e7069dfd19b331be16bed984668fe080",
 "assets/assets/icon.png": "9013ee7054f40611cc19ba8254519da4",
 "assets/assets/voly/petit_pois.jpg": "1ea66f5da0bf5ea478bf511bcc1e240d",
 "assets/assets/voly/lentille.jpg": "0cffd2172e9d0b6fa80ead608f924c9c",
