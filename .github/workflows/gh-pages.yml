@@ -1,0 +1,84 @@
+name: Build and Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Cache pub packages to reduce network usage and speed up builds
+      - name: Cache Pub Packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ~/.dartServer/
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-cache-
+
+      - name: Install Flutter SDK (with retries)
+        run: |
+          set -e
+          FLUTTER_DIR="$HOME/flutter"
+          for i in 1 2 3; do
+            if [ -d "$FLUTTER_DIR" ]; then rm -rf "$FLUTTER_DIR"; fi
+            git clone --depth 1 https://github.com/flutter/flutter.git -b stable "$FLUTTER_DIR" && break || {
+              echo "flutter clone failed (attempt $i)";
+              sleep $((i*5));
+            }
+            if [ $i -eq 3 ]; then
+              echo "Failed to clone Flutter SDK after 3 attempts" >&2
+              exit 1
+            fi
+          done
+          echo "$FLUTTER_DIR/bin" >> $GITHUB_PATH
+          export PATH="$FLUTTER_DIR/bin:$PATH"
+          flutter --version
+          flutter config --enable-web
+          flutter precache --web
+
+      - name: Install dependencies (with retries)
+        run: |
+          n=0
+          until [ $n -ge 3 ]; do
+            flutter pub get && break
+            n=$((n+1))
+            echo "Retrying flutter pub get ($n/3)..."
+            sleep 5
+          done
+          if [ $n -ge 3 ]; then
+            echo "flutter pub get failed after 3 attempts" >&2
+            exit 1
+          fi
+
+      - name: Build web (with retry)
+        run: |
+          attempt=0
+          max=2
+          until [ $attempt -ge $max ]; do
+            if flutter build web --release --base-href "/tantsaha2.0/"; then
+              break
+            fi
+            attempt=$((attempt+1))
+            echo "Build failed, retrying ($attempt/$max)..."
+            sleep 6
+          done
+          if [ $attempt -ge $max ]; then
+            echo "flutter build web failed after $max attempts" >&2
+            exit 1
+          fi
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: build/web
