@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 /// Page eBook pour les guides AkohoTech
 /// Affiche les guides de volailles en format livre similaire à Voly
@@ -107,7 +107,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
         color: const Color(0xFFF5EFE7),
         border: Border(
           bottom: BorderSide(
-            color: const Color(0xFF2C1810).withOpacity(0.1),
+            color: const Color(0xFF2C1810).withValues(alpha: 0.1),
             width: 2,
           ),
         ),
@@ -125,7 +125,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
                 child: Text(
                   'Bokin\'ny Fiompiana',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.merriweather(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF2C1810),
@@ -144,7 +144,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
             children: [
               Text(
                 'Toko ${currentIndex + 1}',
-                style: GoogleFonts.lora(
+                style: TextStyle(
                   fontSize: 14,
                   fontStyle: FontStyle.italic,
                   color: const Color(0xFF5D4E37),
@@ -152,14 +152,14 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
               ),
               Text(
                 ' / ',
-                style: GoogleFonts.lora(
+                style: TextStyle(
                   fontSize: 14,
                   color: const Color(0xFF5D4E37),
                 ),
               ),
               Text(
                 '$total',
-                style: GoogleFonts.lora(
+                style: TextStyle(
                   fontSize: 14,
                   color: const Color(0xFF5D4E37),
                 ),
@@ -209,7 +209,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
             Expanded(
               child: Container(
                 height: 1,
-                color: const Color(0xFF2C1810).withOpacity(0.2),
+                color: const Color(0xFF2C1810).withValues(alpha: 0.2),
               ),
             ),
             Padding(
@@ -225,7 +225,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
             Expanded(
               child: Container(
                 height: 1,
-                color: const Color(0xFF2C1810).withOpacity(0.2),
+                color: const Color(0xFF2C1810).withValues(alpha: 0.2),
               ),
             ),
           ],
@@ -243,7 +243,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
         Text(
           title,
           textAlign: TextAlign.center,
-          style: GoogleFonts.merriweather(
+          style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,
             color: const Color(0xFF2C1810),
@@ -257,7 +257,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
         Text(
           subtitle,
           textAlign: TextAlign.center,
-          style: GoogleFonts.lora(
+          style: TextStyle(
             fontSize: 16,
             color: const Color(0xFF5D4E37),
             fontStyle: FontStyle.italic,
@@ -272,7 +272,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
             Expanded(
               child: Container(
                 height: 1,
-                color: const Color(0xFF2C1810).withOpacity(0.2),
+                color: const Color(0xFF2C1810).withValues(alpha: 0.2),
               ),
             ),
             Padding(
@@ -288,7 +288,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
             Expanded(
               child: Container(
                 height: 1,
-                color: const Color(0xFF2C1810).withOpacity(0.2),
+                color: const Color(0xFF2C1810).withValues(alpha: 0.2),
               ),
             ),
           ],
@@ -307,7 +307,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: const Color(0xFF8B7355).withOpacity(0.3),
+                color: const Color(0xFF8B7355).withValues(alpha: 0.3),
                 width: 2,
               ),
             ),
@@ -325,7 +325,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
               const SizedBox(width: 12),
               Text(
                 title,
-                style: GoogleFonts.merriweather(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF2C1810),
@@ -354,13 +354,13 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
             color: const Color(0xFFF5EFE7),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFF8B7355).withOpacity(0.3),
+              color: const Color(0xFF8B7355).withValues(alpha: 0.3),
               width: 1.5,
             ),
           ),
           child: Text(
             badge.toString(),
-            style: GoogleFonts.lora(
+            style: TextStyle(
               fontSize: 14,
               color: const Color(0xFF2C1810),
               fontWeight: FontWeight.w600,
@@ -389,12 +389,12 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: const Color(0xFF8B7355).withOpacity(0.2),
+              color: const Color(0xFF8B7355).withValues(alpha: 0.2),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -427,7 +427,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
                   Expanded(
                     child: Text(
                       stepTitle,
-                      style: GoogleFonts.merriweather(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF2C1810),
@@ -457,7 +457,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
                       Expanded(
                         child: Text(
                           point.toString(),
-                          style: GoogleFonts.lora(
+                          style: TextStyle(
                             fontSize: 14,
                             color: const Color(0xFF2C1810),
                             height: 1.6,
@@ -507,7 +507,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
                 ),
                 child: Text(
                   label,
-                  style: GoogleFonts.lora(
+                  style: TextStyle(
                     fontSize: 11,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -518,7 +518,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
               Expanded(
                 child: Text(
                   value,
-                  style: GoogleFonts.lora(
+                  style: TextStyle(
                     fontSize: 14,
                     color: const Color(0xFF2C1810),
                     height: 1.5,
@@ -566,7 +566,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
                   Container(
                     width: 2,
                     height: 50,
-                    color: const Color(0xFF8B7355).withOpacity(0.3),
+                    color: const Color(0xFF8B7355).withValues(alpha: 0.3),
                   ),
               ],
             ),
@@ -581,7 +581,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
                   children: [
                     Text(
                       label,
-                      style: GoogleFonts.merriweather(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF8B7355),
@@ -590,7 +590,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
                     const SizedBox(height: 4),
                     Text(
                       value,
-                      style: GoogleFonts.lora(
+                      style: TextStyle(
                         fontSize: 14,
                         color: const Color(0xFF2C1810),
                         height: 1.5,
@@ -615,7 +615,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
         color: const Color(0xFFFFF4E6),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: const Color(0xFFE8B951).withOpacity(0.5),
+          color: const Color(0xFFE8B951).withValues(alpha: 0.5),
           width: 1.5,
         ),
       ),
@@ -644,7 +644,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
                       if (label.isNotEmpty)
                         Text(
                           label,
-                          style: GoogleFonts.merriweather(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: const Color(0xFF2C1810),
@@ -653,7 +653,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
                       if (label.isNotEmpty) const SizedBox(height: 4),
                       Text(
                         value,
-                        style: GoogleFonts.lora(
+                        style: TextStyle(
                           fontSize: 14,
                           color: const Color(0xFF2C1810),
                           height: 1.6,
@@ -681,7 +681,7 @@ class _AkohoEbookPageState extends State<AkohoEbookPage> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),

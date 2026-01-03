@@ -1,20 +1,21 @@
+// ignore_for_file: unused_element, unused_local_variable
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui' as ui;
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
+// import 'dart:typed_data';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'pages/tombony_analyzer_page.dart';
 import 'pages/akoho_ebook_page.dart';
-import 'pages/tilapia_nilotica_page.dart';
-import 'pages/carpe_commune_page.dart';
+// unused pages removed
+import 'pages/tilapia_nilotica_page_flutter.dart';
+import 'pages/carpe_commune_page_flutter.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -30,16 +31,14 @@ Future<void> main() async {
   } catch (_) {
     // If firebase config isn't set up yet, app will still run using placeholder options.
   }
-  // Initialize Supabase on non-web platforms only (temporarily disabled on web for debugging)
-  if (!kIsWeb) {
-    try {
-      await Supabase.initialize(
-        url: 'https://ivnmbrzjltshrfqywwoj.supabase.co', // your project URL
-        anonKey: 'sb_publishable_VETJEXoLGp-2bfs7Nrbn_A_clY_rR3q', // your anon key
-      );
-    } catch (_) {
-      // Supabase not configured yet; continue without it.
-    }
+  // Initialize Supabase on all platforms
+  try {
+    await Supabase.initialize(
+      url: 'https://ivnmbrzjltshrfqywwoj.supabase.co',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2bm1icnpqbHRzaHJmcXl3d29qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMjIyOTcsImV4cCI6MjA4MTg5ODI5N30.46pT3-mL7s8YEXoH96INkKcvdLxRt60zMN8l2vmzgH8',
+    );
+  } catch (e) {
+    debugPrint('Supabase initialization error: $e');
   }
   runApp(const AkohoTechApp());
 }
@@ -54,7 +53,7 @@ class _FloatingOrbsPainter extends CustomPainter {
       ..style = PaintingStyle.fill
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
 
-    Color tint(Color c, double alpha) => c.withOpacity( alpha);
+    Color tint(Color c, double alpha) => c.withValues(alpha: alpha);
 
     final orbs = [
       _Orb(0.15, 0.25, 200, 0.55, Colors.redAccent),
@@ -86,7 +85,7 @@ class _Orb {
 }
 
 // Code Admin secret (ce code ne expire jamais)
-const String adminCode = "TANTSAHA2024";
+const String adminCode = "ARIELHAVANA2024";
 
 // ===== CODES PRÉ-DÉFINIS (fonctionnent sur tous les appareils) =====
 const List<String> predefinedCodes = [
@@ -244,14 +243,30 @@ class CodeManager {
   
   // Sauvegarder un code comme valide (avec date d'expiration)
   static Future<void> saveValidCode(String code, {int expirationDays = 30}) async {
+    final codeUpper = code.toUpperCase().trim();
+    
+    // 1. Sauvegarde Locale
     final prefs = await SharedPreferences.getInstance();
     final validCodes = prefs.getStringList(_validCodesKey) ?? [];
     final expirationDate = DateTime.now().add(Duration(days: expirationDays));
-    final codeEntry = '$code|${expirationDate.toIso8601String()}';
+    final codeEntry = '$codeUpper|${expirationDate.toIso8601String()}';
     
-    if (!validCodes.any((c) => c.startsWith('$code|'))) {
+    if (!validCodes.any((c) => c.startsWith('$codeUpper|'))) {
       validCodes.add(codeEntry);
       await prefs.setStringList(_validCodesKey, validCodes);
+    }
+
+    // 2. Sauvegarde en ligne (Supabase)
+    try {
+      final supabase = Supabase.instance.client;
+      await supabase.from('activation_codes').insert({
+        'code': codeUpper,
+        'is_used': false,
+        'created_at': DateTime.now().toIso8601String(),
+        // On pourrait ajouter expiration_date si la colonne existait
+      });
+    } catch (e) {
+      debugPrint('Erreur sauvegarde Supabase: $e');
     }
   }
   
@@ -261,7 +276,34 @@ class CodeManager {
     
     // Le code admin est toujours valide
     if (codeUpper == adminCode) return true;
+
+    // 1. Vérification en ligne (Supabase) pour sécurité globale
+    try {
+      // On vérifie si Supabase est initialisé
+      // Note: Supabase.instance peut lancer une erreur si non init, donc on try/catch
+      final supabase = Supabase.instance.client;
+      final response = await supabase
+          .from('activation_codes')
+          .select()
+          .eq('code', codeUpper)
+          .maybeSingle();
+      
+      if (response != null) {
+        // Le code existe dans la base de données
+        final isUsed = response['is_used'] as bool? ?? false;
+        if (isUsed) {
+          // Code déjà utilisé par quelqu'un d'autre (ou nous-même)
+          return false;
+        }
+        // Code existant et non utilisé -> Valide !
+        return true;
+      }
+    } catch (e) {
+      // Supabase non dispo ou erreur réseau -> On continue sur la vérification locale
+      debugPrint('Vérification Supabase ignorée: $e');
+    }
     
+    // 2. Vérification Locale (Fallback)
     // Vérifier les codes pré-définis OU les codes générés (fonctionnent sur tous les appareils)
     if (predefinedCodes.contains(codeUpper) || _isGeneratedCode(codeUpper)) {
       final prefs = await SharedPreferences.getInstance();
@@ -293,12 +335,29 @@ class CodeManager {
   
   // Marquer un code comme utilisé (après paiement confirmé)
   static Future<void> markCodeAsUsed(String code) async {
+    final codeUpper = code.toUpperCase().trim();
     final prefs = await SharedPreferences.getInstance();
     final usedCodes = prefs.getStringList(_usedCodesKey) ?? [];
     
-    if (!usedCodes.contains(code.toUpperCase())) {
-      usedCodes.add(code.toUpperCase());
+    // 1. Marquage Local
+    if (!usedCodes.contains(codeUpper)) {
+      usedCodes.add(codeUpper);
       await prefs.setStringList(_usedCodesKey, usedCodes);
+    }
+
+    // 2. Marquage en ligne (Supabase)
+    try {
+      final supabase = Supabase.instance.client;
+      // On essaie de mettre à jour le code s'il existe
+      await supabase
+          .from('activation_codes')
+          .update({
+            'is_used': true,
+            'used_at': DateTime.now().toIso8601String(),
+          })
+          .eq('code', codeUpper);
+    } catch (e) {
+      debugPrint('Erreur marquage Supabase: $e');
     }
   }
   
@@ -473,14 +532,14 @@ class AkohoTechApp extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.white.withOpacity( 0.8),
+          fillColor: Colors.white.withValues(alpha: 0.8),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey.withOpacity( 0.2)),
+            borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
@@ -490,8 +549,8 @@ class AkohoTechApp extends StatelessWidget {
           labelStyle: const TextStyle(color: AppColors.textSecondary),
         ),
         navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: Colors.white.withOpacity( 0.8),
-          indicatorColor: AppColors.primary.withOpacity( 0.15),
+          backgroundColor: Colors.white.withValues(alpha: 0.8),
+          indicatorColor: AppColors.primary.withValues(alpha: 0.15),
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
               return const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary);
@@ -685,6 +744,48 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Vérification Statut Supabase
+                FutureBuilder<bool>(
+                  future: Supabase.instance.client.from('activation_codes').select().limit(1).then((_) => true).catchError((_) => false),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.only(bottom: 16.0),
+                        child: LinearProgressIndicator(),
+                      );
+                    }
+                    final isConnected = snapshot.data ?? false;
+                    return Container(
+                      padding: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: isConnected ? Colors.green.shade50 : Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: isConnected ? Colors.green : Colors.red),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(isConnected ? Icons.cloud_done : Icons.cloud_off, 
+                               color: isConnected ? Colors.green : Colors.red),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              isConnected 
+                                ? 'Base de données connectée (Sécurisé)' 
+                                : 'Non connecté (Table manquante ?)',
+                              style: TextStyle(
+                                color: isConnected ? Colors.green.shade900 : Colors.red.shade900,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
                 Row(
                   children: [
                     Expanded(
@@ -840,7 +941,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: statusColor.withOpacity( 0.2),
+                        backgroundColor: statusColor.withValues(alpha: 0.2),
                         child: Icon(
                           isUsed ? Icons.check : (isExpired ? Icons.timer_off : Icons.key),
                           color: statusColor,
@@ -863,7 +964,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity( 0.2),
+                          color: statusColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -985,7 +1086,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: color.withOpacity( 0.2),
+                      color: color.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -1007,9 +1108,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: color.withOpacity( 0.15),
+                      color: color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: color.withOpacity( 0.5)),
+                      border: Border.all(color: color.withValues(alpha: 0.5)),
                     ),
                     child: Column(
                       children: [
@@ -1130,7 +1231,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     border: Border.all(color: AppColors.primary, width: 4),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity( 0.3),
+                        color: AppColors.primary.withValues(alpha: 0.3),
                         blurRadius: 20,
                         spreadRadius: 5,
                       ),
@@ -1142,7 +1243,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          color: AppColors.primary.withOpacity( 0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           child: const Icon(
                             Icons.person,
                             size: 60,
@@ -1166,7 +1267,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity( 0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
@@ -1189,7 +1290,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   border: Border.all(color: AppColors.primary, width: 3),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity( 0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       blurRadius: 15,
                       spreadRadius: 3,
                     ),
@@ -1201,7 +1302,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        color: AppColors.primary.withOpacity( 0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         child: const Icon(
                           Icons.person,
                           size: 50,
@@ -1225,7 +1326,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity( 0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
@@ -1290,7 +1391,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity( 0.1),
+          color: AppColors.primary.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: AppColors.primary, size: 22),
@@ -1357,7 +1458,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity( 0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 30,
                               spreadRadius: 5,
                             ),
@@ -1400,7 +1501,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       'Fitantanana fambolena sy fiompiana',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.white.withOpacity( 0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontWeight: FontWeight.w300,
                       ),
                     ),
@@ -1410,10 +1511,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity( 0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity( 0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Column(
@@ -1428,7 +1529,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             'Entrez le code d\'accès / Code eingeben',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.white.withOpacity( 0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -1437,7 +1538,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             'Contactez le développeur / Entwickler kontaktieren',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withOpacity( 0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -1447,7 +1548,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             'Ou achetez l\'application',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withOpacity( 0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -1515,7 +1616,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             'À partir de 10 000 Ar',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.white.withOpacity( 0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1531,7 +1632,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity( 0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -1548,7 +1649,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         decoration: InputDecoration(
                           hintText: 'Entrez le code',
                           hintStyle: TextStyle(
-                            color: Colors.grey.withOpacity( 0.5),
+                            color: Colors.grey.withValues(alpha: 0.5),
                             letterSpacing: 2,
                             fontSize: 16,
                           ),
@@ -1565,7 +1666,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity( 0.2),
+                          color: Colors.red.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -1637,7 +1738,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   border: Border.all(color: Colors.white, width: 2),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity( 0.3),
+                                      color: Colors.black.withValues(alpha: 0.3),
                                       blurRadius: 10,
                                       spreadRadius: 2,
                                     ),
@@ -1649,7 +1750,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
                                       return Container(
-                                        color: Colors.white.withOpacity( 0.2),
+                                        color: Colors.white.withValues(alpha: 0.2),
                                         child: const Icon(
                                           Icons.person,
                                           color: Colors.white,
@@ -1673,7 +1774,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               Text(
                                 'Développeur, Créateur',
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity( 0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                   fontSize: 11,
                                 ),
                               ),
@@ -1691,7 +1792,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   border: Border.all(color: Colors.white, width: 2),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity( 0.3),
+                                      color: Colors.black.withValues(alpha: 0.3),
                                       blurRadius: 10,
                                       spreadRadius: 2,
                                     ),
@@ -1703,7 +1804,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
                                       return Container(
-                                        color: Colors.white.withOpacity( 0.2),
+                                        color: Colors.white.withValues(alpha: 0.2),
                                         child: const Icon(
                                           Icons.person,
                                           color: Colors.white,
@@ -1727,7 +1828,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               Text(
                                 'Créateur',
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity( 0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                   fontSize: 11,
                                 ),
                               ),
@@ -1819,12 +1920,12 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                               width: 50,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
+                                color: Colors.white.withValues(alpha: 0.25),
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.3),
+                                    color: Colors.black.withValues(alpha: 0.3),
                                     blurRadius: 10,
                                     offset: const Offset(0, 3),
                                   ),
@@ -1886,7 +1987,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                                       'Fambolena & Fiompiana',
                                       style: TextStyle(
                                         fontSize: 10,
-                                        color: Colors.white.withOpacity(0.9),
+                                        color: Colors.white.withValues(alpha: 0.9),
                                         fontWeight: FontWeight.w500,
                                         letterSpacing: 0.5,
                                       ),
@@ -1961,7 +2062,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
+                            color: Colors.white.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Text(
@@ -2097,10 +2198,10 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                       
                         const SizedBox(height: 14),
 
-                        // OlitraTech Card
+                        // BibikelyTech Card
                         _ModernCategoryCard(
                           emoji: '🪲',
-                          title: 'OlitraTech',
+                          title: 'BibikelyTech',
                           subtitle: 'Insectes',
                           description: 'BSF • Vers de farine • Protéines biby',
                           stats: 'Biofactory',
@@ -2129,20 +2230,22 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                       
                         const SizedBox(height: 14),
 
-                        // HolatraTech Card
+                        // HolatraTech Card (style ZezikaTech-like)
                         _ModernCategoryCard(
                           emoji: '🍄',
                           title: 'HolatraTech',
-                          subtitle: 'Champignons',
-                          description: 'Pleurotes • Shiitake • Paris • Culture',
+                          subtitle: 'Champignons comestibles',
+                          description: 'Pleurotes • Shiitake • Paris',
                           stats: 'Indoor',
-                          gradientColors: const [Color(0xFFA1887F), Color(0xFF6D4C41)],
+                          gradientColors: const [Color(0xCC8D6E63), Color(0xCC6D4C41)],
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const HomeScreen(category: 'holatra')),
+                            MaterialPageRoute(builder: (context) => const HolatraTechHomeScreen()),
                           ),
                         ),
                       
+                        const SizedBox(height: 20),
+
                         const SizedBox(height: 20),
                       ],
                     ),
@@ -2218,7 +2321,7 @@ class _QuickActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: gradientColors[0].withOpacity(0.4),
+              color: gradientColors[0].withValues(alpha: 0.4),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -2278,7 +2381,7 @@ class _ModernCategoryCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: gradientColors[0].withOpacity(0.5),
+              color: gradientColors[0].withValues(alpha: 0.5),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -2313,7 +2416,7 @@ class _ModernCategoryCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
+                        color: Colors.white.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
@@ -2347,7 +2450,7 @@ class _ModernCategoryCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -2355,7 +2458,7 @@ class _ModernCategoryCard extends StatelessWidget {
                             description,
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               height: 1.3,
                             ),
                             maxLines: 2,
@@ -2365,7 +2468,7 @@ class _ModernCategoryCard extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.25),
+                              color: Colors.white.withValues(alpha: 0.25),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -2385,7 +2488,7 @@ class _ModernCategoryCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -2424,7 +2527,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     if (widget.category == 'fambolena') return 'FambolenaTech';
     if (widget.category == 'trondro') return 'TrondroTech';
     if (widget.category == 'tantely') return 'TantelyTech';
-    if (widget.category == 'olitra') return 'OlitraTech';
+    if (widget.category == 'olitra') return 'BibikelyTech';
     if (widget.category == 'zezika') return 'ZezikaTech';
     if (widget.category == 'holatra') return 'HolatraTech';
     if (widget.category == 'vorona') return 'VoronaTech';
@@ -2489,10 +2592,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ];
     } else if (widget.category == 'olitra') {
       return [
-        const OlitraSpeciesScreen(),
-        const OlitraFeedScreen(),
-        const OlitraProductionScreen(),
-        const OlitraUsesScreen(),
+        const BibikelySpeciesScreen(),
+        const BibikelyFeedScreen(),
+        const BibikelyProductionScreen(),
+        const BibikelyUsesScreen(),
         const FinanceScreen(),
       ];
     } else if (widget.category == 'zezika') {
@@ -2501,14 +2604,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         const ZezikaProductionScreen(),
         const ZezikaUsageScreen(),
         const ZezikaResultsScreen(),
-        const FinanceScreen(),
-      ];
-    } else if (widget.category == 'holatra') {
-      return [
-        const HolatraSpeciesScreen(),
-        const HolatraGrowingScreen(),
-        const HolatraHarvestScreen(),
-        const HolatraMarketScreen(),
         const FinanceScreen(),
       ];
     } else if (widget.category == 'vorona') {
@@ -2560,8 +2655,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       return ['Karazana', 'Sakafo', 'Vokatra', 'Fampiasana', 'Vola'];
     } else if (widget.category == 'zezika') {
       return ['Karazana', 'Fanamboarana', 'Fampiasana', 'Vokatra', 'Vola'];
-    } else if (widget.category == 'holatra') {
-      return ['Karazana', 'Fambolena', 'Fiotazana', 'Tsena', 'Vola'];
     } else if (widget.category == 'vorona') {
       return ['Trano', 'Sakafo', 'Torohay', 'Races', 'Atody', 'Famahanana', 'Vola'];
     }
@@ -2625,14 +2718,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         {'icon': '🔧', 'label': 'Fanamboarana'},
         {'icon': '🌱', 'label': 'Fampiasana'},
         {'icon': '📊', 'label': 'Vokatra'},
-        {'icon': '💰', 'label': 'Vola'},
-      ];
-    } else if (widget.category == 'holatra') {
-      return [
-        {'icon': '🍄‍🟫', 'label': 'Karazana'},
-        {'icon': '🌡️', 'label': 'Fambolena'},
-        {'icon': '📦', 'label': 'Fiotazana'},
-        {'icon': '🛒', 'label': 'Tsena'},
         {'icon': '💰', 'label': 'Vola'},
       ];
     } else if (widget.category == 'vorona') {
@@ -2703,7 +2788,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.warning.withOpacity( 0.1),
+                        color: AppColors.warning.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Text('🥚', style: TextStyle(fontSize: 24)),
@@ -2820,7 +2905,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity( 0.1),
+                            color: AppColors.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(incubData['emoji'], style: const TextStyle(fontSize: 24)),
@@ -2917,9 +3002,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity( 0.1),
+                        color: AppColors.success.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.success.withOpacity( 0.3)),
+                        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -2964,7 +3049,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             value: enableAlarm,
                             onChanged: (v) => setModalState(() => enableAlarm = v),
                             activeThumbColor: AppColors.success,
-                            activeTrackColor: AppColors.success.withOpacity( 0.4),
+                            activeTrackColor: AppColors.success.withValues(alpha: 0.4),
                           ),
                         ],
                       ),
@@ -3115,12 +3200,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity( 0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
               ],
-              border: Border.all(color: AppColors.primary.withOpacity( 0.1)),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -3194,12 +3279,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity( 0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white.withOpacity( 0.3)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity( 0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -3215,7 +3300,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity( 0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(_appEmoji, style: const TextStyle(fontSize: 28)),
@@ -3234,7 +3319,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity( 0.25),
+                              color: Colors.white.withValues(alpha: 0.25),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(_titles[_currentIndex], style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600)),
@@ -3255,7 +3340,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity( 0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -3283,12 +3368,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   margin: const EdgeInsets.fromLTRB(4, 0, 4, 0),
                   decoration: BoxDecoration(
                     // Effet 3D Transparent (Glassmorphism)
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                    border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 30,
                         spreadRadius: 5,
                         offset: const Offset(0, -5),
@@ -3345,7 +3430,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.warning.withOpacity( 0.1),
+                              color: AppColors.warning.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: AppColors.warning),
                             ),
@@ -3372,7 +3457,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.success.withOpacity( 0.1),
+                              color: AppColors.success.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: AppColors.success),
                             ),
@@ -3592,7 +3677,7 @@ class _HousingScreenState extends State<HousingScreen> {
                       Switch(
                         value: _showFloorPlan,
                         onChanged: (val) => setState(() => _showFloorPlan = val),
-                        activeTrackColor: Colors.green.withOpacity( 0.5),
+                        activeTrackColor: Colors.green.withValues(alpha: 0.5),
                         thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.green : Colors.grey),
                       ),
                     ],
@@ -3818,7 +3903,7 @@ class Coop3DPainter extends CustomPainter {
     // Add horizontal plank lines for wood effect
     if (addPlanks && points.length >= 4) {
       final plankPaint = Paint()
-        ..color = fill.color.withOpacity( 0.3)
+        ..color = fill.color.withValues(alpha: 0.3)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.5;
       
@@ -3932,7 +4017,7 @@ class Coop3DPainter extends CustomPainter {
     
     // Glass (light blue with transparency effect)
     double inset = 4;
-    final glassPaint = Paint()..color = const Color(0xFF87CEEB).withOpacity( 0.7)..style = PaintingStyle.fill;
+    final glassPaint = Paint()..color = const Color(0xFF87CEEB).withValues(alpha: 0.7)..style = PaintingStyle.fill;
     canvas.drawRect(
       Rect.fromLTRB(w0.dx + inset, w2.dy + inset, w1.dx - inset, w0.dy - inset),
       glassPaint,
@@ -3947,7 +4032,7 @@ class Coop3DPainter extends CustomPainter {
     
     // Window reflection highlight
     final reflectionPaint = Paint()
-      ..color = Colors.white.withOpacity( 0.3)
+      ..color = Colors.white.withValues(alpha: 0.3)
       ..style = PaintingStyle.fill;
     canvas.drawRect(
       Rect.fromLTRB(w0.dx + inset + 2, w2.dy + inset + 2, centerX - 2, centerY - 2),
@@ -4027,7 +4112,7 @@ class Coop3DPainter extends CustomPainter {
       ),
       const Radius.circular(14),
     );
-    canvas.drawRRect(bgRect, Paint()..color = const Color(0xFF2C3E50).withOpacity( 0.9));
+    canvas.drawRRect(bgRect, Paint()..color = const Color(0xFF2C3E50).withValues(alpha: 0.9));
     
     textPainter.paint(canvas, Offset(size.width / 2 - textPainter.width / 2, size.height - 34));
 
@@ -4154,7 +4239,7 @@ class FloorPlan2DPainter extends CustomPainter {
   
   void _drawBuildingShadow(Canvas canvas, double x, double y, double w, double h) {
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity( 0.15)
+      ..color = Colors.black.withValues(alpha: 0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawRect(Rect.fromLTWH(x + 6, y + 6, w, h), shadowPaint);
   }
@@ -4271,7 +4356,7 @@ class FloorPlan2DPainter extends CustomPainter {
     final troughTop = Paint()..color = const Color(0xFFD4A574);
     
     // Shadow
-    canvas.drawRect(Rect.fromLTWH(x + 2, y + 2, length, 8), Paint()..color = Colors.black.withOpacity( 0.2));
+    canvas.drawRect(Rect.fromLTWH(x + 2, y + 2, length, 8), Paint()..color = Colors.black.withValues(alpha: 0.2));
     
     // Trough body
     Path trough = Path()
@@ -4424,8 +4509,8 @@ class FloorPlan2DPainter extends CustomPainter {
     int numWindows = (length / 3).floor().clamp(2, 6);
     
     final windowFrame = Paint()..color = const Color(0xFF5C4033)..strokeWidth = 2..style = PaintingStyle.stroke;
-    final windowGlass = Paint()..color = const Color(0xFFADD8E6).withOpacity( 0.6);
-    final windowReflect = Paint()..color = Colors.white.withOpacity( 0.4);
+    final windowGlass = Paint()..color = const Color(0xFFADD8E6).withValues(alpha: 0.6);
+    final windowReflect = Paint()..color = Colors.white.withValues(alpha: 0.4);
     
     for (int i = 0; i < numWindows; i++) {
       double windowX = x + w * (i + 0.5) / numWindows - windowWidth / 2;
@@ -4448,7 +4533,7 @@ class FloorPlan2DPainter extends CustomPainter {
     double doorX = x + w / 2 - doorWidth / 2;
     
     // Door shadow
-    canvas.drawRect(Rect.fromLTWH(doorX + 2, y + h - 2, doorWidth, doorHeight + 2), Paint()..color = Colors.black.withOpacity( 0.3));
+    canvas.drawRect(Rect.fromLTWH(doorX + 2, y + h - 2, doorWidth, doorHeight + 2), Paint()..color = Colors.black.withValues(alpha: 0.3));
     
     // Door frame
     canvas.drawRect(Rect.fromLTWH(doorX - 2, y + h - 2, doorWidth + 4, doorHeight + 4), Paint()..color = const Color(0xFF5C4033));
@@ -4538,7 +4623,7 @@ class FloorPlan2DPainter extends CustomPainter {
       textDirection: ui.TextDirection.ltr,
     );
     areaLabel.layout();
-    canvas.drawRect(Rect.fromLTWH(x + w/2 - areaLabel.width/2 - 4, y + h/2 - 8, areaLabel.width + 8, 16), Paint()..color = Colors.white.withOpacity( 0.9));
+    canvas.drawRect(Rect.fromLTWH(x + w/2 - areaLabel.width/2 - 4, y + h/2 - 8, areaLabel.width + 8, 16), Paint()..color = Colors.white.withValues(alpha: 0.9));
     canvas.drawRect(Rect.fromLTWH(x + w/2 - areaLabel.width/2 - 4, y + h/2 - 8, areaLabel.width + 8, 16), Paint()..color = Colors.green.shade700..style = PaintingStyle.stroke..strokeWidth = 1);
     areaLabel.paint(canvas, Offset(x + w/2 - areaLabel.width/2, y + h/2 - 6));
   }
@@ -4567,7 +4652,7 @@ class FloorPlan2DPainter extends CustomPainter {
     
     // Legend background
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(legendX - 5, legendY - 5, size.width - 20, 25), Radius.circular(4)), 
-      Paint()..color = Colors.white.withOpacity( 0.95));
+      Paint()..color = Colors.white.withValues(alpha: 0.95));
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(legendX - 5, legendY - 5, size.width - 20, 25), Radius.circular(4)), 
       Paint()..color = Colors.grey.shade400..style = PaintingStyle.stroke..strokeWidth = 0.5);
     
@@ -4893,7 +4978,7 @@ class PiggeryFloorPlanPainter extends CustomPainter {
   
   void _drawBuildingShadow(Canvas canvas, double x, double y, double w, double h) {
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity( 0.15)
+      ..color = Colors.black.withValues(alpha: 0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawRect(Rect.fromLTWH(x + 6, y + 6, w, h), shadowPaint);
   }
@@ -5092,7 +5177,7 @@ class PiggeryFloorPlanPainter extends CustomPainter {
       ..shader = ui.Gradient.radial(
         Offset(x, y),
         radius,
-        [Colors.orange.withOpacity( 0.6), Colors.orange.withOpacity( 0.2), Colors.transparent],
+        [Colors.orange.withValues(alpha: 0.6), Colors.orange.withValues(alpha: 0.2), Colors.transparent],
         [0.0, 0.6, 1.0],
       );
     canvas.drawCircle(Offset(x, y), radius, glowPaint);
@@ -5258,7 +5343,7 @@ class PiggeryFloorPlanPainter extends CustomPainter {
     double legendX = 10;
     
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(legendX - 5, legendY - 5, size.width - 20, 25), Radius.circular(4)), 
-      Paint()..color = Colors.white.withOpacity( 0.95));
+      Paint()..color = Colors.white.withValues(alpha: 0.95));
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(legendX - 5, legendY - 5, size.width - 20, 25), Radius.circular(4)), 
       Paint()..color = Colors.grey.shade400..style = PaintingStyle.stroke..strokeWidth = 0.5);
     
@@ -5462,7 +5547,7 @@ class RabbitryFloorPlanPainter extends CustomPainter {
   
   void _drawBuildingShadow(Canvas canvas, double x, double y, double w, double h) {
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity( 0.15)
+      ..color = Colors.black.withValues(alpha: 0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawRect(Rect.fromLTWH(x + 6, y + 6, w, h), shadowPaint);
   }
@@ -5528,7 +5613,7 @@ class RabbitryFloorPlanPainter extends CustomPainter {
       }
       
       // Row label with background
-      final rowBg = Paint()..color = Colors.white.withOpacity( 0.8);
+      final rowBg = Paint()..color = Colors.white.withValues(alpha: 0.8);
       canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x + 1, rowY + scaledCageH / 2 - 8, 18, 16), Radius.circular(3)), rowBg);
       _drawText(canvas, 'R${row + 1}', Offset(x + 3, rowY + scaledCageH / 2 - 5), const Color(0xFF5C3317), 9);
     }
@@ -5566,7 +5651,7 @@ class RabbitryFloorPlanPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(x, y, w, h), Paint()..color = const Color(0xFF606060)..strokeWidth = 2..style = PaintingStyle.stroke);
     
     // Hay/bedding on floor
-    final hayPaint = Paint()..color = const Color(0xFFE8D4A8).withOpacity( 0.6);
+    final hayPaint = Paint()..color = const Color(0xFFE8D4A8).withValues(alpha: 0.6);
     canvas.drawRect(Rect.fromLTWH(x + 3, y + h - 12, w - 6, 9), hayPaint);
     // Hay texture
     for (double hx = x + 5; hx < x + w - 5; hx += 4) {
@@ -5629,7 +5714,7 @@ class RabbitryFloorPlanPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(x + w * 0.3, y + h * 0.8, w * 0.4, h * 0.2), Paint()..color = const Color(0xFFB0B0B0));
     
     // Water level
-    canvas.drawRect(Rect.fromLTWH(x + 2, y + h * 0.15, w - 4, h * 0.6), Paint()..color = const Color(0xFF64B5F6).withOpacity( 0.5));
+    canvas.drawRect(Rect.fromLTWH(x + 2, y + h * 0.15, w - 4, h * 0.6), Paint()..color = const Color(0xFF64B5F6).withValues(alpha: 0.5));
   }
   
   void _drawNestBox(Canvas canvas, double x, double y, double w, double h) {
@@ -5735,7 +5820,7 @@ class RabbitryFloorPlanPainter extends CustomPainter {
     double legendX = 10;
     
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(legendX - 5, legendY - 5, size.width - 20, 25), Radius.circular(4)), 
-      Paint()..color = Colors.white.withOpacity( 0.95));
+      Paint()..color = Colors.white.withValues(alpha: 0.95));
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(legendX - 5, legendY - 5, size.width - 20, 25), Radius.circular(4)), 
       Paint()..color = Colors.grey.shade400..style = PaintingStyle.stroke..strokeWidth = 0.5);
     
@@ -6911,10 +6996,10 @@ class _FeedScreenState extends State<FeedScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.primary.withOpacity( 0.2)),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity( 0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -6925,7 +7010,7 @@ class _FeedScreenState extends State<FeedScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity( 0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Row(
@@ -7163,9 +7248,9 @@ class _FeedScreenState extends State<FeedScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.primary.withOpacity( 0.5), style: BorderStyle.solid),
+                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.5), style: BorderStyle.solid),
                           borderRadius: BorderRadius.circular(12),
-                          color: AppColors.primary.withOpacity( 0.05),
+                          color: AppColors.primary.withValues(alpha: 0.05),
                         ),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -7186,7 +7271,7 @@ class _FeedScreenState extends State<FeedScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         elevation: 4,
-                        shadowColor: AppColors.primary.withOpacity( 0.4),
+                        shadowColor: AppColors.primary.withValues(alpha: 0.4),
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -7382,7 +7467,7 @@ class _FeedScreenState extends State<FeedScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.grey.shade200),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.03), blurRadius: 5, offset: const Offset(0, 2))],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 5, offset: const Offset(0, 2))],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -7443,7 +7528,7 @@ class _FeedScreenState extends State<FeedScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity( 0.3),
+            color: Colors.green.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -7457,7 +7542,7 @@ class _FeedScreenState extends State<FeedScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity( 0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Text('🥕', style: TextStyle(fontSize: 32)),
@@ -7499,9 +7584,9 @@ class _FeedScreenState extends State<FeedScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity( 0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity( 0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -7859,7 +7944,7 @@ class TorohayAkohoScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity( 0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 25,
             offset: const Offset(0, 12),
           ),
@@ -7948,7 +8033,7 @@ class TorohayAkohoScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity( 0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -7958,7 +8043,7 @@ class TorohayAkohoScreen extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [
               getCardColor(),
-              getCardColor().withOpacity( 0.7),
+              getCardColor().withValues(alpha: 0.7),
             ],
           ),
         ),
@@ -7985,7 +8070,7 @@ class TorohayAkohoScreen extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Colors.black.withOpacity( 0.8),
+                    Colors.black.withValues(alpha: 0.8),
                   ],
                   stops: const [0.4, 1.0],
                 ),
@@ -8005,9 +8090,9 @@ class TorohayAkohoScreen extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity( 0.25),
+                            color: Colors.white.withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white.withOpacity( 0.3)),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                           ),
                           child: Text(
                             badges.isNotEmpty ? badges[0] : '',
@@ -8076,9 +8161,9 @@ class TorohayAkohoScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity( 0.08),
+        color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withOpacity( 0.3)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -8181,7 +8266,7 @@ class _GuideDetailPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -8233,9 +8318,9 @@ class _GuideDetailPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
       ),
       child: Text(
         text,
@@ -8260,7 +8345,7 @@ class _GuideDetailPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -8272,7 +8357,7 @@ class _GuideDetailPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -8330,7 +8415,7 @@ class _GuideDetailPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -8342,7 +8427,7 @@ class _GuideDetailPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -8744,7 +8829,7 @@ class TorohayVoronaScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity( 0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 25,
             offset: const Offset(0, 12),
           ),
@@ -8832,7 +8917,7 @@ class TorohayVoronaScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity( 0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -8842,7 +8927,7 @@ class TorohayVoronaScreen extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [
               getCardColor(),
-              getCardColor().withOpacity( 0.7),
+              getCardColor().withValues(alpha: 0.7),
             ],
           ),
         ),
@@ -8869,7 +8954,7 @@ class TorohayVoronaScreen extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Colors.black.withOpacity( 0.8),
+                    Colors.black.withValues(alpha: 0.8),
                   ],
                   stops: const [0.4, 1.0],
                 ),
@@ -8889,9 +8974,9 @@ class TorohayVoronaScreen extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity( 0.25),
+                            color: Colors.white.withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white.withOpacity( 0.3)),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                           ),
                           child: Text(
                             badges.isNotEmpty ? badges[0] : '',
@@ -8960,9 +9045,9 @@ class TorohayVoronaScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity( 0.08),
+        color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withOpacity( 0.3)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -9376,14 +9461,30 @@ class _HealthScreenState extends State<HealthScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TabBar(
-          controller: _tabController,
-          labelColor: Colors.green,
-          unselectedLabelColor: Colors.grey,
-          tabs: const [
-            Tab(text: 'Tetiandro (Vaccins)'),
-            Tab(text: 'Torolalana Aretina'),
-          ],
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.grey.shade800,
+            indicator: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.green.shade600, Colors.teal.shade500]),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [BoxShadow(color: Colors.green.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 2))],
+            ),
+            indicatorSize: TabBarIndicatorSize.tab,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+            tabs: const [
+              Tab(text: 'Tetiandro (Vaccins)'),
+              Tab(text: 'Torolalana Aretina'),
+            ],
+          ),
         ),
         Expanded(
           child: TabBarView(
@@ -9932,10 +10033,10 @@ class CalculatorsAndProfitScreen extends StatelessWidget {
           _buildCalculatorCard(
             context,
             emoji: '🦆',
-            title: 'Fikajiana Olitra',
-            subtitle: 'Kajy ny vola lany sy tombony amin\'ny famokarana olitra BSF',
+            title: 'Fikajiana Bibikely',
+            subtitle: 'Kajy ny vola lany sy tombony amin\'ny famokarana bibikely BSF',
             color: Colors.teal,
-            onTap: () => _showOlitraCalculator(context),
+            onTap: () => _showBibikelyCalculator(context),
           ),
           
           _buildCalculatorCard(
@@ -10021,7 +10122,7 @@ class CalculatorsAndProfitScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity( 0.15),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(emoji, style: const TextStyle(fontSize: 24)),
@@ -10390,21 +10491,21 @@ class CalculatorsAndProfitScreen extends StatelessWidget {
     );
   }
 
-  void _showOlitraCalculator(BuildContext context) {
+  void _showBibikelyCalculator(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _CalculatorSheet(
-        title: 'Fikajiana Olitra BSF',
+        title: 'Fikajiana Bibikely BSF',
         emoji: '🪱',
         color: Colors.teal,
         fields: const [
           {'label': 'Fako organika isan\'andro (kg)', 'key': 'waste_per_day', 'hint': '5'},
           {'label': 'Faharetana (andro)', 'key': 'duration', 'hint': '30'},
-          {'label': 'Starter olitra (kg)', 'key': 'starter_qty', 'hint': '1'},
+          {'label': 'Starter bibikely (kg)', 'key': 'starter_qty', 'hint': '1'},
           {'label': 'Vidin\'ny starter/kg (Ar)', 'key': 'starter_price', 'hint': '40000'},
-          {'label': 'Vidin\'ny olitra velona/kg (Ar)', 'key': 'live_price', 'hint': '20000'},
+          {'label': 'Vidin\'ny bibikely velona/kg (Ar)', 'key': 'live_price', 'hint': '20000'},
           {'label': 'Vidin\'ny olitra maina/kg (Ar)', 'key': 'dried_price', 'hint': '50000'},
         ],
         calculateResult: (values) {
@@ -10415,7 +10516,7 @@ class CalculatorsAndProfitScreen extends StatelessWidget {
           final livePrice = (values['live_price'] ?? 0).toDouble();
           final driedPrice = (values['dried_price'] ?? 0).toDouble();
 
-          // Assumptions: 20% conversion waste -> olitra velona; 25% drying yield
+          // Assumptions: 20% conversion waste -> bibikely velona; 25% drying yield
           final totalWaste = wastePerDay * duration;
           final liveOutputKg = totalWaste * 0.20;
           final driedOutputKg = liveOutputKg * 0.25;
@@ -10432,7 +10533,7 @@ class CalculatorsAndProfitScreen extends StatelessWidget {
 
           return {
             'Fako nodiovina': '${totalWaste.toStringAsFixed(1)} kg',
-            'Vokatra olitra velona': '${liveOutputKg.toStringAsFixed(1)} kg',
+            'Vokatra bibikely velona': '${liveOutputKg.toStringAsFixed(1)} kg',
             'Vokatra olitra maina': '${driedOutputKg.toStringAsFixed(1)} kg',
             'Vidin\'ny starter': '${NumberFormat("#,##0").format(starterCost)} Ar',
             'Saran\'asa (500Ar/kg waste)': '${NumberFormat("#,##0").format(opsCost)} Ar',
@@ -10748,9 +10849,9 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: widget.color.withOpacity( 0.1),
+                        color: widget.color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: widget.color.withOpacity( 0.3)),
+                        border: Border.all(color: widget.color.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -10923,7 +11024,7 @@ Widget _buildCard({required String title, required Widget child, IconData? icon}
       borderRadius: BorderRadius.circular(24),
       boxShadow: [
         BoxShadow(
-          color: AppColors.primary.withOpacity( 0.1),
+          color: AppColors.primary.withValues(alpha: 0.1),
           blurRadius: 20,
           offset: const Offset(0, 8),
         ),
@@ -10948,7 +11049,7 @@ Widget _buildCard({required String title, required Widget child, IconData? icon}
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity( 0.15),
+                        color: AppColors.primary.withValues(alpha: 0.15),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -11301,9 +11402,9 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.info.withOpacity( 0.08),
+                      color: AppColors.info.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.info.withOpacity( 0.3)),
+                      border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -11587,7 +11688,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
         decoration: BoxDecoration(
           color: sex == 'Lahy' ? Colors.blue.shade50 : Colors.pink.shade50,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: (sex == 'Lahy' ? Colors.blue : Colors.pink).withOpacity( 0.3)),
+          border: Border.all(color: (sex == 'Lahy' ? Colors.blue : Colors.pink).withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -11857,19 +11958,23 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
         // Tab Bar
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(14),
           ),
           child: TabBar(
             controller: _tabController,
             labelColor: Colors.white,
-            unselectedLabelColor: AppColors.textSecondary,
+            unselectedLabelColor: Colors.grey.shade800,
             indicator: BoxDecoration(
-              gradient: const LinearGradient(colors: [AppColors.gradientStart, AppColors.gradientEnd]),
+              gradient: LinearGradient(colors: [Colors.orange.shade600, Colors.deepOrange.shade500]),
               borderRadius: BorderRadius.circular(10),
+              boxShadow: [BoxShadow(color: Colors.orange.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 2))],
             ),
             indicatorSize: TabBarIndicatorSize.tab,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
             tabs: [
               const Tab(text: '🐔 Races (100+)'),
               Tab(text: widget.category == 'vorona' ? '🦆 Vorona' : '🐓 Akoho'),
@@ -12025,7 +12130,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 10)],
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
                     ),
                     child: Row(
                       children: [
@@ -12033,7 +12138,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
-                            color: typeColor.withOpacity( 0.15),
+                            color: typeColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Center(child: Text(_getBreedEmoji(breed['type']), style: const TextStyle(fontSize: 24))),
@@ -12049,7 +12154,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: typeColor.withOpacity( 0.15),
+                                      color: typeColor.withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(breed['type'], style: TextStyle(color: typeColor, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -12131,7 +12236,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 10)],
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
                       ),
                       child: ListTile(
                         leading: Container(
@@ -12252,7 +12357,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 10)],
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
                   ),
                   child: Column(
                     children: [
@@ -12271,7 +12376,7 @@ class _BreedsScreenState extends State<BreedsScreen> with SingleTickerProviderSt
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 10)],
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
                   ),
                   child: Column(
                     children: [
@@ -12439,7 +12544,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.warning.withOpacity( 0.1),
+                        color: AppColors.warning.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Text('🥚', style: TextStyle(fontSize: 24)),
@@ -12564,7 +12669,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity( 0.1),
+                            color: AppColors.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(incubData['emoji'], style: const TextStyle(fontSize: 24)),
@@ -12674,9 +12779,9 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity( 0.08),
+                        color: AppColors.success.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.success.withOpacity( 0.3)),
+                        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -12755,7 +12860,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                             value: enableAlarm,
                             onChanged: (v) => setModalState(() => enableAlarm = v),
                             activeThumbColor: AppColors.success,
-                            activeTrackColor: AppColors.success.withOpacity( 0.4),
+                            activeTrackColor: AppColors.success.withValues(alpha: 0.4),
                           ),
                         ],
                       ),
@@ -12945,13 +13050,16 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
           child: TabBar(
             controller: _tabController,
             indicator: BoxDecoration(
-              color: AppColors.primary,
+              gradient: LinearGradient(colors: [Colors.amber.shade600, Colors.orange.shade500]),
               borderRadius: BorderRadius.circular(12),
+              boxShadow: [BoxShadow(color: Colors.orange.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 2))],
             ),
             labelColor: Colors.white,
-            unselectedLabelColor: AppColors.textSecondary,
+            unselectedLabelColor: Colors.grey.shade800,
             indicatorSize: TabBarIndicatorSize.tab,
             dividerColor: Colors.transparent,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
             tabs: const [
               Tab(text: '🥚 Atody Voangona'),
               Tab(text: '🐣 Manakotrika'),
@@ -12976,7 +13084,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity( 0.06), blurRadius: 10, offset: const Offset(0, 4)),
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 4)),
                         ],
                       ),
                       child: Row(
@@ -12985,7 +13093,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                             width: 50,
                             height: 50,
                             decoration: BoxDecoration(
-                              color: AppColors.warning.withOpacity( 0.12),
+                              color: AppColors.warning.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Center(child: Text('🥚', style: TextStyle(fontSize: 24))),
@@ -13042,7 +13150,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                               ? Border.all(color: AppColors.success, width: 2)
                               : null,
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity( 0.06), blurRadius: 10, offset: const Offset(0, 4)),
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 4)),
                           ],
                         ),
                         child: Column(
@@ -13055,8 +13163,8 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                                   height: 50,
                                   decoration: BoxDecoration(
                                     color: incub['status'] == 'Vita' 
-                                      ? AppColors.success.withOpacity( 0.12)
-                                      : isReady ? AppColors.warning.withOpacity( 0.12) : AppColors.info.withOpacity( 0.12),
+                                      ? AppColors.success.withValues(alpha: 0.12)
+                                      : isReady ? AppColors.warning.withValues(alpha: 0.12) : AppColors.info.withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Center(child: Text(incub['status'] == 'Vita' ? '🐤' : isReady ? '🐣' : incubData['emoji'], style: const TextStyle(fontSize: 24))),
@@ -13073,7 +13181,7 @@ class _EggsScreenState extends State<EggsScreen> with SingleTickerProviderStateM
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: AppColors.primary.withOpacity( 0.12),
+                                              color: AppColors.primary.withValues(alpha: 0.12),
                                               borderRadius: BorderRadius.circular(6),
                                             ),
                                             child: Text(incubType.split(' ').first, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary)),
@@ -13201,7 +13309,7 @@ Widget _buildStatCard({
       borderRadius: BorderRadius.circular(20),
       boxShadow: [
         BoxShadow(
-          color: cardColor.withOpacity( 0.12),
+          color: cardColor.withValues(alpha: 0.12),
           blurRadius: 20,
           offset: const Offset(0, 8),
         ),
@@ -13214,7 +13322,7 @@ Widget _buildStatCard({
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [cardColor.withOpacity( 0.2), cardColor.withOpacity( 0.35)],
+              colors: [cardColor.withValues(alpha: 0.2), cardColor.withValues(alpha: 0.35)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -13489,8 +13597,8 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withOpacity( 0.1),
-            AppColors.primaryLight.withOpacity( 0.05),
+            AppColors.primary.withValues(alpha: 0.1),
+            AppColors.primaryLight.withValues(alpha: 0.05),
           ],
         ),
       ),
@@ -13503,11 +13611,11 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity( 0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity( 0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -13767,11 +13875,11 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity( 0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity( 0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -13822,7 +13930,7 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity( 0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 6),
                   ),
@@ -13853,7 +13961,7 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
                       margin: const EdgeInsets.only(top: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity( 0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -13892,7 +14000,7 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity( 0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -14004,7 +14112,7 @@ class _BitroHousingScreenState extends State<BitroHousingScreen> {
                         Switch(
                           value: _showFloorPlan,
                           onChanged: (val) => setState(() => _showFloorPlan = val),
-                          activeTrackColor: Colors.blueAccent.withOpacity( 0.5),
+                          activeTrackColor: Colors.blueAccent.withValues(alpha: 0.5),
                           thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.blueAccent : Colors.grey),
                         ),
                       ],
@@ -14885,7 +14993,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
                                 gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
-                                  BoxShadow(color: gradient[0].withOpacity( 0.4), blurRadius: 8, offset: const Offset(0, 4)),
+                                  BoxShadow(color: gradient[0].withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
                                 ],
                               ),
                               child: Column(
@@ -14904,7 +15012,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity( 0.2),
+                                      color: Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
@@ -15244,7 +15352,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity( 0.3),
+            color: Colors.purple.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -15258,7 +15366,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity( 0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(data['emoji'] as String, style: const TextStyle(fontSize: 32)),
@@ -15299,9 +15407,9 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity( 0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity( 0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -15318,7 +15426,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
     return Column(
       children: [
         Text(value, style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold)),
-        Text(label, style: TextStyle(color: color.withOpacity( 0.7), fontSize: 12)),
+        Text(label, style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 12)),
       ],
     );
   }
@@ -15439,7 +15547,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity( 0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -15453,7 +15561,7 @@ class _BitroFeedScreenState extends State<BitroFeedScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withOpacity( 0.1),
+                  color: Colors.purple.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: Colors.purple),
@@ -15503,7 +15611,7 @@ class GuideDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [Colors.purple, Colors.deepPurple], begin: Alignment.topLeft, end: Alignment.bottomRight),
                 borderRadius: BorderRadius.circular(18),
-                boxShadow: [BoxShadow(color: Colors.purple.withOpacity( 0.3), blurRadius: 12, offset: const Offset(0, 6))],
+                boxShadow: [BoxShadow(color: Colors.purple.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
               ),
               child: Column(
                 children: [
@@ -15524,7 +15632,7 @@ class GuideDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.purple.withOpacity( 0.05), blurRadius: 8, offset: const Offset(0, 4))],
+                boxShadow: [BoxShadow(color: Colors.purple.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 4))],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -15879,7 +15987,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity( 0.3),
+            color: Colors.grey.withValues(alpha: 0.3),
             offset: const Offset(5, 5),
             blurRadius: 10,
           ),
@@ -15941,7 +16049,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                   color: isSelected ? AppColors.primary : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: isSelected ? [
-                                    BoxShadow(color: AppColors.primary.withOpacity( 0.4), blurRadius: 8, offset: const Offset(0, 4))
+                                    BoxShadow(color: AppColors.primary.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4))
                                   ] : null,
                                   border: Border.all(
                                     color: isSelected ? AppColors.primaryDark : Colors.grey[300]!,
@@ -15975,19 +16083,23 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
             // Tab Bar
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 4, offset: const Offset(0, 2))
-                ],
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(14),
               ),
               child: TabBar(
                 isScrollable: true,
-                labelColor: AppColors.primary,
-                unselectedLabelColor: Colors.grey,
-                indicatorSize: TabBarIndicatorSize.label,
-                indicatorColor: AppColors.primary,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.grey.shade800,
+                indicator: BoxDecoration(
+                  gradient: LinearGradient(colors: [Colors.green.shade600, Colors.teal.shade500]),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [BoxShadow(color: Colors.green.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 2))],
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
                 tabs: const [
                   Tab(text: 'Famantarana'),
                   Tab(text: 'Vakisiny'),
@@ -16031,7 +16143,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                   decoration: BoxDecoration(
                                     color: Colors.green[100],
                                     borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [BoxShadow(color: Colors.green.withOpacity( 0.2), blurRadius: 4, offset: const Offset(0, 2))],
+                                    boxShadow: [BoxShadow(color: Colors.green.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2))],
                                   ),
                                   child: Text(sign, style: TextStyle(color: Colors.green[800])),
                                 )).toList(),
@@ -16086,7 +16198,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                             decoration: BoxDecoration(
                               color: Colors.blue[50],
                               borderRadius: BorderRadius.circular(12),
-                              boxShadow: [BoxShadow(color: Colors.blue.withOpacity( 0.1), blurRadius: 4, offset: const Offset(0, 2))],
+                              boxShadow: [BoxShadow(color: Colors.blue.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))],
                             ),
                             child: Row(
                               children: [
@@ -16124,7 +16236,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                 color: Colors.orange.shade50,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Colors.orange.shade100),
-                                boxShadow: [BoxShadow(color: Colors.orange.withOpacity( 0.1), blurRadius: 4, offset: const Offset(0, 2))],
+                                boxShadow: [BoxShadow(color: Colors.orange.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))],
                               ),
                               child: Row(
                                 children: [
@@ -16207,7 +16319,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                     gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
-                                      BoxShadow(color: gradient[0].withOpacity( 0.4), blurRadius: 8, offset: const Offset(0, 4)),
+                                      BoxShadow(color: gradient[0].withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
                                     ],
                                   ),
                                   child: Column(
@@ -16216,7 +16328,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                       Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity( 0.2),
+                                          color: Colors.white.withValues(alpha: 0.2),
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(Icons.medical_services_outlined, color: Colors.white, size: 24),
@@ -16233,7 +16345,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity( 0.2),
+                                          color: Colors.white.withValues(alpha: 0.2),
                                           borderRadius: BorderRadius.circular(10),
                                         ),
                                         child: const Text(
@@ -16305,7 +16417,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                     gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
-                                      BoxShadow(color: gradient[0].withOpacity( 0.4), blurRadius: 8, offset: const Offset(0, 4)),
+                                      BoxShadow(color: gradient[0].withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
                                     ],
                                   ),
                                   child: Column(
@@ -16314,7 +16426,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                       Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity( 0.2),
+                                          color: Colors.white.withValues(alpha: 0.2),
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(Icons.menu_book_rounded, color: Colors.white, size: 24),
@@ -16331,7 +16443,7 @@ class _BitroHealthScreenState extends State<BitroHealthScreen> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity( 0.2),
+                                          color: Colors.white.withValues(alpha: 0.2),
                                           borderRadius: BorderRadius.circular(10),
                                         ),
                                         child: const Text(
@@ -16384,7 +16496,7 @@ class DiseaseDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [Color(0xFFEF5350), Color(0xFFE57373)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                 borderRadius: BorderRadius.circular(18),
-                boxShadow: [BoxShadow(color: const Color(0xFFE53935).withOpacity( 0.3), blurRadius: 12, offset: const Offset(0, 6))],
+                boxShadow: [BoxShadow(color: const Color(0xFFE53935).withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
               ),
               child: Column(
                 children: [
@@ -16437,8 +16549,8 @@ class DiseaseDetailScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity( 0.2)),
-        boxShadow: [BoxShadow(color: color.withOpacity( 0.1), blurRadius: 8, offset: const Offset(0, 4))],
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -16447,11 +16559,11 @@ class DiseaseDetailScreen extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: color.withOpacity( 0.1), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
                 child: Icon(icon, color: color, size: 20),
               ),
               const SizedBox(width: 12),
-              Expanded(child: Text(title, style: TextStyle(color: color.withOpacity( 0.8), fontWeight: FontWeight.bold, fontSize: 16))),
+              Expanded(child: Text(title, style: TextStyle(color: color.withValues(alpha: 0.8), fontWeight: FontWeight.bold, fontSize: 16))),
             ],
           ),
           const SizedBox(height: 12),
@@ -16703,9 +16815,9 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.info.withOpacity( 0.08),
+                      color: AppColors.info.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.info.withOpacity( 0.3)),
+                      border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -16923,7 +17035,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
         decoration: BoxDecoration(
           color: sex == 'Lahy' ? Colors.blue.shade50 : Colors.pink.shade50,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: (sex == 'Lahy' ? Colors.blue : Colors.pink).withOpacity( 0.3)),
+          border: Border.all(color: (sex == 'Lahy' ? Colors.blue : Colors.pink).withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -17052,7 +17164,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
           ),
           child: Row(
             children: [
@@ -17087,12 +17199,15 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
           child: TabBar(
             controller: _tabController,
             labelColor: Colors.white,
-            unselectedLabelColor: AppColors.textSecondary,
+            unselectedLabelColor: Colors.grey.shade800,
             indicator: BoxDecoration(
-              gradient: const LinearGradient(colors: [AppColors.gradientStart, AppColors.gradientEnd]),
+              gradient: LinearGradient(colors: [Colors.teal.shade600, Colors.green.shade600]),
               borderRadius: BorderRadius.circular(10),
+              boxShadow: [BoxShadow(color: Colors.teal.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 2))],
             ),
             indicatorSize: TabBarIndicatorSize.tab,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
             tabs: const [
               Tab(text: '🧬 Races'),
               Tab(text: '🐇 Bitro'),
@@ -17125,9 +17240,9 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity( 0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity( 0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -17141,7 +17256,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-              Text(label, style: TextStyle(fontSize: 12, color: color.withOpacity( 0.8))),
+              Text(label, style: TextStyle(fontSize: 12, color: color.withValues(alpha: 0.8))),
             ],
           ),
         ],
@@ -17207,7 +17322,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 10)],
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
                 ),
                 child: Row(
                   children: [
@@ -17215,7 +17330,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: typeColor.withOpacity( 0.15),
+                        color: typeColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(child: Text(_getBreedEmoji(breed['type']), style: const TextStyle(fontSize: 24))),
@@ -17231,7 +17346,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: typeColor.withOpacity( 0.15),
+                                  color: typeColor.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(breed['type'], style: TextStyle(color: typeColor, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -17383,7 +17498,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 10)],
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
                       ),
                       child: ListTile(
                         leading: Container(
@@ -17458,7 +17573,7 @@ class _BitroBreedsScreenState extends State<BitroBreedsScreen> with SingleTicker
             decoration: BoxDecoration(
               gradient: const LinearGradient(colors: [AppColors.gradientStart, AppColors.gradientEnd]),
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [BoxShadow(color: AppColors.primary.withOpacity( 0.3), blurRadius: 12, offset: const Offset(0, 6))],
+              boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
             ),
             child: Column(
               children: [
@@ -17576,8 +17691,8 @@ class _BitroGestationScreenState extends State<BitroGestationScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withOpacity( 0.1),
-            AppColors.primaryLight.withOpacity( 0.05),
+            AppColors.primary.withValues(alpha: 0.1),
+            AppColors.primaryLight.withValues(alpha: 0.05),
           ],
         ),
       ),
@@ -17605,7 +17720,7 @@ class _BitroGestationScreenState extends State<BitroGestationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity( 0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -17676,7 +17791,7 @@ class _BitroGestationScreenState extends State<BitroGestationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity( 0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -17742,7 +17857,7 @@ class _BitroGestationScreenState extends State<BitroGestationScreen> {
           // Breeding info
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white.withOpacity( 0.9), borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), borderRadius: BorderRadius.circular(16)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -17948,7 +18063,7 @@ class _KisoaHousingScreenState extends State<KisoaHousingScreen> {
                     Switch(
                       value: _showFloorPlan,
                       onChanged: (val) => setState(() => _showFloorPlan = val),
-                      activeTrackColor: Colors.pink.withOpacity( 0.5),
+                      activeTrackColor: Colors.pink.withValues(alpha: 0.5),
                       thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.pink : Colors.grey),
                     ),
                   ],
@@ -19262,7 +19377,7 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity( 0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -19503,17 +19618,32 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TabBar(
-          controller: _tabController,
-          labelColor: Colors.pink,
-          unselectedLabelColor: Colors.grey,
-          isScrollable: true,
-          tabs: const [
-            Tab(text: 'Tetiandro'),
-            Tab(text: 'Kisoa Kely'),
-            Tab(text: 'Aretina'),
-            Tab(text: 'Biosecurity (Pro)'),
-          ],
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.grey.shade800,
+            indicator: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.pink.shade500, Colors.red.shade500]),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [BoxShadow(color: Colors.pink.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 2))],
+            ),
+            isScrollable: true,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+            tabs: const [
+              Tab(text: 'Tetiandro'),
+              Tab(text: 'Kisoa Kely'),
+              Tab(text: 'Aretina'),
+              Tab(text: 'Biosecurity (Pro)'),
+            ],
+          ),
         ),
         Expanded(
           child: TabBarView(
@@ -19705,10 +19835,10 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: Colors.white.withOpacity( 0.35), width: 1.5),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
                     boxShadow: [
-                      BoxShadow(color: gradient.first.withOpacity( 0.35), blurRadius: 14, offset: const Offset(0, 6)),
-                      BoxShadow(color: Colors.black.withOpacity( 0.15), blurRadius: 10, offset: const Offset(0, 4)),
+                      BoxShadow(color: gradient.first.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 6)),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, 4)),
                     ],
                   ),
                   child: Center(
@@ -24808,7 +24938,7 @@ DINGANA 5: FIJINJANA
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: Colors.green.withOpacity(0.15), blurRadius: 12, offset: const Offset(0, 6)),
+                  BoxShadow(color: Colors.green.withValues(alpha: 0.15), blurRadius: 12, offset: const Offset(0, 6)),
                 ],
               ),
               child: TextField(
@@ -24849,7 +24979,7 @@ DINGANA 5: FIJINJANA
       decoration: BoxDecoration(
         color: const Color(0xFFF5EFE7),
         border: Border(
-          bottom: BorderSide(color: const Color(0xFF2C1810).withOpacity(0.1), width: 2),
+          bottom: BorderSide(color: const Color(0xFF2C1810).withValues(alpha: 0.1), width: 2),
         ),
       ),
       child: Column(
@@ -24857,7 +24987,7 @@ DINGANA 5: FIJINJANA
           // Title
           Text(
             'Bokin\'ny Fambolena',
-            style: GoogleFonts.merriweather(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF2C1810),
@@ -24871,7 +25001,7 @@ DINGANA 5: FIJINJANA
             children: [
               Text(
                 'Toko ${cropIndex + 1}',
-                style: GoogleFonts.lora(
+                style: TextStyle(
                   fontSize: 14,
                   fontStyle: FontStyle.italic,
                   color: const Color(0xFF5D4E37),
@@ -24879,14 +25009,14 @@ DINGANA 5: FIJINJANA
               ),
               Text(
                 ' / ',
-                style: GoogleFonts.lora(
+                style: TextStyle(
                   fontSize: 14,
                   color: const Color(0xFF5D4E37),
                 ),
               ),
               Text(
                 '$totalPages',
-                style: GoogleFonts.lora(
+                style: TextStyle(
                   fontSize: 14,
                   color: const Color(0xFF5D4E37),
                 ),
@@ -24977,15 +25107,15 @@ DINGANA 5: FIJINJANA
         // Decorative line top
         Row(
           children: [
-            Expanded(child: Container(height: 1, color: const Color(0xFF2C1810).withOpacity(0.2))),
+            Expanded(child: Container(height: 1, color: const Color(0xFF2C1810).withValues(alpha: 0.2))),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 '✦',
-                style: TextStyle(fontSize: 16, color: const Color(0xFF2C1810).withOpacity(0.3)),
+                style: TextStyle(fontSize: 16, color: const Color(0xFF2C1810).withValues(alpha: 0.3)),
               ),
             ),
-            Expanded(child: Container(height: 1, color: const Color(0xFF2C1810).withOpacity(0.2))),
+            Expanded(child: Container(height: 1, color: const Color(0xFF2C1810).withValues(alpha: 0.2))),
           ],
         ),
         const SizedBox(height: 24),
@@ -24999,7 +25129,7 @@ DINGANA 5: FIJINJANA
         Text(
           name,
           textAlign: TextAlign.center,
-          style: GoogleFonts.merriweather(
+          style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w700,
             color: const Color(0xFF2C1810),
@@ -25010,15 +25140,15 @@ DINGANA 5: FIJINJANA
         // Decorative line bottom
         Row(
           children: [
-            Expanded(child: Container(height: 1, color: const Color(0xFF2C1810).withOpacity(0.2))),
+            Expanded(child: Container(height: 1, color: const Color(0xFF2C1810).withValues(alpha: 0.2))),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 '✦',
-                style: TextStyle(fontSize: 16, color: const Color(0xFF2C1810).withOpacity(0.3)),
+                style: TextStyle(fontSize: 16, color: const Color(0xFF2C1810).withValues(alpha: 0.3)),
               ),
             ),
-            Expanded(child: Container(height: 1, color: const Color(0xFF2C1810).withOpacity(0.2))),
+            Expanded(child: Container(height: 1, color: const Color(0xFF2C1810).withValues(alpha: 0.2))),
           ],
         ),
       ],
@@ -25035,7 +25165,7 @@ DINGANA 5: FIJINJANA
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: const Color(0xFF8B7355).withOpacity(0.3),
+                color: const Color(0xFF8B7355).withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -25053,7 +25183,7 @@ DINGANA 5: FIJINJANA
               const SizedBox(width: 12),
               Text(
                 title,
-                style: GoogleFonts.merriweather(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF2C1810),
@@ -25092,7 +25222,7 @@ DINGANA 5: FIJINJANA
                 flex: 2,
                 child: Text(
                   '${item['label']}:',
-                  style: GoogleFonts.lora(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF5D4E37),
@@ -25104,7 +25234,7 @@ DINGANA 5: FIJINJANA
                 flex: 3,
                 child: Text(
                   item['value'] as String,
-                  style: GoogleFonts.lora(
+                  style: TextStyle(
                     fontSize: 15,
                     color: const Color(0xFF2C1810),
                     height: 1.6,
@@ -25150,7 +25280,7 @@ DINGANA 5: FIJINJANA
                   child: Center(
                     child: Text(
                       '$stepNumber',
-                      style: GoogleFonts.merriweather(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFFFFF8F0),
@@ -25162,7 +25292,7 @@ DINGANA 5: FIJINJANA
                 Expanded(
                   child: Text(
                     cleanedLine,
-                    style: GoogleFonts.merriweather(
+                    style: TextStyle(
                     fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF2C1810),
@@ -25181,7 +25311,7 @@ DINGANA 5: FIJINJANA
               children: [
                 Text(
                   '• ',
-                  style: GoogleFonts.lora(
+                  style: TextStyle(
                     fontSize: 15,
                     color: const Color(0xFF8B7355),
                   ),
@@ -25189,7 +25319,7 @@ DINGANA 5: FIJINJANA
                 Expanded(
                   child: Text(
                     line.substring(1).trim(),
-                    style: GoogleFonts.lora(
+                    style: TextStyle(
                       fontSize: 15,
                       color: const Color(0xFF2C1810),
                       height: 1.6,
@@ -25204,7 +25334,7 @@ DINGANA 5: FIJINJANA
             padding: const EdgeInsets.only(left: 44, bottom: 8),
             child: Text(
               line,
-              style: GoogleFonts.lora(
+              style: TextStyle(
                 fontSize: 15,
                 color: const Color(0xFF2C1810),
                 height: 1.6,
@@ -25231,7 +25361,7 @@ DINGANA 5: FIJINJANA
             color: const Color(0xFFF5EFE7),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: const Color(0xFF8B7355).withOpacity(0.2),
+              color: const Color(0xFF8B7355).withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -25246,7 +25376,7 @@ DINGANA 5: FIJINJANA
                 ),
                 child: Text(
                   week,
-                  style: GoogleFonts.lora(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFFFFF8F0),
@@ -25257,7 +25387,7 @@ DINGANA 5: FIJINJANA
               Expanded(
                 child: Text(
                   action,
-                  style: GoogleFonts.lora(
+                  style: TextStyle(
                     fontSize: 15,
                     color: const Color(0xFF2C1810),
                     height: 1.5,
@@ -25281,7 +25411,7 @@ DINGANA 5: FIJINJANA
         color: const Color(0xFFF5EFE7),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: const Color(0xFF8B7355).withOpacity(0.3),
+          color: const Color(0xFF8B7355).withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
@@ -25314,7 +25444,7 @@ DINGANA 5: FIJINJANA
             children: [
               Text(
                 label,
-                style: GoogleFonts.lora(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF5D4E37),
@@ -25323,7 +25453,7 @@ DINGANA 5: FIJINJANA
               const SizedBox(height: 4),
               Text(
                 value,
-                style: GoogleFonts.lora(
+                style: TextStyle(
                   fontSize: 15,
                   color: const Color(0xFF2C1810),
                   height: 1.5,
@@ -25364,7 +25494,7 @@ DINGANA 5: FIJINJANA
                 Expanded(
                   child: Text(
                     tip,
-                    style: GoogleFonts.lora(
+                    style: TextStyle(
                       fontSize: 14,
                       color: const Color(0xFF2C1810),
                       height: 1.6,
@@ -25424,7 +25554,7 @@ DINGANA 5: FIJINJANA
                 color: const Color(0xFF4CAF50),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
-                  BoxShadow(color: Colors.green.withOpacity( 0.3), blurRadius: 4, offset: const Offset(0, 2)),
+                  BoxShadow(color: Colors.green.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2)),
                 ],
               ),
               child: Text(
@@ -25449,7 +25579,7 @@ DINGANA 5: FIJINJANA
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(color: Colors.green.withOpacity( 0.1), blurRadius: 8, offset: const Offset(0, 4)),
+                BoxShadow(color: Colors.green.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 4)),
               ],
             ),
             child: Center(
@@ -25534,10 +25664,10 @@ DINGANA 5: FIJINJANA
         decoration: BoxDecoration(
           gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? Colors.white : Colors.white.withOpacity( 0.4), width: isSelected ? 2.5 : 1.5),
+          border: Border.all(color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.4), width: isSelected ? 2.5 : 1.5),
           boxShadow: [
-            BoxShadow(color: gradient[0].withOpacity( 0.4), blurRadius: 12, offset: const Offset(0, 6)),
-            BoxShadow(color: gradient[1].withOpacity( 0.2), blurRadius: 4, offset: const Offset(0, 2)),
+            BoxShadow(color: gradient[0].withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 6)),
+            BoxShadow(color: gradient[1].withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2)),
           ],
         ),
         child: Stack(
@@ -25548,7 +25678,7 @@ DINGANA 5: FIJINJANA
               child: Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity( 0.25),
+                  color: Colors.white.withValues(alpha: 0.25),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 12),
@@ -25574,7 +25704,7 @@ DINGANA 5: FIJINJANA
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity( 0.25),
+                      color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -25610,9 +25740,9 @@ DINGANA 5: FIJINJANA
         width: 56,
         height: 56,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity( 0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withOpacity( 0.3), width: 2),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
         ),
         child: Image.asset(
           path,
@@ -25714,7 +25844,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
       backgroundColor: const Color(0xFFFFF8F0),
       appBar: AppBar(
         backgroundColor: const Color(0xFF2C1810),
-        title: Text(c.name, style: GoogleFonts.merriweather(color: const Color(0xFFFFF8F0), fontWeight: FontWeight.w600)),
+        title: Text(c.name, style: TextStyle(color: const Color(0xFFFFF8F0), fontWeight: FontWeight.w600)),
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFFFFF8F0)),
       ),
@@ -25740,7 +25870,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFFFF8F0),
               border: Border(
-                top: BorderSide(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                top: BorderSide(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
               ),
             ),
             child: Row(
@@ -25767,7 +25897,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                     width: index == _currentPage ? 32 : 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: index == _currentPage ? const Color(0xFF2C1810) : const Color(0xFF2C1810).withOpacity(0.2),
+                      color: index == _currentPage ? const Color(0xFF2C1810) : const Color(0xFF2C1810).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   );
@@ -25794,8 +25924,8 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
               'Pejy ${_currentPage + 1} / ${pages.length}',
-              style: GoogleFonts.lora(
-                color: const Color(0xFF2C1810).withOpacity(0.5),
+              style: TextStyle(
+                color: const Color(0xFF2C1810).withValues(alpha: 0.5),
                 fontSize: 12,
               ),
             ),
@@ -25828,14 +25958,14 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    color: const Color(0xFF2C1810).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                    border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
                   ),
                   child: Text(
                     'Toko 1',
-                    style: GoogleFonts.merriweather(
-                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                    style: TextStyle(
+                      color: const Color(0xFF2C1810).withValues(alpha: 0.6),
                       fontSize: 12,
                       letterSpacing: 2,
                     ),
@@ -25844,7 +25974,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   c.name,
-                  style: GoogleFonts.merriweather(
+                  style: TextStyle(
                     color: const Color(0xFF2C1810),
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
@@ -25856,7 +25986,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                   height: 2,
                   width: 60,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C1810).withOpacity(0.3),
+                    color: const Color(0xFF2C1810).withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(1),
                   ),
                 ),
@@ -25871,12 +26001,12 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
               borderRadius: BorderRadius.circular(8),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2C1810).withOpacity(0.1),
+                  color: const Color(0xFF2C1810).withValues(alpha: 0.1),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
               ],
-              border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1), width: 1),
+              border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1), width: 1),
             ),
             child: Column(
               children: [
@@ -25889,11 +26019,11 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                       c.imagePath,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        color: const Color(0xFF2C1810).withOpacity(0.05),
+                        color: const Color(0xFF2C1810).withValues(alpha: 0.05),
                         alignment: Alignment.center,
                         child: Text(
                           c.name.isNotEmpty ? c.name.substring(0, 1).toUpperCase() : '🌱',
-                          style: TextStyle(fontSize: 48, color: const Color(0xFF2C1810).withOpacity(0.3)),
+                          style: TextStyle(fontSize: 48, color: const Color(0xFF2C1810).withValues(alpha: 0.3)),
                         ),
                       ),
                     ),
@@ -25904,12 +26034,12 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF8F0),
                     borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(8), bottomRight: Radius.circular(8)),
-                    border: Border(top: BorderSide(color: const Color(0xFF2C1810).withOpacity(0.1))),
+                    border: Border(top: BorderSide(color: const Color(0xFF2C1810).withValues(alpha: 0.1))),
                   ),
                   child: Text(
                     'Sary ${_currentPage + 1}.1',
-                    style: GoogleFonts.lora(
-                      color: const Color(0xFF2C1810).withOpacity(0.5),
+                    style: TextStyle(
+                      color: const Color(0xFF2C1810).withValues(alpha: 0.5),
                       fontSize: 11,
                       fontStyle: FontStyle.italic,
                     ),
@@ -25924,7 +26054,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
           if (infoItems.isNotEmpty) ...[
             Text(
               'Fampahalalana Fototra',
-              style: GoogleFonts.merriweather(
+              style: TextStyle(
                 color: const Color(0xFF2C1810),
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -25940,7 +26070,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                     flex: 2,
                     child: Text(
                       item['label'] ?? '',
-                      style: GoogleFonts.lora(
+                      style: TextStyle(
                         color: const Color(0xFF2C1810),
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -25953,8 +26083,8 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                     child: Text(
                       item['value'] ?? '',
                       textAlign: TextAlign.right,
-                      style: GoogleFonts.lora(
-                        color: const Color(0xFF2C1810).withOpacity(0.7),
+                      style: TextStyle(
+                        color: const Color(0xFF2C1810).withValues(alpha: 0.7),
                         fontSize: 14,
                         height: 1.5,
                       ),
@@ -25983,14 +26113,14 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    color: const Color(0xFF2C1810).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                    border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
                   ),
                   child: Text(
                     'Toko 2',
-                    style: GoogleFonts.merriweather(
-                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                    style: TextStyle(
+                      color: const Color(0xFF2C1810).withValues(alpha: 0.6),
                       fontSize: 12,
                       letterSpacing: 2,
                     ),
@@ -25999,7 +26129,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Masomboly & Tany',
-                  style: GoogleFonts.merriweather(
+                  style: TextStyle(
                     color: const Color(0xFF2C1810),
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -26049,7 +26179,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
             const SizedBox(width: 8),
             Text(
               title,
-              style: GoogleFonts.merriweather(
+              style: TextStyle(
                 color: const Color(0xFF2C1810),
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -26061,9 +26191,9 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: accentColor.withOpacity(0.05),
+            color: accentColor.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: accentColor.withOpacity(0.15)),
+            border: Border.all(color: accentColor.withValues(alpha: 0.15)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -26072,7 +26202,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
                   line.trim(),
-                  style: GoogleFonts.lora(
+                  style: TextStyle(
                     color: const Color(0xFF2C1810),
                     fontSize: 13,
                     height: 1.6,
@@ -26102,14 +26232,14 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    color: const Color(0xFF2C1810).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                    border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
                   ),
                   child: Text(
                     'Toko 3',
-                    style: GoogleFonts.merriweather(
-                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                    style: TextStyle(
+                      color: const Color(0xFF2C1810).withValues(alpha: 0.6),
                       fontSize: 12,
                       letterSpacing: 2,
                     ),
@@ -26118,7 +26248,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Fomba Fambolena',
-                  style: GoogleFonts.merriweather(
+                  style: TextStyle(
                     color: const Color(0xFF2C1810),
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -26154,7 +26284,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                       borderRadius: BorderRadius.circular(18),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF2C1810).withOpacity(0.2),
+                          color: const Color(0xFF2C1810).withValues(alpha: 0.2),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -26163,7 +26293,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                     alignment: Alignment.center,
                     child: Text(
                       '${idx + 1}',
-                      style: GoogleFonts.merriweather(
+                      style: TextStyle(
                         color: const Color(0xFFFFF8F0),
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -26176,13 +26306,13 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2C1810).withOpacity(0.03),
+                        color: const Color(0xFF2C1810).withValues(alpha: 0.03),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                        border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
                       ),
                       child: Text(
                         cleanLine,
-                        style: GoogleFonts.lora(
+                        style: TextStyle(
                           color: const Color(0xFF2C1810),
                           fontSize: 14,
                           height: 1.6,
@@ -26213,14 +26343,14 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    color: const Color(0xFF2C1810).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                    border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
                   ),
                   child: Text(
                     'Toko 4',
-                    style: GoogleFonts.merriweather(
-                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                    style: TextStyle(
+                      color: const Color(0xFF2C1810).withValues(alpha: 0.6),
                       fontSize: 12,
                       letterSpacing: 2,
                     ),
@@ -26229,7 +26359,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Dingana',
-                  style: GoogleFonts.merriweather(
+                  style: TextStyle(
                     color: const Color(0xFF2C1810),
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -26249,9 +26379,9 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFF2C1810).withOpacity(0.03),
+                color: const Color(0xFF2C1810).withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -26264,7 +26394,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                     ),
                     child: Text(
                       weekLabel,
-                      style: GoogleFonts.merriweather(
+                      style: TextStyle(
                         color: const Color(0xFFFFF8F0),
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
@@ -26275,7 +26405,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                   Expanded(
                     child: Text(
                       action,
-                      style: GoogleFonts.lora(
+                      style: TextStyle(
                         color: const Color(0xFF2C1810),
                         fontSize: 14,
                         height: 1.5,
@@ -26305,14 +26435,14 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    color: const Color(0xFF2C1810).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                    border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
                   ),
                   child: Text(
                     'Toko 5',
-                    style: GoogleFonts.merriweather(
-                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                    style: TextStyle(
+                      color: const Color(0xFF2C1810).withValues(alpha: 0.6),
                       fontSize: 12,
                       letterSpacing: 2,
                     ),
@@ -26321,7 +26451,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Toro-hevitra',
-                  style: GoogleFonts.merriweather(
+                  style: TextStyle(
                     color: const Color(0xFF2C1810),
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -26336,9 +26466,9 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withOpacity(0.05),
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.2)),
+              border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.2)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -26351,7 +26481,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 Expanded(
                   child: Text(
                     tip.toString(),
-                    style: GoogleFonts.lora(
+                    style: TextStyle(
                       color: const Color(0xFF2C1810),
                       fontSize: 14,
                       height: 1.6,
@@ -26379,14 +26509,14 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    color: const Color(0xFF2C1810).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                    border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
                   ),
                   child: Text(
                     'Toko ${_getCurrentChapterNumber()}',
-                    style: GoogleFonts.merriweather(
-                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                    style: TextStyle(
+                      color: const Color(0xFF2C1810).withValues(alpha: 0.6),
                       fontSize: 12,
                       letterSpacing: 2,
                     ),
@@ -26395,7 +26525,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Tombontsoa',
-                  style: GoogleFonts.merriweather(
+                  style: TextStyle(
                     color: const Color(0xFF2C1810),
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -26425,14 +26555,14 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    color: const Color(0xFF2C1810).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                    border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
                   ),
                   child: Text(
                     'Toko ${_getCurrentChapterNumber()}',
-                    style: GoogleFonts.merriweather(
-                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                    style: TextStyle(
+                      color: const Color(0xFF2C1810).withValues(alpha: 0.6),
                       fontSize: 12,
                       letterSpacing: 2,
                     ),
@@ -26441,7 +26571,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Fikarakarana',
-                  style: GoogleFonts.merriweather(
+                  style: TextStyle(
                     color: const Color(0xFF2C1810),
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -26471,14 +26601,14 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    color: const Color(0xFF2C1810).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                    border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
                   ),
                   child: Text(
                     'Toko ${_getCurrentChapterNumber()}',
-                    style: GoogleFonts.merriweather(
-                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                    style: TextStyle(
+                      color: const Color(0xFF2C1810).withValues(alpha: 0.6),
                       fontSize: 12,
                       letterSpacing: 2,
                     ),
@@ -26487,7 +26617,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Aretina sy Bibikely',
-                  style: GoogleFonts.merriweather(
+                  style: TextStyle(
                     color: const Color(0xFF2C1810),
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -26517,14 +26647,14 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    color: const Color(0xFF2C1810).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                    border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
                   ),
                   child: Text(
                     'Toko ${_getCurrentChapterNumber()}',
-                    style: GoogleFonts.merriweather(
-                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                    style: TextStyle(
+                      color: const Color(0xFF2C1810).withValues(alpha: 0.6),
                       fontSize: 12,
                       letterSpacing: 2,
                     ),
@@ -26533,7 +26663,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Fijinjana',
-                  style: GoogleFonts.merriweather(
+                  style: TextStyle(
                     color: const Color(0xFF2C1810),
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -26563,14 +26693,14 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C1810).withOpacity(0.05),
+                    color: const Color(0xFF2C1810).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                    border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
                   ),
                   child: Text(
                     'Toko ${_getCurrentChapterNumber()}',
-                    style: GoogleFonts.merriweather(
-                      color: const Color(0xFF2C1810).withOpacity(0.6),
+                    style: TextStyle(
+                      color: const Color(0xFF2C1810).withValues(alpha: 0.6),
                       fontSize: 12,
                       letterSpacing: 2,
                     ),
@@ -26579,7 +26709,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Kalandrie',
-                  style: GoogleFonts.merriweather(
+                  style: TextStyle(
                     color: const Color(0xFF2C1810),
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -26599,16 +26729,16 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2C1810).withOpacity(0.03),
+                  color: const Color(0xFF2C1810).withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFF2C1810).withOpacity(0.1)),
+                  border: Border.all(color: const Color(0xFF2C1810).withValues(alpha: 0.1)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       month,
-                      style: GoogleFonts.merriweather(
+                      style: TextStyle(
                         color: const Color(0xFF2C1810),
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -26617,8 +26747,8 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
                     const SizedBox(height: 6),
                     Text(
                       activity,
-                      style: GoogleFonts.lora(
-                        color: const Color(0xFF2C1810).withOpacity(0.7),
+                      style: TextStyle(
+                        color: const Color(0xFF2C1810).withValues(alpha: 0.7),
                         fontSize: 13,
                         height: 1.5,
                       ),
@@ -26652,7 +26782,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
             padding: const EdgeInsets.only(top: 16, bottom: 8),
             child: Text(
               trimmedLine,
-              style: GoogleFonts.merriweather(
+              style: TextStyle(
                 color: const Color(0xFF2C1810),
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
@@ -26672,7 +26802,7 @@ class _CultureDetailScreenState extends State<CultureDetailScreen> {
               Expanded(
                 child: Text(
                   trimmedLine.replaceFirst(RegExp(r'^[•\-]\s*'), ''),
-                  style: GoogleFonts.lora(
+                  style: TextStyle(
                     color: const Color(0xFF2C1810),
                     fontSize: 13,
                     height: 1.6,
@@ -27912,7 +28042,7 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
       ),
       child: Column(
         children: [
@@ -27963,7 +28093,7 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
       ),
       child: Column(
         children: [
@@ -28081,7 +28211,7 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
       ),
       child: Column(
         children: [
@@ -28177,7 +28307,7 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Column(
               children: [
@@ -28281,7 +28411,7 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: _buildBenefitRow(
@@ -28400,14 +28530,14 @@ class FambolenaSoilScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 10)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
             ),
             child: Column(
               children: [
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: (soil['color'] as Color).withOpacity( 0.2),
+                    color: (soil['color'] as Color).withValues(alpha: 0.2),
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   ),
                   child: Row(
@@ -28870,7 +29000,7 @@ class FambolenaPestsScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -28926,7 +29056,7 @@ class FambolenaPestsScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -29178,7 +29308,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
                   // Tabs
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity( 0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: TabBar(
@@ -29276,7 +29406,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
           }),
           _buildCalcCard('🦆', 'Olitra', 'Olitra BSF, fahana, tombony', Colors.teal, () {
             Navigator.pop(context);
-            _showOlitraCalculator(context);
+            _showBibikelyCalculator(context);
           }),
           
           const SizedBox(height: 16),
@@ -29425,7 +29555,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
                 Text(
                   '• Ny akoho dia tsara ho an\'ny budget kely\n'
                   '• Ny kisoa sy tantely dia mampidi-bola be kokoa\n'
-                  '• Ny olitra BSF dia mora vokarina sy manome tombony tsara\n'
+                  '• Ny bibikely BSF dia mora vokarina sy manome tombony tsara\n'
                   '• Ampifangaroy ny fiompiana sy fambolena mba hampitombo ny tombony',
                   style: TextStyle(fontSize: 11, height: 1.5),
                 ),
@@ -29445,7 +29575,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
         leading: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: color.withOpacity( 0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(emoji, style: const TextStyle(fontSize: 18)),
@@ -29481,7 +29611,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: color.withOpacity( 0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(roi, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color)),
@@ -29731,21 +29861,21 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
     );
   }
 
-  void _showOlitraCalculator(BuildContext context) {
+  void _showBibikelyCalculator(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _CalculatorSheet(
-        title: 'Fikajiana Olitra BSF',
+        title: 'Fikajiana Bibikely BSF',
         emoji: '🪱',
         color: Colors.teal,
         fields: const [
           {'label': 'Fako organika isan\'andro (kg)', 'key': 'waste_per_day', 'hint': '5'},
           {'label': 'Faharetana (andro)', 'key': 'duration', 'hint': '30'},
-          {'label': 'Starter olitra (kg)', 'key': 'starter_qty', 'hint': '1'},
+          {'label': 'Starter bibikely (kg)', 'key': 'starter_qty', 'hint': '1'},
           {'label': 'Vidin\'ny starter/kg (Ar)', 'key': 'starter_price', 'hint': '40000'},
-          {'label': 'Vidin\'ny olitra velona/kg (Ar)', 'key': 'live_price', 'hint': '20000'},
+          {'label': 'Vidin\'ny bibikely velona/kg (Ar)', 'key': 'live_price', 'hint': '20000'},
           {'label': 'Vidin\'ny olitra maina/kg (Ar)', 'key': 'dried_price', 'hint': '50000'},
         ],
         calculateResult: (values) {
@@ -29772,7 +29902,7 @@ class _FikajianaTombonyDialogState extends State<FikajianaTombonyDialog> with Si
 
           return {
             'Fako nodiovina': '${totalWaste.toStringAsFixed(1)} kg',
-            'Vokatra olitra velona': '${liveOutputKg.toStringAsFixed(1)} kg',
+            'Vokatra bibikely velona': '${liveOutputKg.toStringAsFixed(1)} kg',
             'Vokatra olitra maina': '${driedOutputKg.toStringAsFixed(1)} kg',
             'Vidin\'ny starter': '${NumberFormat("#,##0").format(starterCost)} Ar',
             'Saran\'asa (500Ar/kg waste)': '${NumberFormat("#,##0").format(opsCost)} Ar',
@@ -30231,7 +30361,7 @@ class _PricingDialogState extends State<PricingDialog> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 3)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 3)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -30283,7 +30413,7 @@ class _PricingDialogState extends State<PricingDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 13)),
-                Text(subtitle, style: TextStyle(fontSize: 11, color: textColor.withOpacity( 0.7))),
+                Text(subtitle, style: TextStyle(fontSize: 11, color: textColor.withValues(alpha: 0.7))),
               ],
             ),
           ),
@@ -30409,7 +30539,7 @@ class TrondroSystemsScreen extends StatelessWidget {
                       const Text('KARAZANA TRONDRO',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Tilapia, Carpe, Clarias, Heterotis - Vidiny sy toetoetra',
-                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -30452,13 +30582,13 @@ class TrondroSystemsScreen extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [color.withOpacity( 0.9), color.withOpacity( 0.6)],
+                          colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
-                          BoxShadow(color: color.withOpacity( 0.3), blurRadius: 8, offset: const Offset(0, 4)),
+                          BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4)),
                         ],
                       ),
                       child: Padding(
@@ -30477,7 +30607,7 @@ class TrondroSystemsScreen extends StatelessWidget {
                             ),
                             Text(
                               fish['localName'] as String,
-                              style: TextStyle(color: Colors.white.withOpacity( 0.85), fontSize: 10),
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 10),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -30486,7 +30616,7 @@ class TrondroSystemsScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity( 0.95),
+                                color: Colors.white.withValues(alpha: 0.95),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -30523,7 +30653,7 @@ class TrondroSystemsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity( 0.25),
+        color: Colors.white.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(text, style: const TextStyle(fontSize: 9, color: Colors.white)),
@@ -30534,14 +30664,14 @@ class TrondroSystemsScreen extends StatelessWidget {
     if (fish['name'] == 'Tilapia : Nilotica (gris), Red (mena)') {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const TilapiaNiloticaPage()),
+        MaterialPageRoute(builder: (context) => const TilapiaNiloticaPageFlutter()),
       );
       return;
     }
     if (fish['name'] == 'Carpe : Royale , Commune , Chinoise') {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const CarpeCommunePage()),
+        MaterialPageRoute(builder: (context) => const CarpeCommunePageFlutter()),
       );
       return;
     }
@@ -30563,7 +30693,7 @@ class TrondroSystemsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [color, color.withOpacity( 0.7)],
+                  colors: [color, color.withValues(alpha: 0.7)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -30580,7 +30710,7 @@ class TrondroSystemsScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(fish['name'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
-                            Text(fish['localName'] as String, style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 14)),
+                            Text(fish['localName'] as String, style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 14)),
                           ],
                         ),
                       ),
@@ -30749,9 +30879,9 @@ class TrondroSystemsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: color.withOpacity( 0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity( 0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -30978,6 +31108,51 @@ class TrondroTeknikaScreen extends StatelessWidget {
       },
     ];
 
+    final waterParameters = [
+      {
+        'name': 'Temperature',
+        'emoji': '🌡️',
+        'optimal': '25-30°C (Tilapia), 20-28°C (Carpe)',
+        'danger': '<18°C na >35°C',
+        'tips': 'Alokaloka, ampio rano mangatsiaka',
+      },
+      {
+        'name': 'pH',
+        'emoji': '⚗️',
+        'optimal': '6.5-8.5',
+        'danger': '<6 na >9',
+        'tips': 'Ampio calcium, ovao ny rano',
+      },
+      {
+        'name': 'Oxygène dissous',
+        'emoji': '💨',
+        'optimal': '>5 mg/L',
+        'danger': '<3 mg/L',
+        'tips': 'Ampio aérateur, aza mamahana be',
+      },
+      {
+        'name': 'Ammoniaque (NH3)',
+        'emoji': '⚠️',
+        'optimal': '<0.02 mg/L',
+        'danger': '>0.1 mg/L',
+        'tips': 'Ovao ny rano, esory ny fako',
+      },
+      {
+        'name': 'Transparence',
+        'emoji': '👁️',
+        'optimal': '30-40 cm',
+        'danger': '<15 cm',
+        'tips': 'Ovao ny rano 20-30%',
+      },
+       {
+        'name': 'Nitrite (NO2)',
+        'emoji': '🧪',
+        'optimal': '<0.1 mg/L',
+        'danger': '>0.5 mg/L',
+        'tips': 'Ahena sakafo, ovay rano',
+      },
+    ];
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -31007,7 +31182,7 @@ class TrondroTeknikaScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text('TEKNIKA FIOMPIANA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-                      Text('Fomba sy rafitra samihafa', style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 13)),
+                      Text('Fomba sy rafitra samihafa', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
                     ],
                   ),
                 ),
@@ -31016,395 +31191,1457 @@ class TrondroTeknikaScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Vocational training single card -> opens full sheet
-          GestureDetector(
-            onTap: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) => Container(
-                  height: MediaQuery.of(context).size.height * 0.9,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          // MAIN SECTIONS GRID (4 cubes - 2x2)
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.2,
+            children: [
+              // Business Tilapia Cube
+              GestureDetector(
+                onTap: () => _showBusinessTilapiaGuide(context),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0f172a), Color(0xFF1e40af)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [BoxShadow(color: Colors.blue.shade900.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3))],
                   ),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: [Colors.cyan.shade700, Colors.blue.shade600]),
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Text('🎓', style: TextStyle(fontSize: 30)),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('PARCOURS EXPRESS (1 JOUR)',
-                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                                  Text('Dingana tsotra: fanomanana → alevinage → sakafo → fanaraha-maso',
-                                      style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close, color: Colors.white),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: ListView(
-                            children: [
-                              ...quickSteps.map((card) => Container(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 6, offset: const Offset(0, 2))],
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Text(card['icon'] as String, style: const TextStyle(fontSize: 20)),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Text(card['title'] as String,
-                                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.cyan.shade800)),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 10),
-                                        ...(card['items'] as List).map((it) => Container(
-                                              margin: const EdgeInsets.only(bottom: 6),
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                              decoration: BoxDecoration(
-                                                color: Colors.cyan.shade50,
-                                                borderRadius: BorderRadius.circular(10),
-                                                border: Border.all(color: Colors.cyan.shade100),
-                                              ),
-                                              child: Row(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text('• ', style: TextStyle(fontSize: 12, color: Colors.cyan.shade700, fontWeight: FontWeight.bold)),
-                                                  Expanded(child: Text(it as String, style: const TextStyle(fontSize: 12, height: 1.35))),
-                                                ],
-                                              ),
-                                            )),
-                                      ],
-                                    ),
-                                  )),
-                            ],
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('🐟', style: TextStyle(fontSize: 32)),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(8)),
+                            child: const Text('PRO', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF0f172a))),
                           ),
-                        ),
+                        ],
                       ),
+                      const SizedBox(height: 8),
+                      const Text('BUSINESS TILAPIA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('450g en 6 volana', style: TextStyle(color: Colors.amber.shade300, fontSize: 10)),
                     ],
                   ),
                 ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 8, offset: const Offset(0, 2))],
               ),
+              
+              // Business Carpe Cube
+              GestureDetector(
+                onTap: () => _showBusinessCarpeGuide(context),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.teal.shade800, Colors.green.shade700],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [BoxShadow(color: Colors.teal.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3))],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('🐠', style: TextStyle(fontSize: 32)),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(color: Colors.lime, borderRadius: BorderRadius.circular(8)),
+                            child: Text('PRO', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.teal.shade900)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('BUSINESS CARPE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('1-2kg en 12 volana', style: TextStyle(color: Colors.lime.shade300, fontSize: 10)),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Rafitra Fiompiana Cube
+              GestureDetector(
+                onTap: () => _showRafitraFiompiana(context, teknikaList),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.cyan.shade700, Colors.blue.shade600],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [BoxShadow(color: Colors.cyan.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3))],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('🏗️', style: TextStyle(fontSize: 32)),
+                      const SizedBox(height: 8),
+                      const Text('RAFITRA FIOMPIANA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('${teknikaList.length} karazana', style: TextStyle(color: Colors.cyan.shade200, fontSize: 10)),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Kalitaon'ny Rano Cube
+              GestureDetector(
+                onTap: () => _showKalitaoRano(context),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.shade800, Colors.cyan.shade600],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [BoxShadow(color: Colors.blue.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3))],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('💧', style: TextStyle(fontSize: 32)),
+                      const SizedBox(height: 8),
+                      const Text('KALITAO RANO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('6 paramètres', style: TextStyle(color: Colors.cyan.shade200, fontSize: 10)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRafitraFiompiana(BuildContext context, List<Map<String, dynamic>> teknikaList) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.9,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [Colors.cyan.shade700, Colors.blue.shade800], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white38, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 20),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.cyan.shade50,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Text('🎓', style: TextStyle(fontSize: 26)),
-                  ),
-                  const SizedBox(width: 12),
+                  Text('🏗️', style: TextStyle(fontSize: 36)),
+                  SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('PARCOURS EXPRESS (1 JOUR)',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                        Text('Kit de démarrage en 1 journée: fanomanana → alevinage → sakafo → fanaraha-maso',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                        Text('RAFITRA FIOMPIANA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+                        Text('Safidio ny rafitra mety aminao', style: TextStyle(color: Colors.white70, fontSize: 12)),
                       ],
                     ),
                   ),
-                  const Icon(Icons.keyboard_arrow_right, color: Colors.cyan, size: 24),
                 ],
               ),
             ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Systems list
-          ...teknikaList.map((teknika) => Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity( 0.08), blurRadius: 8, offset: const Offset(0, 2)),
-              ],
-            ),
-            child: Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                leading: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: (teknika['color'] as Color).withOpacity( 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(child: Text(teknika['emoji'] as String, style: const TextStyle(fontSize: 28))),
+            const SizedBox(height: 20),
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 0.85,
                 ),
-                title: Text(teknika['title'] as String, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: teknika['color'] as Color)),
-                subtitle: Text(teknika['description'] as String, style: const TextStyle(fontSize: 11)),
-                children: [
-                  // Quick stats
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: (teknika['color'] as Color).withOpacity( 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: (teknika['details'] as List).map((d) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: (teknika['color'] as Color).withOpacity( 0.3)),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(d['label'] as String, style: TextStyle(fontSize: 9, color: Colors.grey.shade600)),
-                            Text(d['value'] as String, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: teknika['color'] as Color)),
-                          ],
-                        ),
-                      )).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Advantages
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('✅ TOMBONTSOA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.green.shade800)),
-                        const SizedBox(height: 8),
-                        ...(teknika['advantages'] as List).map((a) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('• ', style: TextStyle(color: Colors.green.shade700)),
-                              Expanded(child: Text(a as String, style: const TextStyle(fontSize: 12))),
-                            ],
-                          ),
-                        )),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Requirements
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('⚙️ ZAVATRA ILAINA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.orange.shade800)),
-                        const SizedBox(height: 8),
-                        ...(teknika['requirements'] as List).map((r) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('• ', style: TextStyle(color: Colors.orange.shade700)),
-                              Expanded(child: Text(r as String, style: const TextStyle(fontSize: 12))),
-                            ],
-                          ),
-                        )),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Investment
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.blue.shade100, Colors.cyan.shade100],
+                itemCount: teknikaList.length,
+                itemBuilder: (context, index) {
+                  final teknika = teknikaList[index];
+                  return GestureDetector(
+                    onTap: () => _buildTeknikaDetailsSheet(context, teknika),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 2))],
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: (teknika['color'] as Color).withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(teknika['emoji'] as String, style: const TextStyle(fontSize: 32)),
+                          ),
+                          const SizedBox(height: 10),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              teknika['title'] as String,
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: teknika['color'] as Color),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            teknika['investment'] as String,
+                            style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showKalitaoRano(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [Colors.blue.shade800, Colors.cyan.shade700], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white38, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 20),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Text('💧', style: TextStyle(fontSize: 36)),
+                  SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('💰', style: TextStyle(fontSize: 24)),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('FAMPIASAM-BOLA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                            Text(teknika['investment'] as String, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue.shade800)),
-                          ],
-                        ),
+                        Text('KALITAON\'NY RANO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+                        Text('Paramètres sy loharano', style: TextStyle(color: Colors.white70, fontSize: 12)),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-          )),
-
-          const SizedBox(height: 24),
-          
-          // Water Section Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.cyan.shade600]),
-              borderRadius: BorderRadius.circular(16),
+            const SizedBox(height: 20),
+            Expanded(
+              child: GridView.count(
+                padding: const EdgeInsets.all(16),
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.85,
+                children: [
+                  _buildWaterParamCard(context, '🌡️', 'Temperature', '25-30°C (Tilapia), 20-28°C (Carpe)', '<18°C na >35°C', 'Alokaloka amin\'ny masoandro mafana, ampio rano mangatsiaka rehefa mafana loatra'),
+                  _buildWaterParamCard(context, '⚗️', 'pH', '6.5-8.5', '<6 na >9', 'Ampio calcium (coquille) raha ambany loatra, ovao ny rano raha ambony loatra'),
+                  _buildWaterParamCard(context, '💨', 'Oxygène dissous', '>5 mg/L', '<3 mg/L', 'Ampio aérateur, aza mamahana be loatra, ahena ny trondro raha be loatra'),
+                  _buildWaterParamCard(context, '⚠️', 'Ammoniaque (NH3)', '<0.02 mg/L', '>0.1 mg/L (poizina!)', 'Ovao ny rano matetika, aza mamahana be, esory ny fako sy trondro maty'),
+                  _buildWaterParamCard(context, '👁️', 'Transparence', '30-40 cm', '<15 cm (mainty)', 'Raha mainty loatra = plancton be, ovao ny rano 20-30%. Raha mazava loatra = tsy ampy sakafo.'),
+                  _buildWaterParamCard(context, '🧪', 'Nitrite (NO2)', '<0.1 mg/L', '>0.5 mg/L', 'Famantarana: gills mena-volontsôkôlà. Ovay rano 30-50%, ahena sakafo.'),
+                ],
+              ),
             ),
-            child: Row(
-              children: [
-                const Text('💧', style: TextStyle(fontSize: 30)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('KALITAON\'NY RANO',
-                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                      Text('Paramètres sy loharano',
-                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
 
-          // Water Parameters
-          ...[
-            {
-              'name': 'Temperature',
-              'emoji': '🌡️',
-              'optimal': '25-30°C (Tilapia), 20-28°C (Carpe)',
-              'danger': '<18°C na >35°C',
-              'tips': 'Alokaloka amin\'ny masoandro mafana, ampio rano mangatsiaka rehefa mafana loatra',
-            },
-            {
-              'name': 'pH',
-              'emoji': '⚗️',
-              'optimal': '6.5-8.5',
-              'danger': '<6 na >9',
-              'tips': 'Ampio calcium (coquille) raha ambany loatra, ovao ny rano raha ambony loatra',
-            },
-            {
-              'name': 'Oxygène dissous',
-              'emoji': '💨',
-              'optimal': '>5 mg/L',
-              'danger': '<3 mg/L',
-              'tips': 'Ampio aérateur, aza mamahana be loatra, ahena ny trondro raha be loatra',
-            },
-            {
-              'name': 'Ammoniaque (NH3)',
-              'emoji': '⚠️',
-              'optimal': '<0.02 mg/L',
-              'danger': '>0.1 mg/L (poizina!)',
-              'tips': 'Ovao ny rano matetika, aza mamahana be, esory ny fako sy trondro maty',
-            },
-            {
-              'name': 'Transparence',
-              'emoji': '👁️',
-              'optimal': '30-40 cm',
-              'danger': '<15 cm (mainty)',
-              'tips': 'Raha mainty loatra = plancton be, ovao ny rano 20-30%. Raha mazava loatra = tsy ampy sakafo.',
-            },
-          ].map((param) => Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
+  Widget _buildWaterParamCard(BuildContext context, String emoji, String name, String optimal, String danger, String tips) {
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) => Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
-              border: Border.all(color: Colors.blue.shade50),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
-                    Text(param['emoji']!, style: const TextStyle(fontSize: 24)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(param['name']!, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blue.shade800)),
-                    ),
+                    Text(emoji, style: const TextStyle(fontSize: 40)),
+                    const SizedBox(width: 16),
+                    Expanded(child: Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue.shade800))),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(12)),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('✅ Tsara:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                          Text(param['optimal']!, style: TextStyle(fontSize: 12, color: Colors.green.shade700, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('⚠️ Loza:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                          Text(param['danger']!, style: TextStyle(fontSize: 12, color: Colors.red.shade700, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
+                      Text('✅ TSARA (Optimal)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.green.shade800)),
+                      const SizedBox(height: 6),
+                      Text(optimal, style: TextStyle(fontSize: 15, color: Colors.green.shade700)),
                     ],
                   ),
                 ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('⚠️ LOZA (Danger)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.red.shade800)),
+                      const SizedBox(height: 6),
+                      Text(danger, style: TextStyle(fontSize: 15, color: Colors.red.shade700)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(12)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('💡 TOROHEVITRA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.amber.shade800)),
+                      const SizedBox(height: 6),
+                      Text(tips, style: const TextStyle(fontSize: 14, height: 1.4)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.blue.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 2))],
+          border: Border.all(color: Colors.blue.shade100),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 32)),
+            const SizedBox(height: 6),
+            Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blue.shade800), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
+            const Spacer(),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
+              child: Text('✅ $optimal', style: TextStyle(fontSize: 10, color: Colors.green.shade700, fontWeight: FontWeight.w600), textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
+              child: Text('⚠️ $danger', style: TextStyle(fontSize: 10, color: Colors.red.shade700, fontWeight: FontWeight.w600), textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
+            ),
+            const SizedBox(height: 4),
+            Text('Tap pour détails', style: TextStyle(fontSize: 9, color: Colors.grey.shade500, fontStyle: FontStyle.italic)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showBusinessTilapiaGuide(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BusinessTilapiaGuidePage(),
+      ),
+    );
+  }
+
+  void _showBusinessCarpeGuide(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BusinessCarpeGuidePage(),
+      ),
+    );
+  }
+}
+
+// ========== Business Carpe Guide Page ==========
+class BusinessCarpeGuidePage extends StatefulWidget {
+  const BusinessCarpeGuidePage({super.key});
+
+  @override
+  State<BusinessCarpeGuidePage> createState() => _BusinessCarpeGuidePageState();
+}
+
+class _BusinessCarpeGuidePageState extends State<BusinessCarpeGuidePage> {
+  final TextEditingController _surfaceController = TextEditingController(text: '500');
+  int _fingerlings = 0;
+  int _feedKg = 0;
+  double _productionTons = 0;
+  bool _showResult = false;
+
+  void _calculateBOM() {
+    final surface = double.tryParse(_surfaceController.text) ?? 0;
+    if (surface <= 0) return;
+
+    const density = 2; // fish per m2 (carpe needs more space)
+    const survival = 0.85;
+    const targetWeight = 1.5; // kg (1.5kg average)
+    const fcr = 1.8; // Carpe has higher FCR
+
+    final totalFish = (surface * density).round();
+    final harvestFish = totalFish * survival;
+    final totalBiomass = harvestFish * targetWeight;
+    final totalFeed = totalBiomass * fcr;
+
+    setState(() {
+      _fingerlings = totalFish;
+      _feedKg = totalFeed.round();
+      _productionTons = totalBiomass / 1000;
+      _showResult = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          // Hero Header
+          SliverAppBar(
+            expandedHeight: 280,
+            pinned: true,
+            backgroundColor: Colors.teal.shade800,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Colors.teal.shade800, Colors.green.shade700],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 40),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.eco, color: Colors.lime.shade300, size: 16),
+                              const SizedBox(width: 6),
+                              Text('POLYCULTURE', style: TextStyle(color: Colors.lime.shade300, fontSize: 11, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Business Carpe\nProfessionnel',
+                          style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold, height: 1.2),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Tanjona: Trondro 1-2kg ao anatin\'ny 12 volana',
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Content
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Metrics Grid
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 0.85,
+                    children: [
+                      _buildMetricCard('500m²+', 'Velarana', Colors.teal),
+                      _buildMetricCard('12 Volana', 'Tsingerina', Colors.amber),
+                      _buildMetricCard('Commune', 'Karazana', Colors.green),
+                      _buildMetricCard('25-30%', 'Proteinina', Colors.purple),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Section 1: Advantages of Carpe
+                  _buildSectionHeader(Icons.star, '1. Tombontsoan\'ny Carpe', 'Maninona no Carpe?'),
+                  const SizedBox(height: 16),
+
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildAdvantageItem('🌱', 'Omnivora', 'Mihinana zava-maitso, voankazo, vovo, ary lefona'),
+                        _buildAdvantageItem('💪', 'Matanjaka', 'Tsy mora marary, mifanaraka amin\'ny toetr\'andro samihafa'),
+                        _buildAdvantageItem('📈', 'Mitombo tsara', 'Azo atao 1-2kg ao anatin\'ny 12 volana'),
+                        _buildAdvantageItem('💰', 'Mora vidiny', 'Zana-trondro sy sakafo mora noho ny Tilapia'),
+                        _buildAdvantageItem('🐟', 'Polyculture', 'Azo ampiarahina amin\'ny Tilapia na trondro hafa'),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Section 2: Production Cycle
+                  _buildSectionHeader(Icons.calendar_month, '2. Tetiandro Fitantanana', 'Tsingerina 12 volana'),
+                  const SizedBox(height: 16),
+
+                  _buildTimelineItem(1, 'Volana 1-2: Nursery', 'Zana-trondro kely', Colors.blue, [
+                    'Fametrahana zana-trondro (5-10g)',
+                    'Famahanana vovony 3-4 isan\'andro',
+                    'Proteinina 30-35%',
+                  ]),
+                  _buildTimelineItem(3, 'Volana 3-6: Fitomboana', 'Transition phase', Colors.amber, [
+                    'Famindrana amin\'ny farihy lehibe',
+                    'Sakafo pellets + zava-maitso',
+                    'Proteinina 25-28%',
+                  ]),
+                  _buildTimelineItem(7, 'Volana 7-10: Fampatavizana', 'Growing phase', Colors.purple, [
+                    'Sakafo maro karazana (vovo, vary, voankazo)',
+                    'Jereo ny hafanana sy oksizena',
+                    'Tanjona: 800g - 1.2kg',
+                  ]),
+                  _buildTimelineItem(11, 'Volana 11-12: Harvest', 'Vola Miditra', Colors.green, [
+                    'Fanakatonana sakafo 24 ora mialoha',
+                    'Fivarotana: 1.5-2kg isan\'ny iray',
+                    'Tombony: Carpe mora amidy eny an-tsena',
+                  ], isLast: true),
+
+                  const SizedBox(height: 24),
+
+                  // Section 3: Feeding Guide
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.teal.shade800,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                              child: Icon(Icons.restaurant, color: Colors.lime.shade400, size: 24),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('3. Sakafo ho an\'ny Carpe', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                                  Text('Sakafo maro karazana = Tombony bebe kokoa', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        _buildFeedCard('🌾', 'Vary sy Katsaka', 'Angovo lehibe - 30% ny sakafo', Colors.amber),
+                        const SizedBox(height: 10),
+                        _buildFeedCard('🌿', 'Zava-maitso', 'Salady, ravina, ahi-drano - 25%', Colors.green),
+                        const SizedBox(height: 10),
+                        _buildFeedCard('🐛', 'Vovo sy Olitra', 'Proteina - 20%', Colors.brown),
+                        const SizedBox(height: 10),
+                        _buildFeedCard('🥜', 'Tourteau (Soja, Arachide)', 'Proteina mafy - 15%', Colors.orange),
+                        const SizedBox(height: 10),
+                        _buildFeedCard('🍌', 'Voankazo masaka', 'Vitamina sy angovo - 10%', Colors.yellow),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Section 4: Calculator BOM
+                  _buildSectionHeader(Icons.calculate, '4. Kajy ny Fandaniana', 'Bill of Materials'),
+                  const SizedBox(height: 16),
+
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [Colors.teal.shade700, Colors.green.shade600]),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _surfaceController,
+                                keyboardType: TextInputType.number,
+                                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                                decoration: InputDecoration(
+                                  labelText: 'Velarana (m²)',
+                                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            ElevatedButton(
+                              onPressed: _calculateBOM,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.lime,
+                                foregroundColor: Colors.teal.shade900,
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: const Text('KAJY', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+                        if (_showResult) ...[
+                          const SizedBox(height: 20),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              children: [
+                                _buildResultRow('🐟 Zana-trondro ilaina', '$_fingerlings'),
+                                const Divider(color: Colors.white24),
+                                _buildResultRow('🌾 Sakafo (kg/tsingerina)', '$_feedKg kg'),
+                                const Divider(color: Colors.white24),
+                                _buildResultRow('📦 Vokatra (tona)', '${_productionTons.toStringAsFixed(2)} T'),
+                                const Divider(color: Colors.white24),
+                                _buildResultRow('💰 Tanjona (Ar/kg)', '8,000 - 12,000 Ar'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Section 5: Water Quality for Carpe
+                  _buildSectionHeader(Icons.water_drop, '5. Kalitao Rano ho an\'ny Carpe', 'Paramètres optimaux'),
+                  const SizedBox(height: 16),
+
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1.0,
+                    children: [
+                      _buildWaterMiniCard('🌡️', 'Temp', '20-28°C'),
+                      _buildWaterMiniCard('⚗️', 'pH', '7.0-8.0'),
+                      _buildWaterMiniCard('💨', 'O₂', '>4 mg/L'),
+                      _buildWaterMiniCard('👁️', 'Transp.', '25-40cm'),
+                      _buildWaterMiniCard('📏', 'Lalina', '1.2-1.8m'),
+                      _buildWaterMiniCard('🌊', 'Rano', 'Madio'),
+                    ],
+                  ),
+
+                  const SizedBox(height: 30),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricCard(String value, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(IconData icon, String title, String subtitle) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: Colors.teal.shade50, borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: Colors.teal.shade700, size: 24),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.teal.shade800)),
+              Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdvantageItem(String emoji, String title, String description) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 24)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.green.shade800)),
+                Text(description, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineItem(int month, String title, String subtitle, Color color, List<String> items, {bool isLast = false}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            Container(
+              width: 36, height: 36,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              child: Center(child: Text('$month', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14))),
+            ),
+            if (!isLast) Container(width: 2, height: 80, color: color.withValues(alpha: 0.3)),
+          ],
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: color)),
+                Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                 const SizedBox(height: 8),
-                Text('💡 ${param['tips']}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontStyle: FontStyle.italic)),
+                ...items.map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('• ', style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+                      Expanded(child: Text(item, style: const TextStyle(fontSize: 12, height: 1.3))),
+                    ],
+                  ),
+                )),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeedCard(String emoji, String title, String description, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 28)),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                Text(description, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWaterMiniCard(String emoji, String name, String value) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.teal.withValues(alpha: 0.1), blurRadius: 6, offset: const Offset(0, 2))],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 22)),
+          const SizedBox(height: 4),
+          Text(name, style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+          Text(value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.teal.shade700)),
+        ],
+      ),
+    );
+  }
+}
+
+// ========== Business Tilapia Guide Page ==========
+class BusinessTilapiaGuidePage extends StatefulWidget {
+  const BusinessTilapiaGuidePage({super.key});
+
+  @override
+  State<BusinessTilapiaGuidePage> createState() => _BusinessTilapiaGuidePageState();
+}
+
+class _BusinessTilapiaGuidePageState extends State<BusinessTilapiaGuidePage> {
+  final TextEditingController _surfaceController = TextEditingController(text: '200');
+  int _fingerlings = 0;
+  int _feedKg = 0;
+  double _productionTons = 0;
+  bool _showResult = false;
+
+  void _calculateBOM() {
+    final surface = double.tryParse(_surfaceController.text) ?? 0;
+    if (surface <= 0) return;
+
+    const density = 5; // fish per m2
+    const survival = 0.90;
+    const targetWeight = 0.45; // kg (450g)
+    const fcr = 1.2;
+
+    final totalFish = (surface * density).round();
+    final harvestFish = totalFish * survival;
+    final totalBiomass = harvestFish * targetWeight;
+    final totalFeed = totalBiomass * fcr;
+
+    setState(() {
+      _fingerlings = totalFish;
+      _feedKg = totalFeed.round();
+      _productionTons = totalBiomass / 1000;
+      _showResult = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          // Hero Header
+          SliverAppBar(
+            expandedHeight: 280,
+            pinned: true,
+            backgroundColor: const Color(0xFF0f172a),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF0f172a), Color(0xFF1e40af)],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 40),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.bolt, color: Colors.amber.shade300, size: 16),
+                              const SizedBox(width: 6),
+                              Text('VOKATRA HAINGANA', style: TextStyle(color: Colors.amber.shade300, fontSize: 11, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Ny Lalana Mankany\namin\'ny Tombony',
+                          style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold, height: 1.2),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Tanjona: Trondro 400-500g ao anatin\'ny 6 volana',
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Key Metrics
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Metrics Grid
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 0.85,
+                    children: [
+                      _buildMetricCard('140-520m²', 'Velarana', Colors.blue),
+                      _buildMetricCard('6 Volana', 'Tsingerina', Colors.amber),
+                      _buildMetricCard('GIFT', 'Monosex', Colors.green),
+                      _buildMetricCard('40%+', 'Proteinina', Colors.purple),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Section 1: Production Cycle
+                  _buildSectionHeader(Icons.calendar_month, '1. Tetiandro Fitantanana', 'Ny tsingerina "Production Cycle"'),
+                  const SizedBox(height: 16),
+
+                  // Timeline
+                  _buildTimelineItem(1, 'Volana 1: Fiantombohana', 'Nursery', Colors.blue, [
+                    'Fametrahana zana-trondro (1-5g)',
+                    'Famahanana vovony 4-6 isan\'andro',
+                    'Proteinina > 40%',
+                  ]),
+                  
+                  // PARCOURS EXPRESS 1 JOUR - Volana 1
+                  GestureDetector(
+                    onTap: () => _showExpressDay1(context),
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 20, bottom: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.blue.shade700, Colors.cyan.shade600],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [BoxShadow(color: Colors.blue.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text('⚡', style: TextStyle(fontSize: 28)),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text('PARCOURS EXPRESS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(8)),
+                                      child: const Text('1 ANDRO', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 10)),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                const Text('Ny dingana rehetra ho vita amin\'ny andro voalohany', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 18),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  _buildTimelineItem(2, 'Volana 2-3: Fivelarana', 'Fitomboana', Colors.amber, [
+                    'Famindrana amin\'ny tanky lehibe',
+                    'Sakafo pellets kely (2mm)',
+                    'Proteinina 35%',
+                  ]),
+                  _buildTimelineItem(4, 'Volana 4-5: Fibatana', 'Fampatavizana', Colors.purple, [
+                    'Fanaraha-maso ny oksizena isan\'alina',
+                    'Sakafo pellets 4mm',
+                    'Proteinina 30%',
+                  ]),
+                  _buildTimelineItem(6, 'Volana 6: Jono & Tsena', 'Vola Miditra', Colors.green, [
+                    'Fanakatonana sakafo 24 ora mialoha',
+                    'Fivarotana mivantana amin\'ny mpamongady',
+                    'Tanjona: 400g - 500g',
+                  ], isLast: true),
+
+                  const SizedBox(height: 24),
+
+                  // Section 2: Daily Schedule
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0f172a),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                              child: Icon(Icons.schedule, color: Colors.amber.shade400, size: 24),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('2. Asa Isan\'andro', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                                  Text('Fahombiazana = Fifehezana ny fotoana', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        _buildScheduleCard('06:00', 'Maraina', Icons.wb_sunny, Colors.amber, [
+                          'Fandrefesana ny oksizena sy ny hafanana',
+                          'Jereo raha misy trondro mipoitra (piping)',
+                        ]),
+                        const SizedBox(height: 12),
+                        // Water Quality Parameters - GRID CUBES
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(colors: [Colors.blue.shade800, Colors.cyan.shade700]),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Text('💧', style: TextStyle(fontSize: 24)),
+                                  const SizedBox(width: 10),
+                                  const Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('KALITAON\'NY RANO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                                        Text('Tsindrio hijery ny antsipirihany', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              
+                              // Grid of 6 cubes (3x2)
+                              GridView.count(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                childAspectRatio: 1.0,
+                                children: [
+                                  _buildWaterCube(context, '🌡️', 'Temp', '25-30°C', '25-30°C (Tilapia), 20-28°C (Carpe)', '<18°C na >35°C', 'Alokaloka amin\'ny masoandro mafana, ampio rano mangatsiaka rehefa mafana loatra'),
+                                  _buildWaterCube(context, '⚗️', 'pH', '6.5-8.5', '6.5-8.5', '<6 na >9', 'Ampio calcium (coquille) raha ambany loatra, ovao ny rano raha ambony loatra'),
+                                  _buildWaterCube(context, '💨', 'O₂', '>5 mg/L', '>5 mg/L', '<3 mg/L', 'Ampio aérateur, aza mamahana be loatra, ahena ny trondro raha be loatra'),
+                                  _buildWaterCube(context, '⚠️', 'NH₃', '<0.02', '<0.02 mg/L', '>0.1 mg/L (poizina!)', 'Ovao ny rano matetika, aza mamahana be, esory ny fako sy trondro maty'),
+                                  _buildWaterCube(context, '👁️', 'Transp.', '30-40cm', '30-40 cm', '<15 cm (mainty)', 'Raha mainty loatra = plancton be, ovao ny rano 20-30%. Raha mazava loatra = tsy ampy sakafo.'),
+                                  _buildWaterCube(context, '🧪', 'NO₂', '<0.1', '<0.1 mg/L', '>0.5 mg/L', 'Famantarana: gills mena-volontsôkôlà, miantso rivotra. Ovay rano 30-50%, ahena sakafo.'),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildScheduleCard('08:00 - 16:00', 'Andro', Icons.work, Colors.blue, [
+                          'Famahanana in-3 na in-4',
+                          'Omeo izay lany ao anatin\'ny 10 minitra monja',
+                        ]),
+                        const SizedBox(height: 12),
+                        _buildScheduleCard('18:00', 'Hariva', Icons.nightlight_round, Colors.purple, [
+                          'Fanadiovana ny sivana sy ny rafitra',
+                          'Fanamarinana ny fiarovana (Sécurité)',
+                        ]),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Section 3: Budget Calculator
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(color: Colors.green.shade100, borderRadius: BorderRadius.circular(12)),
+                              child: Icon(Icons.calculate, color: Colors.green.shade700, size: 24),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('3. Tombana Tetibola (BOM)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                                  Text('Kajy tsotsotra mifototra amin\'ny velarana', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        const Text('Velarana (m²)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _surfaceController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: 'Ohatra: 200',
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          ),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 6),
+                        Text('Soso-kevitra: 140m² - 520m²', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _calculateBOM,
+                            icon: const Icon(Icons.monetization_on),
+                            label: const Text('Kajio ny Fandaniana'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade700,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                        if (_showResult) ...[
+                          const SizedBox(height: 20),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Vinavina ho an\'ny 6 volana:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                const SizedBox(height: 12),
+                                _buildResultRow('Zana-trondro GIFT (Densité 5/m²):', '$_fingerlings isa', Colors.blue),
+                                const SizedBox(height: 8),
+                                _buildResultRow('Sakafo (FCR 1.2):', '$_feedKg Kg', Colors.amber),
+                                const Divider(height: 20),
+                                _buildResultRow('Vokatra Kendrena:', '${_productionTons.toStringAsFixed(2)} T', Colors.green, isBold: true),
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.info_outline, color: Colors.blue.shade700, size: 18),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: Text('Ny sakafo no mitaky 60-70% ny tetibola. Omano mialoha ny famatsiana.', style: TextStyle(fontSize: 11, color: Colors.blue.shade800))),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricCard(String value, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border(bottom: BorderSide(color: color, width: 3)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8)],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: color), textAlign: TextAlign.center),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 9, color: Colors.grey.shade600), textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(IconData icon, String title, String subtitle) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: Colors.blue.shade100, borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: Colors.blue.shade700, size: 24),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimelineItem(int month, String title, String badge, Color color, List<String> items, {bool isLast = false}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              child: Center(child: Text('$month', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12))),
+            ),
+            if (!isLast) Container(width: 2, height: 80, color: Colors.grey.shade300),
+          ],
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                      child: Text(badge, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ...items.map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.check_circle, color: color, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(item, style: const TextStyle(fontSize: 13))),
+                    ],
+                  ),
+                )),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScheduleCard(String time, String period, IconData icon, Color color, List<String> tasks) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(time, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(width: 8),
+              Text(period, style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+              const Spacer(),
+              Icon(icon, color: color, size: 20),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...tasks.map((task) => Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.check_circle_outline, color: Colors.green.shade400, size: 16),
+                const SizedBox(width: 8),
+                Expanded(child: Text(task, style: TextStyle(fontSize: 12, color: Colors.grey.shade300))),
               ],
             ),
           )),
@@ -31412,6 +32649,613 @@ class TrondroTeknikaScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildResultRow(String label, String value, Color color, {bool isBold = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(fontSize: 13, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+        Text(value, style: TextStyle(fontSize: isBold ? 16 : 14, fontWeight: FontWeight.bold, color: color)),
+      ],
+    );
+  }
+
+  Widget _buildWaterMiniCard(String emoji, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 18)),
+          const SizedBox(height: 4),
+          Text(label, style: const TextStyle(fontSize: 10, color: Colors.white70)),
+          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFullWaterParam(String emoji, String name, String optimal, String danger, String tips) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with emoji and name
+          Row(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 22)),
+              const SizedBox(width: 10),
+              Expanded(child: Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14))),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Optimal value
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.green.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Text('✅', style: TextStyle(fontSize: 14)),
+                const SizedBox(width: 8),
+                const Text('Tsara: ', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                Expanded(child: Text(optimal, style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 12))),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Danger value
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Text('⚠️', style: TextStyle(fontSize: 14)),
+                const SizedBox(width: 8),
+                const Text('Loza: ', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                Expanded(child: Text(danger, style: TextStyle(color: Colors.red.shade300, fontWeight: FontWeight.bold, fontSize: 12))),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Tips
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('💡', style: TextStyle(fontSize: 14)),
+                const SizedBox(width: 8),
+                Expanded(child: Text(tips, style: const TextStyle(color: Colors.white, fontSize: 11, height: 1.4))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExpressDay1(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.9,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [Colors.blue.shade900, const Color(0xFF0a1628)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white38, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 20),
+            // Header
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Text('⚡', style: TextStyle(fontSize: 40)),
+                  SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('PARCOURS EXPRESS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
+                        Text('Andro 1 - Ny fiantombohana rehetra', style: TextStyle(color: Colors.amber, fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Timeline Express
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _buildExpressStep('05:00', 'Maraina be', Icons.alarm, Colors.indigo, [
+                      '🔧 Omano ny fitaovana rehetra (tanky, soron-drano, fampandehanan-drano)',
+                      '💧 Fenoy rano madio ny tanky nursery (200-500L)',
+                      '🌡️ Refeso ny hafanana: 26-28°C no tsara indrindra',
+                    ]),
+                    _buildExpressStep('07:00', 'Fandraisana zana-trondro', Icons.local_shipping, Colors.blue, [
+                      '📦 Raisio ny zana-trondro avy amin\'ny mpamatsy',
+                      '🔍 Jereo tsara: 1-5g, tomady, tsy maratra',
+                      '🏷️ Isao: tanjona 100-200 zana-trondro/m³',
+                    ]),
+                    _buildExpressStep('08:00', 'Acclimatation', Icons.thermostat, Colors.cyan, [
+                      '⏱️ Andraso 20-30 minitra mba hifanaraka ny hafanana',
+                      '💧 Ampidiro kely ny rano anaty tanky (tsikelikely)',
+                      '🐟 Avelao ny zana-trondro hivoaka azy irery',
+                    ]),
+                    _buildExpressStep('09:00', 'Famahanana voalohany', Icons.restaurant, Colors.orange, [
+                      '🥣 Vovony fine (poudre 0.2-0.5mm)',
+                      '📏 Habetsahana: 8-10% lanja vatana / andro',
+                      '⏱️ Zarao in-4: 9h, 11h, 14h, 16h',
+                    ]),
+                    _buildExpressStep('10:00', 'Fanaraha-maso', Icons.visibility, Colors.purple, [
+                      '👁️ Jereo raha misakafo tsara ny rehetra',
+                      '🚫 Esory izay tsy misakafo na marary',
+                      '📝 Soraty: isan\'ny zana-trondro, olana hita',
+                    ]),
+                    _buildExpressStep('12:00', 'Famahanana 2', Icons.lunch_dining, Colors.amber, [
+                      '🥣 Vovony - ampahany faharoa',
+                      '💧 Jereo ny kalitao rano (pH, oksizena)',
+                      '🌡️ Hafanana tokony ho 26-30°C',
+                    ]),
+                    _buildExpressStep('14:00', 'Famahanana 3 + Fanadihadiana', Icons.science, Colors.teal, [
+                      '🥣 Vovony - ampahany fahatelo',
+                      '📊 Refeso: pH (6.5-8.5), O₂ (>5mg/L)',
+                      '🔄 Raha ilaina: ovao 10-20% rano',
+                    ]),
+                    _buildExpressStep('16:00', 'Famahanana farany', Icons.dinner_dining, Colors.deepOrange, [
+                      '🥣 Vovony - ampahany fahaefatra (farany)',
+                      '🧹 Esory ny sisa-tsakafo tsy lany',
+                      '✅ Jereo fa misakafo tsara daholo',
+                    ]),
+                    _buildExpressStep('18:00', 'Fiomanana alina', Icons.nights_stay, Colors.deepPurple, [
+                      '🔦 Ampidiro jiro maivana (raha mety)',
+                      '💨 Asio aérateur raha tsy ampy oksizena',
+                      '🌡️ Refeso ny hafanana farany',
+                    ], isLast: true),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Summary Box
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [Colors.green.shade700, Colors.teal.shade600]),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        children: [
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('✅', style: TextStyle(fontSize: 24)),
+                              SizedBox(width: 10),
+                              Text('CHECKLIST ANDRO 1', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          _buildCheckItem('Tanky nursery vonona'),
+                          _buildCheckItem('Zana-trondro noraisina (100-200)'),
+                          _buildCheckItem('Acclimatation vita'),
+                          _buildCheckItem('Famahanana in-4 vita'),
+                          _buildCheckItem('Fanadihadiana rano vita'),
+                          _buildCheckItem('Antontan-taratasy voarakitra'),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 30),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpressStep(String time, String title, IconData icon, Color color, List<String> tasks, {bool isLast = false}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Timeline line
+        Column(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 10, offset: const Offset(0, 4))],
+              ),
+              child: Icon(icon, color: Colors.white, size: 26),
+            ),
+            if (!isLast)
+              Container(
+                width: 3,
+                height: 60,
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(width: 14),
+        // Content
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(color: color.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(8)),
+                      child: Text(time, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ...tasks.map((task) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(task, style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4)),
+                )),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCheckItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)),
+            child: const Icon(Icons.check, color: Colors.white, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Text(text, style: const TextStyle(color: Colors.white, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWaterCube(BuildContext context, String emoji, String shortName, String shortValue, String optimal, String danger, String tips) {
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          builder: (context) => Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.blue.shade900, Colors.cyan.shade800]),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(color: Colors.white38, borderRadius: BorderRadius.circular(2)),
+                ),
+                const SizedBox(height: 20),
+                Text(emoji, style: const TextStyle(fontSize: 48)),
+                const SizedBox(height: 12),
+                Text(shortName, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 20),
+                // Optimal
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('✅', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Tsara', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                            Text(optimal, style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Danger
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('⚠️', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Loza', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                            Text(danger, style: TextStyle(color: Colors.red.shade300, fontWeight: FontWeight.bold, fontSize: 14)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Tips
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('💡', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(tips, style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.5))),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 26)),
+            const SizedBox(height: 4),
+            Text(shortName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+            const SizedBox(height: 2),
+            Text(shortValue, style: const TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.w500)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Helper to show Teknika details as a modal bottom sheet
+void _buildTeknikaDetailsSheet(BuildContext context, Map<String, dynamic> teknika) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8F9FA), // Light grey background
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: (teknika['color'] as Color).withValues(alpha: 0.1),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Row(
+              children: [
+                Text(teknika['emoji'] as String, style: const TextStyle(fontSize: 32)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        teknika['title'] as String,
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: (teknika['color'] as Color)),
+                      ),
+                      Text(
+                        teknika['description'] as String,
+                        style: TextStyle(fontSize: 13, color: Colors.black87),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.black54),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          // Content
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                // Quick stats
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: (teknika['color'] as Color).withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.center,
+                    children: (teknika['details'] as List).map((d) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: (teknika['color'] as Color).withValues(alpha: 0.3)),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(d['label'] as String, style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+                          const SizedBox(height: 2),
+                          Text(d['value'] as String, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: teknika['color'] as Color)),
+                        ],
+                      ),
+                    )).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Advantages
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.green.shade200, width: 1.5),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('✅ TOMBONTSOA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.green.shade800)),
+                      const SizedBox(height: 10),
+                      ...(teknika['advantages'] as List).map((a) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('• ', style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold)),
+                            Expanded(child: Text(a as String, style: const TextStyle(fontSize: 13, height: 1.4))),
+                          ],
+                        ),
+                      )),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Requirements
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.shade200, width: 1.5),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('⚙️ ZAVATRA ILAINA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.orange.shade800)),
+                      const SizedBox(height: 10),
+                      ...(teknika['requirements'] as List).map((r) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('• ', style: TextStyle(color: Colors.orange.shade700, fontWeight: FontWeight.bold)),
+                            Expanded(child: Text(r as String, style: const TextStyle(fontSize: 13, height: 1.4))),
+                          ],
+                        ),
+                      )),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Investment
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.shade100, Colors.cyan.shade100],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('💰', style: TextStyle(fontSize: 32)),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('FAMPIASAM-BOLA (TOMBANA)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black54)),
+                          Text(teknika['investment'] as String, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 // ========== Trondro Prices Screen ==========
@@ -31470,83 +33314,242 @@ class TrondroPricesScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.green.shade700, Colors.teal.shade600]),
-              borderRadius: BorderRadius.circular(16),
+      backgroundColor: const Color(0xFFF0F4F8),
+      body: CustomScrollView(
+        slivers: [
+          // Hero Header
+          SliverAppBar(
+            expandedHeight: 180,
+            pinned: true,
+            backgroundColor: Colors.green.shade700,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
             ),
-            child: Row(
-              children: [
-                const Text('💰', style: TextStyle(fontSize: 40)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('VIDIN\'NY TRONDRO',
-                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('Vidin\'ny zanany (Fingerling) sy Géniteur',
-                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12)),
-                    ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade700, Colors.teal.shade600],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                 ),
-              ],
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Text('💰', style: TextStyle(fontSize: 42)),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('VIDIN\'NY TRONDRO',
+                                      style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                                  Text('Vidin\'ny zanany (Fingerling) sy Géniteur',
+                                      style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 20),
-          
-          ...prices.map((group) => Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+
+          // Species Grid (2x2)
+          SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Quick Market Prices - Grid Cubes
                   Row(
                     children: [
-                      Text(group['emoji'] as String, style: const TextStyle(fontSize: 24)),
-                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text('📊', style: TextStyle(fontSize: 24)),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('VIDINY ENY AN-TSENA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green.shade800)),
+                          Text('Tsindrio hijery ny antsipirihany', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Species Grid
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.0,
+                    ),
+                    itemCount: prices.length,
+                    itemBuilder: (context, index) {
+                      final group = prices[index];
+                      final color = group['color'] as Color;
+                      return GestureDetector(
+                        onTap: () => _showPriceDetails(context, group),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 4))],
+                          ),
+                          child: Stack(
+                            children: [
+                              // Background emoji
+                              Positioned(
+                                right: -10,
+                                bottom: -10,
+                                child: Text(group['emoji'] as String, style: TextStyle(fontSize: 80, color: Colors.white.withValues(alpha: 0.2))),
+                              ),
+                              // Content
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(group['emoji'] as String, style: const TextStyle(fontSize: 36)),
+                                    const Spacer(),
+                                    Text(
+                                      (group['species'] as String).split(' ')[0],
+                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        group['marketPrice'] as String,
+                                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Info Box
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [Colors.blue.shade100, Colors.cyan.shade100]),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('💡', style: TextStyle(fontSize: 28)),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Fanombanana vidiny', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blue.shade800)),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Ireo vidiny ireo dia mety miovaova arakaraka ny faritra sy ny fotoana. Ny vidiny eny an-tsena dia ho an\'ny trondro varotra (>300g).',
+                                style: TextStyle(fontSize: 11, color: Colors.blue.shade700, height: 1.4),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPriceDetails(BuildContext context, Map<String, dynamic> group) {
+    final color = group['color'] as Color;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Column(
+                children: [
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white38, borderRadius: BorderRadius.circular(2))),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Text(group['emoji'] as String, style: const TextStyle(fontSize: 48)),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              group['species'] as String,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: group['color'] as Color,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
+                            Text(group['species'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                            const SizedBox(height: 6),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
-                                color: (group['color'] as Color).withOpacity(0.1),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: (group['color'] as Color).withOpacity(0.3)),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.store, size: 14, color: Colors.grey),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Tsena: ${group['marketPrice']}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey.shade800,
-                                    ),
-                                  ),
+                                  const Icon(Icons.storefront, color: Colors.white, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text('Tsena: ${group['marketPrice']}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                                 ],
                               ),
                             ),
@@ -31555,22 +33558,71 @@ class TrondroPricesScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const Divider(height: 24),
-                  ...(group['items'] as List<Map<String, String>>).map((item) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(child: Text(item['name']!, style: const TextStyle(fontWeight: FontWeight.w500))),
-                        Text(item['price']!, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-                      ],
-                    ),
-                  )),
                 ],
               ),
             ),
-          )),
-        ],
+            
+            // Price List
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  Row(
+                    children: [
+                      const Text('🏷️', style: TextStyle(fontSize: 22)),
+                      const SizedBox(width: 10),
+                      Text('Vidiny fingerling sy géniteur', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey.shade800)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ...(group['items'] as List<Map<String, String>>).asMap().entries.map((entry) {
+                    final item = entry.value;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: color.withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(child: Text('${entry.key + 1}', style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 16))),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(item['name']!, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade50,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(item['price']!, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green.shade700, fontSize: 12)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -31893,7 +33945,7 @@ class _TrondroFeedScreenState extends State<TrondroFeedScreen> {
                       const Text('SAKAFO TRONDRO',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Fomba famahanana Tilapia sy Carpe',
-                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -31909,7 +33961,7 @@ class _TrondroFeedScreenState extends State<TrondroFeedScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 6)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -32248,7 +34300,7 @@ class _TrondroFeedScreenState extends State<TrondroFeedScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -32367,7 +34419,7 @@ class _TrondroFeedScreenState extends State<TrondroFeedScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -32444,6 +34496,7 @@ class TrondroHealthScreen extends StatelessWidget {
       {
         'name': 'Aretina hoditra (Ich / White Spot)',
         'emoji': '⚪',
+        'color': Colors.grey,
         'symptoms': ['Pentina fotsy eo amin\'ny hoditra', 'Miparitaka mafy', 'Tsy te-hisakafo', 'Mikitroka amin\'ny rindrina'],
         'causes': 'Parasita (Ichthyophthirius), rano maloto, stress',
         'treatment': [
@@ -32457,6 +34510,7 @@ class TrondroHealthScreen extends StatelessWidget {
       {
         'name': 'Aretina bakteria (Aeromonas)',
         'emoji': '🦠',
+        'color': Colors.red,
         'symptoms': ['Fery eo amin\'ny vatana', 'Menaka mivoaka', 'Kibo mivonto', 'Maso mibontsina'],
         'causes': 'Bakteria (Aeromonas hydrophila), rano maloto, fery',
         'treatment': [
@@ -32470,6 +34524,7 @@ class TrondroHealthScreen extends StatelessWidget {
       {
         'name': 'Fongoza (Saprolegnia)',
         'emoji': '🍄‍🟫',
+        'color': Colors.brown,
         'symptoms': ['Fotaka fotsy eo amin\'ny hoditra', 'Toy ny coton', 'Rameva simba'],
         'causes': 'Champignon, rano ratsy, fery efa misy',
         'treatment': [
@@ -32482,6 +34537,7 @@ class TrondroHealthScreen extends StatelessWidget {
       {
         'name': 'Tsy fahampian\'oxygène',
         'emoji': '💨',
+        'color': Colors.blue,
         'symptoms': ['Misokatra eo ambonin\'ny rano', 'Miaina mafy', 'Tsy mihetsika', 'Maty tampoka'],
         'causes': 'Rano be loatra, mafana loatra, plancton be loatra',
         'treatment': [
@@ -32504,128 +34560,346 @@ class TrondroHealthScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.red.shade600, Colors.pink.shade600]),
-              borderRadius: BorderRadius.circular(16),
+      backgroundColor: const Color(0xFFF0F4F8),
+      body: CustomScrollView(
+        slivers: [
+          // Hero Header
+          SliverAppBar(
+            expandedHeight: 180,
+            pinned: true,
+            backgroundColor: Colors.red.shade600,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
             ),
-            child: Row(
-              children: [
-                const Text('🩺', style: TextStyle(fontSize: 40)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('FAHASALAMANA TRONDRO',
-                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('Aretina sy fitsaboana',
-                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
-                    ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.red.shade700, Colors.pink.shade600],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Health Tips
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Text('💡', style: TextStyle(fontSize: 24)),
-                    SizedBox(width: 8),
-                    Text('TOROHEVITRA FAHASALAMANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: healthTips.map((tip) => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.green.shade300),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(tip['icon'] as String, style: const TextStyle(fontSize: 14)),
-                        const SizedBox(width: 6),
-                        Flexible(child: Text(tip['tip'] as String, style: const TextStyle(fontSize: 11))),
+                        Row(
+                          children: [
+                            const Text('🩺', style: TextStyle(fontSize: 42)),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('FAHASALAMANA TRONDRO',
+                                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                                  Text('Aretina sy fitsaboana',
+                                      style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                  )).toList(),
+                  ),
                 ),
-              ],
+              ),
             ),
           ),
 
-          const SizedBox(height: 20),
-
-          const Text('ARETINA MAHAZATRA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
-
-          // Diseases
-          ...diseases.map((disease) => Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
-            ),
-            child: Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                leading: Text(disease['emoji'] as String, style: const TextStyle(fontSize: 28)),
-                title: Text(disease['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                subtitle: Text('Antony: ${disease['causes']}', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
+                  // Health Tips - Grid Cubes
+                  Container(
                     padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [Colors.green.shade600, Colors.teal.shade600]),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('🔍 Famantarana:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                        ...(disease['symptoms'] as List).map((sym) => Padding(
-                          padding: const EdgeInsets.only(left: 16, top: 2),
-                          child: Text('• $sym', style: TextStyle(fontSize: 11, color: Colors.grey.shade700)),
-                        )),
-                        const SizedBox(height: 12),
-                        const Text('💊 Fitsaboana:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.green)),
-                        ...(disease['treatment'] as List).map((treat) => Padding(
-                          padding: const EdgeInsets.only(left: 16, top: 2),
-                          child: Text('• $treat', style: TextStyle(fontSize: 11, color: Colors.grey.shade700)),
-                        )),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(8),
+                        const Row(
+                          children: [
+                            Text('💡', style: TextStyle(fontSize: 26)),
+                            SizedBox(width: 10),
+                            Text('TOROHEVITRA FAHASALAMANA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 0.85,
+                          children: healthTips.map((tip) => Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(tip['icon'] as String, style: const TextStyle(fontSize: 28)),
+                                const SizedBox(height: 6),
+                                Text(
+                                  tip['tip'] as String, 
+                                  style: const TextStyle(color: Colors.white, fontSize: 9, height: 1.3),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          )).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Section Header - Diseases
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text('🦠', style: TextStyle(fontSize: 24)),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('ARETINA MAHAZATRA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.red.shade800)),
+                          Text('Tsindrio hijery ny antsipirihany', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Diseases Grid
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.1,
+                    ),
+                    itemCount: diseases.length,
+                    itemBuilder: (context, index) {
+                      final disease = diseases[index];
+                      final color = disease['color'] as Color;
+                      return GestureDetector(
+                        onTap: () => _showDiseaseDetails(context, disease),
+                        child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(6),
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4))],
+                            border: Border.all(color: color.withValues(alpha: 0.3)),
                           ),
-                          child: Row(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text('🛡️ ', style: TextStyle(fontSize: 14)),
-                              Expanded(child: Text('Fisorohana: ${disease['prevention']}', style: TextStyle(fontSize: 11, color: Colors.blue.shade800))),
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(disease['emoji'] as String, style: const TextStyle(fontSize: 30)),
+                              ),
+                              const SizedBox(height: 10),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: Text(
+                                  disease['name'] as String,
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: color),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDiseaseDetails(BuildContext context, Map<String, dynamic> disease) {
+    final color = disease['color'] as Color;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Column(
+                children: [
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white38, borderRadius: BorderRadius.circular(2))),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Text(disease['emoji'] as String, style: const TextStyle(fontSize: 48)),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(disease['name'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                            const SizedBox(height: 4),
+                            Text('Antony: ${disease['causes']}', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            // Content
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  // Symptoms
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Text('🔍', style: TextStyle(fontSize: 22)),
+                            const SizedBox(width: 10),
+                            Text('Famantarana', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.orange.shade800)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        ...(disease['symptoms'] as List).map((sym) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('• ', style: TextStyle(color: Colors.orange.shade700, fontWeight: FontWeight.bold, fontSize: 14)),
+                              Expanded(child: Text(sym as String, style: const TextStyle(fontSize: 13, height: 1.4))),
+                            ],
+                          ),
+                        )),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Treatment
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Text('💊', style: TextStyle(fontSize: 22)),
+                            const SizedBox(width: 10),
+                            Text('Fitsaboana', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.green.shade800)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        ...(disease['treatment'] as List).asMap().entries.map((entry) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(color: Colors.green.shade600, shape: BoxShape.circle),
+                                child: Center(child: Text('${entry.key + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(child: Text(entry.value as String, style: const TextStyle(fontSize: 13, height: 1.4))),
+                            ],
+                          ),
+                        )),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Prevention
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [Colors.blue.shade100, Colors.cyan.shade100]),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('🛡️', style: TextStyle(fontSize: 32)),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Fisorohana', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blue.shade800)),
+                              const SizedBox(height: 4),
+                              Text(disease['prevention'] as String, style: TextStyle(fontSize: 13, color: Colors.blue.shade700, height: 1.4)),
                             ],
                           ),
                         ),
@@ -32635,8 +34909,8 @@ class TrondroHealthScreen extends StatelessWidget {
                 ],
               ),
             ),
-          )),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -32736,7 +35010,7 @@ class TrondroWaterScreen extends StatelessWidget {
                       const Text('FITANTANANA RANO',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Kalitao sy fikojakojana rano',
-                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -32756,7 +35030,7 @@ class TrondroWaterScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -32832,7 +35106,7 @@ class TrondroWaterScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -33097,7 +35371,7 @@ class TantelyHivesScreen extends StatelessWidget {
                       const Text('TOHO-TANTELY & FITAOVANA',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Karazana toho-tantely sy fitaovana ilaina',
-                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -33113,7 +35387,7 @@ class TantelyHivesScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -33187,7 +35461,7 @@ class TantelyHivesScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -33273,7 +35547,7 @@ class TantelyHivesScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -33437,7 +35711,7 @@ class TantelyProductsScreen extends StatelessWidget {
                       const Text('VOKATRA TANTELY',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Tantely, Savoka, Propolis, Gelée royale...',
-                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -33504,7 +35778,7 @@ class TantelyProductsScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -33681,7 +35955,7 @@ class TantelyHealthScreen extends StatelessWidget {
                       const Text('FAHASALAMAN\'NY TANTELY',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Aretina sy fitsaboana - Fisorohana',
-                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -33740,7 +36014,7 @@ class TantelyHealthScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -33979,7 +36253,7 @@ class TantelyCalendarScreen extends StatelessWidget {
                       const Text('TETIANDRO APICULTURE',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('Asa tokony atao isam-bolana',
-                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -34024,7 +36298,7 @@ class TantelyCalendarScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -34088,14 +36362,14 @@ class TantelyCalendarScreen extends StatelessWidget {
   }
 }
 
-// ==================== OLITRATECH - INSECT FARMING ====================
+// ==================== BIBIKELYTECH - INSECT FARMING ====================
 
-// ========== Olitra Stage Details Page ==========
-class OlitraStageDetailsPage extends StatelessWidget {
+// ========== Bibikely Stage Details Page ==========
+class BibikelyStageDetailsPage extends StatelessWidget {
   final Map<String, dynamic> stage;
   final Map<String, dynamic> guide;
 
-  const OlitraStageDetailsPage({
+  const BibikelyStageDetailsPage({
     super.key,
     required this.stage,
     required this.guide,
@@ -34304,7 +36578,7 @@ class _CricketGuideEbookPageState extends State<CricketGuideEbookPage> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -34356,7 +36630,7 @@ class _CricketGuideEbookPageState extends State<CricketGuideEbookPage> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.green.withOpacity(0.3),
+                    color: Colors.green.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -34368,7 +36642,7 @@ class _CricketGuideEbookPageState extends State<CricketGuideEbookPage> {
             Text(
               'Torolalana momba ny Fiompiana',
               textAlign: TextAlign.center,
-              style: GoogleFonts.playfairDisplay(
+              style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: Colors.brown[800],
@@ -34387,7 +36661,7 @@ class _CricketGuideEbookPageState extends State<CricketGuideEbookPage> {
             Text(
               'Torolalana Feno sy "Boaty 3"',
               textAlign: TextAlign.center,
-              style: GoogleFonts.lato(
+              style: TextStyle(
                 fontSize: 18,
                 fontStyle: FontStyle.italic,
                 color: Colors.brown[600],
@@ -34938,7 +37212,7 @@ class _CricketGuideEbookPageState extends State<CricketGuideEbookPage> {
                 Expanded(
                   child: Text(
                     title,
-                    style: GoogleFonts.playfairDisplay(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.brown[800],
@@ -34996,7 +37270,7 @@ class _CricketGuideEbookPageState extends State<CricketGuideEbookPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                   border: Border.all(color: color),
                 ),
@@ -35028,7 +37302,7 @@ class _CricketGuideEbookPageState extends State<CricketGuideEbookPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5, offset: const Offset(0, 2)),
         ],
         border: Border.all(color: Colors.grey[200]!),
       ),
@@ -35060,14 +37334,14 @@ class _CricketGuideEbookPageState extends State<CricketGuideEbookPage> {
 }
 
 // ========== Olitra Species Screen ==========
-class OlitraSpeciesScreen extends StatefulWidget {
-  const OlitraSpeciesScreen({super.key});
+class BibikelySpeciesScreen extends StatefulWidget {
+  const BibikelySpeciesScreen({super.key});
 
   @override
-  State<OlitraSpeciesScreen> createState() => _OlitraSpeciesScreenState();
+  State<BibikelySpeciesScreen> createState() => _BibikelySpeciesScreenState();
 }
 
-class _OlitraSpeciesScreenState extends State<OlitraSpeciesScreen> {
+class _BibikelySpeciesScreenState extends State<BibikelySpeciesScreen> {
   double _bsfEggs = 1.0;
 
   final Map<String, Map<String, dynamic>> _bsfStageGuides = {
@@ -35245,50 +37519,257 @@ class _OlitraSpeciesScreenState extends State<OlitraSpeciesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.brown.shade800,
-        elevation: 0,
-        title: const Text('Karazana Olitra', style: TextStyle(fontWeight: FontWeight.bold)),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 1,
-                mainAxisSpacing: 16,
-                childAspectRatio: 2.5,
+      backgroundColor: const Color(0xFFF0F4F8),
+      body: CustomScrollView(
+        slivers: [
+          // Hero Header
+          SliverAppBar(
+            expandedHeight: 180,
+            pinned: true,
+            backgroundColor: Colors.brown.shade800,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.brown.shade800, Colors.orange.shade700],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Text('🪱', style: TextStyle(fontSize: 42)),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('KARAZANA OLITRA',
+                                      style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                                  Text('Safidio ny olitra tianao hiompiana',
+                                      style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Species Grid
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSpeciesCard(
-                    context,
-                    'BSF (Lalitra Mainty)',
-                    'Hermetia illucens',
-                    Icons.bug_report,
-                    Colors.green,
-                    'assets/images/8.png',
-                    () => _buildBSFTab(),
+                  // Info header
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.brown.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text('🐛', style: TextStyle(fontSize: 24)),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('OLITRA FIOMPIANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.brown.shade800)),
+                          Text('Tsindrio hijery ny antsipirihany', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                        ],
+                      ),
+                    ],
                   ),
-                  _buildSpeciesCard(
-                    context,
-                    'Ver de Farine (Kankana)',
-                    'Tenebrio molitor',
-                    Icons.grain,
-                    Colors.orange,
-                    'assets/images/13.png',
-                    () => _buildMealwormTab(),
+                  const SizedBox(height: 20),
+
+                  // 2x2 Grid of species
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                    childAspectRatio: 0.85,
+                    children: [
+                      _buildSpeciesCube(
+                        context,
+                        'BSF',
+                        'Lalitra Mainty',
+                        '🪰',
+                        Colors.green,
+                        'Hermetia illucens',
+                        '14-45 andro',
+                        () => _buildBSFTab(),
+                      ),
+                      _buildSpeciesCube(
+                        context,
+                        'Ver de Farine',
+                        'Kankana',
+                        '🪱',
+                        Colors.orange,
+                        'Tenebrio molitor',
+                        '2-10 volana',
+                        () => _buildMealwormTab(),
+                      ),
+                      _buildSpeciesCube(
+                        context,
+                        'Sahobaka',
+                        'Grillon',
+                        '🦗',
+                        Colors.brown,
+                        'Acheta domesticus',
+                        '2-3 volana',
+                        () => _buildCricketTab(),
+                      ),
+                      _buildInfoCube(),
+                    ],
                   ),
-                  _buildSpeciesCard(
-                    context,
-                    'Sahobaka (Grillon)',
-                    'Acheta domesticus',
-                    Icons.music_note,
-                    Colors.brown,
-                    'assets/images/17.jpg',
-                    () => _buildCricketTab(),
+
+                  const SizedBox(height: 20),
+
+                  // Tips section
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [Colors.amber.shade100, Colors.orange.shade100]),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('💡', style: TextStyle(fontSize: 28)),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Inona no tsara indrindra?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.brown.shade800)),
+                              const SizedBox(height: 4),
+                              Text(
+                                'BSF = haingana, protéina be. Kankana = tsara ho an\'ny vorona. Sahobaka = mora atao, mihinana voajanahary.',
+                                style: TextStyle(fontSize: 11, color: Colors.brown.shade700, height: 1.4),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSpeciesCube(BuildContext context, String title, String subtitle, String emoji, Color color, String scientific, String duration, Widget Function() builder) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => Scaffold(
+          appBar: AppBar(title: Text('$title - $subtitle'), backgroundColor: color),
+          body: builder(),
+        )));
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 4))],
+        ),
+        child: Stack(
+          children: [
+            // Background emoji
+            Positioned(
+              right: -10,
+              bottom: -10,
+              child: Text(emoji, style: TextStyle(fontSize: 80, color: Colors.white.withValues(alpha: 0.2))),
+            ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 36)),
+                  const Spacer(),
+                  Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '⏱️ $duration',
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCube() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blueGrey.shade400, Colors.blueGrey.shade300],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.blueGrey.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('📊', style: TextStyle(fontSize: 36)),
+            const Spacer(),
+            const Text('Fanampiny', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text('Fampitahana', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Ho avy...',
+                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -35318,7 +37799,7 @@ class _OlitraSpeciesScreenState extends State<OlitraSpeciesScreen> {
                   child: Image.asset(
                     imagePath,
                     fit: BoxFit.cover,
-                    errorBuilder: (c, o, s) => Container(color: color.withOpacity(0.1)),
+                    errorBuilder: (c, o, s) => Container(color: color.withValues(alpha: 0.1)),
                   ),
                 ),
               ),
@@ -35329,7 +37810,7 @@ class _OlitraSpeciesScreenState extends State<OlitraSpeciesScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.2),
+                      color: color.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(icon, size: 40, color: color),
@@ -35601,7 +38082,7 @@ class _OlitraSpeciesScreenState extends State<OlitraSpeciesScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -35630,7 +38111,7 @@ class _OlitraSpeciesScreenState extends State<OlitraSpeciesScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => OlitraStageDetailsPage(
+                        builder: (context) => BibikelyStageDetailsPage(
                           stage: stage,
                           guide: guide,
                         ),
@@ -35709,7 +38190,7 @@ class _OlitraSpeciesScreenState extends State<OlitraSpeciesScreen> {
                       style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.2),
+                        fillColor: Colors.white.withValues(alpha: 0.2),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                         suffixText: 'g',
                         suffixStyle: const TextStyle(color: Colors.white70),
@@ -35729,7 +38210,7 @@ class _OlitraSpeciesScreenState extends State<OlitraSpeciesScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -35743,7 +38224,7 @@ class _OlitraSpeciesScreenState extends State<OlitraSpeciesScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -35977,7 +38458,7 @@ class _OlitraSpeciesScreenState extends State<OlitraSpeciesScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -36053,8 +38534,8 @@ class _OlitraSpeciesScreenState extends State<OlitraSpeciesScreen> {
 }
 
 // ========== Karazana Olitra Screen (Species Comparison) ==========
-class OlitraSpeciesComparisonScreen extends StatelessWidget {
-  const OlitraSpeciesComparisonScreen({Key? key}) : super(key: key);
+class BibikelySpeciesComparisonScreen extends StatelessWidget {
+  const BibikelySpeciesComparisonScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -36184,7 +38665,7 @@ class OlitraSpeciesComparisonScreen extends StatelessWidget {
           },
         ],
         'price': {
-          'olitra': '15,000-25,000 Ar/kg (olitra velona)',
+          'olitra': '15,000-25,000 Ar/kg (bibikely velona)',
           'maina': '40,000-60,000 Ar/kg (olitra maina)',
           'eggs': '50,000-100,000 Ar/g (atody)',
           'frass': '5,000-10,000 Ar/kg (zezika)',
@@ -36209,7 +38690,7 @@ class OlitraSpeciesComparisonScreen extends StatelessWidget {
         'uses': ['Sakafo akoho', 'Sakafo trondro', 'Sakafo vorona', 'Sakafo olona', 'Pet food'],
         'production': '2-4 kg olitra/m²/volana',
         'price': {
-          'olitra': '25,000-40,000 Ar/kg (olitra velona)',
+          'olitra': '25,000-40,000 Ar/kg (bibikely velona)',
           'maina': '60,000-100,000 Ar/kg (olitra maina)',
           'adults': '30,000-50,000 Ar/100 (scarabée mpanampy)',
         },
@@ -36272,7 +38753,7 @@ class OlitraSpeciesComparisonScreen extends StatelessWidget {
                       const Text('KARAZANA OLITRA',
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       Text('BSF, Vers de farine, Grillons...',
-                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -36321,7 +38802,7 @@ class OlitraSpeciesComparisonScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -36408,7 +38889,7 @@ class OlitraSpeciesComparisonScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -36493,25 +38974,50 @@ class OlitraSpeciesComparisonScreen extends StatelessWidget {
 }
 
 // ========== Olitra Feed Screen ==========
-class OlitraFeedScreen extends StatelessWidget {
-  const OlitraFeedScreen({super.key});
+class BibikelyFeedScreen extends StatelessWidget {
+  const BibikelyFeedScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final bsfFeeds = [
-      {'name': 'Fako sakafo (sisan-tsakafo)', 'quality': 'Tsara indrindra', 'emoji': '🍌', 'details': 'Ravina legioma, hoditry voankazo, sisa-mofo'},
-      {'name': 'Fako voankazo', 'quality': 'Tsara', 'emoji': '🍎', 'details': 'Mango, papay, voasary lo - mitombo haingana'},
-      {'name': 'Tain-biby (zezika)', 'quality': 'Tsara', 'emoji': '💩', 'details': 'Tain-kisoa, tain-omby - protéine betsaka'},
-      {'name': 'Apombombary (Son de Riz)', 'quality': 'Antonony', 'emoji': '🌾', 'details': 'Azo ampiana amin\'ny fako hafa'},
-      {'name': 'Fako legioma', 'quality': 'Tsara', 'emoji': '🥬', 'details': 'Ravina, fotony - mora lo'},
-    ];
-
-    final mealwormFeeds = [
-      {'name': 'Apombombary (Son de Riz/Blé)', 'quality': 'Tsara indrindra', 'emoji': '🌾', 'details': 'Sakafo fototra - tsy maintsy misy'},
-      {'name': 'Lafarinina katsaka', 'quality': 'Tsara', 'emoji': '🌽', 'details': 'Azo ampifangaroina amin\'ny paraky'},
-      {'name': 'Karoty/Patsa', 'quality': 'Tsara', 'emoji': '🥕', 'details': 'Loharano hamandoana - tsy mila rano'},
-      {'name': 'Ovy mamy', 'quality': 'Tsara', 'emoji': '🍠', 'details': 'Hamandoana sy glucides'},
-      {'name': 'Sisa-mofo', 'quality': 'Antonony', 'emoji': '🍞', 'details': 'Glucides - aza be loatra'},
+    final feedCategories = [
+      {
+        'title': 'BSF',
+        'subtitle': 'Sakafo Lalitra Mainty',
+        'emoji': '🪰',
+        'color': Colors.green,
+        'feeds': [
+          {'name': 'Fako sakafo', 'quality': 'Tsara indrindra', 'emoji': '🍌'},
+          {'name': 'Fako voankazo', 'quality': 'Tsara', 'emoji': '🍎'},
+          {'name': 'Tain-biby', 'quality': 'Tsara', 'emoji': '💩'},
+          {'name': 'Apombombary', 'quality': 'Antonony', 'emoji': '🌾'},
+          {'name': 'Fako legioma', 'quality': 'Tsara', 'emoji': '🥬'},
+        ],
+      },
+      {
+        'title': 'Kankana',
+        'subtitle': 'Ver de Farine',
+        'emoji': '🪱',
+        'color': Colors.orange,
+        'feeds': [
+          {'name': 'Apombombary', 'quality': 'Tsara indrindra', 'emoji': '🌾'},
+          {'name': 'Lafarinina katsaka', 'quality': 'Tsara', 'emoji': '🌽'},
+          {'name': 'Karoty/Patsa', 'quality': 'Tsara', 'emoji': '🥕'},
+          {'name': 'Ovy mamy', 'quality': 'Tsara', 'emoji': '🍠'},
+          {'name': 'Sisa-mofo', 'quality': 'Antonony', 'emoji': '🍞'},
+        ],
+      },
+      {
+        'title': 'Sahobaka',
+        'subtitle': 'Grillon',
+        'emoji': '🦗',
+        'color': Colors.brown,
+        'feeds': [
+          {'name': 'Legioma', 'quality': 'Tsara indrindra', 'emoji': '🥬'},
+          {'name': 'Voankazo', 'quality': 'Tsara', 'emoji': '🍎'},
+          {'name': 'Cerealy', 'quality': 'Tsara', 'emoji': '🌾'},
+          {'name': 'Proteinina', 'quality': 'Ilaina', 'emoji': '🥚'},
+        ],
+      },
     ];
 
     final feedingTips = [
@@ -36523,199 +39029,276 @@ class OlitraFeedScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.green.shade600, Colors.teal.shade600]),
-              borderRadius: BorderRadius.circular(16),
+      backgroundColor: const Color(0xFFF0F4F8),
+      body: CustomScrollView(
+        slivers: [
+          // Hero Header
+          SliverAppBar(
+            expandedHeight: 180,
+            pinned: true,
+            backgroundColor: Colors.green.shade700,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
             ),
-            child: Row(
-              children: [
-                const Text('🥬', style: TextStyle(fontSize: 40)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('SAKAFO OLITRA',
-                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('Fako organika sy cerealy',
-                          style: TextStyle(color: Colors.white.withOpacity( 0.9), fontSize: 12)),
-                    ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade700, Colors.teal.shade600],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // BSF Feeds
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Text('🪰', style: TextStyle(fontSize: 24)),
-                    SizedBox(width: 8),
-                    Text('SAKAFO BSF (Black Soldier Fly)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                const Divider(),
-                ...bsfFeeds.map((feed) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(feed['emoji'] as String, style: const TextStyle(fontSize: 24)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Text(feed['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                            Text(feed['details'] as String, style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+                            const Text('🥬', style: TextStyle(fontSize: 42)),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('SAKAFO OLITRA',
+                                      style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                                  Text('Fako organika sy cerealy',
+                                      style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: (feed['quality'] == 'Tsara indrindra') ? Colors.green.shade200 : Colors.amber.shade200,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(feed['quality'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                )),
-              ],
+                ),
+              ),
             ),
           ),
 
-          const SizedBox(height: 20),
-
-          // Mealworm Feeds
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Text('🪱', style: TextStyle(fontSize: 24)),
-                    SizedBox(width: 8),
-                    Text('SAKAFO VERS DE FARINE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                const Divider(),
-                ...mealwormFeeds.map((feed) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
+          // Feed Categories Grid
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Info header
+                  Row(
                     children: [
-                      Text(feed['emoji'] as String, style: const TextStyle(fontSize: 24)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text('🍽️', style: TextStyle(fontSize: 24)),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('SAKAFO ISAKY NY OLITRA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green.shade800)),
+                          Text('Tsindrio hijery ny antsipirihany', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // 3 Feed Type Cubes
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.8,
+                    children: feedCategories.map((cat) {
+                      final color = cat['color'] as Color;
+                      return GestureDetector(
+                        onTap: () => _showFeedDetails(context, cat),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 3))],
+                          ),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                right: -5,
+                                bottom: -5,
+                                child: Text(cat['emoji'] as String, style: TextStyle(fontSize: 50, color: Colors.white.withValues(alpha: 0.2))),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(cat['emoji'] as String, style: const TextStyle(fontSize: 28)),
+                                    const Spacer(),
+                                    Text(cat['title'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                                    Text(cat['subtitle'] as String, style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 9)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Tips Section
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [Colors.amber.shade100, Colors.orange.shade100]),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Text(feed['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                            Text(feed['details'] as String, style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+                            const Text('💡', style: TextStyle(fontSize: 24)),
+                            const SizedBox(width: 10),
+                            Text('TOROHEVITRA FAMAHANANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.brown.shade800)),
                           ],
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: (feed['quality'] == 'Tsara indrindra') ? Colors.green.shade200 : Colors.amber.shade200,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(feed['quality'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+                        ...feedingTips.map((tip) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(tip['icon'] as String, style: const TextStyle(fontSize: 18)),
+                              const SizedBox(width: 10),
+                              Expanded(child: Text(tip['tip'] as String, style: const TextStyle(fontSize: 11))),
+                            ],
+                          ),
+                        )),
+                      ],
+                    ),
                   ),
-                )),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Feeding Tips
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.amber.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Text('💡', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('TOROHEVITRA FAMAHANANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ...feedingTips.map((tip) => Container(
-                  margin: const EdgeInsets.only(bottom: 6),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                  child: Row(
-                    children: [
-                      Text(tip['icon'] as String, style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 10),
-                      Expanded(child: Text(tip['tip'] as String, style: const TextStyle(fontSize: 11))),
-                    ],
-                  ),
-                )),
-              ],
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
   }
+
+  void _showFeedDetails(BuildContext context, Map<String, dynamic> cat) {
+    final color = cat['color'] as Color;
+    final feeds = cat['feeds'] as List<Map<String, String>>;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.65,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Column(
+                children: [
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white38, borderRadius: BorderRadius.circular(2))),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Text(cat['emoji'] as String, style: const TextStyle(fontSize: 40)),
+                      const SizedBox(width: 14),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Sakafo ${cat['title']}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                          Text(cat['subtitle'] as String, style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Feed List
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: feeds.length,
+                itemBuilder: (ctx, i) {
+                  final feed = feeds[i];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: color.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(feed['emoji']!, style: const TextStyle(fontSize: 28)),
+                        const SizedBox(width: 14),
+                        Expanded(child: Text(feed['name']!, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: feed['quality'] == 'Tsara indrindra' ? Colors.green.shade100 : Colors.amber.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(feed['quality']!, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: feed['quality'] == 'Tsara indrindra' ? Colors.green.shade800 : Colors.amber.shade800)),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ========== Olitra Production Screen ==========
-class OlitraProductionScreen extends StatefulWidget {
-  const OlitraProductionScreen({super.key});
+class BibikelyProductionScreen extends StatefulWidget {
+  const BibikelyProductionScreen({super.key});
 
   @override
-  State<OlitraProductionScreen> createState() => _OlitraProductionScreenState();
+  State<BibikelyProductionScreen> createState() => _BibikelyProductionScreenState();
 }
 
-class _OlitraProductionScreenState extends State<OlitraProductionScreen> {
+class _BibikelyProductionScreenState extends State<BibikelyProductionScreen> {
   String _activeTab = 'biby'; // 'biby' or 'olona'
   String _activeInsect = 'bsf'; // 'bsf', 'mealworm', 'cricket'
 
@@ -36965,7 +39548,7 @@ class _OlitraProductionScreenState extends State<OlitraProductionScreen> {
                                     child: Ink(
                                       padding: const EdgeInsets.symmetric(vertical: 10),
                                       decoration: BoxDecoration(
-                                        color: isActive ? Colors.white : Colors.white.withOpacity(0.15),
+                                        color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(10),
                                         border: Border.all(
                                           color: isActive ? Colors.white : Colors.white30,
@@ -37058,7 +39641,7 @@ class _OlitraProductionScreenState extends State<OlitraProductionScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: isActive ? color : Colors.transparent, width: 4)),
-          color: isActive ? color.withOpacity(0.1) : Colors.transparent,
+          color: isActive ? color.withValues(alpha: 0.1) : Colors.transparent,
         ),
         child: Center(
           child: Text(
@@ -37091,7 +39674,7 @@ class _OlitraProductionScreenState extends State<OlitraProductionScreen> {
           children: (insect['nutrients'] as List).map<Widget>((n) {
             return Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(8), border: Border.all(color: color.withOpacity(0.2))),
+              decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(8), border: Border.all(color: color.withValues(alpha: 0.2))),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -37230,12 +39813,12 @@ class _OlitraProductionScreenState extends State<OlitraProductionScreen> {
           mainAxisSpacing: 10,
           children: (insect['humanFood']['benefits'] as List).map<Widget>((b) {
             return Container(
-              decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(8), border: Border.all(color: color.withOpacity(0.2))),
+              decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(8), border: Border.all(color: color.withValues(alpha: 0.2))),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(b['title'], style: TextStyle(fontWeight: FontWeight.bold, color: color)),
-                  Text(b['subtitle'], style: TextStyle(color: color.withOpacity(0.8))),
+                  Text(b['subtitle'], style: TextStyle(color: color.withValues(alpha: 0.8))),
                 ],
               ),
             );
@@ -37317,280 +39900,280 @@ class _OlitraProductionScreenState extends State<OlitraProductionScreen> {
 
 
 // ========== Olitra Uses Screen ==========
-class OlitraUsesScreen extends StatelessWidget {
-  const OlitraUsesScreen({super.key});
+class BibikelyUsesScreen extends StatelessWidget {
+  const BibikelyUsesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     // Prix par kg pour chaque espèce
     final insectPrices = [
-      {
-        'name': 'BSF (Black Soldier Fly)',
-        'emoji': '🪰',
-        'color': Colors.green,
-        'prices': [
-          {'form': 'Olitra velona', 'price': '4,500 Ar/kg'},
-          {'form': 'Olitra maina', 'price': '40,000 - 60,000 Ar/kg'},
-          {'form': 'Poudre (vovoka)', 'price': '50,000 - 80,000 Ar/kg'},
-          {'form': 'Menaka (huile)', 'price': '80,000 - 120,000 Ar/kg'},
-        ],
-      },
-      {
-        'name': 'Ver de Farine (Mealworm)',
-        'emoji': '🐛',
-        'color': Colors.yellow.shade800,
-        'prices': [
-          {'form': 'Olitra velona', 'price': '25,000 - 40,000 Ar/kg'},
-          {'form': 'Olitra maina', 'price': '60,000 - 100,000 Ar/kg'},
-          {'form': 'Poudre (vovoka)', 'price': '80,000 - 120,000 Ar/kg'},
-        ],
-      },
-      {
-        'name': 'Sahobaka (Grillon)',
-        'emoji': '🦗',
-        'color': Colors.amber.shade900,
-        'prices': [
-          {'form': 'Velona', 'price': '30,000 - 50,000 Ar/kg'},
-          {'form': 'Maina', 'price': '80,000 - 150,000 Ar/kg'},
-          {'form': 'Poudre', 'price': '100,000 - 180,000 Ar/kg'},
-        ],
-      },
+      {'name': 'BSF', 'emoji': '🪰', 'color': Colors.green, 'prices': [
+        {'form': 'Velona', 'price': '4,500 Ar/kg'},
+        {'form': 'Maina', 'price': '40,000-60,000 Ar/kg'},
+        {'form': 'Vovoka', 'price': '50,000-80,000 Ar/kg'},
+      ]},
+      {'name': 'Kankana', 'emoji': '🪱', 'color': Colors.orange, 'prices': [
+        {'form': 'Velona', 'price': '25,000-40,000 Ar/kg'},
+        {'form': 'Maina', 'price': '60,000-100,000 Ar/kg'},
+      ]},
+      {'name': 'Sahobaka', 'emoji': '🦗', 'color': Colors.brown, 'prices': [
+        {'form': 'Velona', 'price': '30,000-50,000 Ar/kg'},
+        {'form': 'Maina', 'price': '80,000-150,000 Ar/kg'},
+      ]},
     ];
 
-    // Sakafo biby - utilisations pour animaux
     final animalFeeds = [
-      {
-        'animal': 'Akoho (Volaille)',
-        'emoji': '🐔',
-        'color': Colors.orange,
-        'benefits': [
-          'Protéine 40-50% - tsara ho an\'ny fitomboana',
-          'Calcium ho an\'ny atody matanjaka',
-          'Manampy amin\'ny loko mavo ny atody',
-          'Ahazoana akoho salama sy matanjaka',
-        ],
-        'dosage': '10-15% amin\'ny sakafo andavanandro',
-        'insects': ['BSF', 'Ver de Farine', 'Sahobaka'],
-      },
-      {
-        'animal': 'Trondro (Poisson)',
-        'emoji': '🐟',
-        'color': Colors.blue,
-        'benefits': [
-          'Solon\'ny farina trondro (fishmeal)',
-          'Protein ambony ho an\'ny fitomboana haingana',
-          'Omega-3 avy amin\'ny menaka BSF',
-          'Tsy mila granulés lafo',
-        ],
-        'dosage': '20-30% amin\'ny sakafo',
-        'insects': ['BSF', 'Ver de Farine'],
-      },
-      {
-        'animal': 'Kisoa (Porc)',
-        'emoji': '🐷',
-        'color': Colors.pink,
-        'benefits': [
-          'Protéine betsaka ho an\'ny nofo',
-          'Lysine naturel - manampy fitomboana',
-          'Tsy mila provende lafo',
-          'Nofo matsiro sy salama',
-        ],
-        'dosage': '5-10% amin\'ny sakafo',
-        'insects': ['BSF'],
-      },
-      {
-        'animal': 'Gana (Canard)',
-        'emoji': '🦆',
-        'color': Colors.teal,
-        'benefits': [
-          'Sakafo naturel tian\'ny gana',
-          'Atody betsaka sy matanjaka',
-          'Volom-borona manganohano',
-          'Fitomboana haingana',
-        ],
-        'dosage': '15-20% amin\'ny sakafo',
-        'insects': ['BSF', 'Ver de Farine'],
-      },
-      {
-        'animal': 'Vorona (Oiseaux)',
-        'emoji': '🐦',
-        'color': Colors.purple,
-        'benefits': [
-          'Sakafo voajanahary ho an\'ny vorona',
-          'Vitamina sy mineraly betsaka',
-          'Manampy amin\'ny fiterahana',
-        ],
-        'dosage': '20-30% amin\'ny sakafo',
-        'insects': ['Ver de Farine', 'Sahobaka'],
-      },
-      {
-        'animal': 'Tantely (Appât pêche)',
-        'emoji': '🎣',
-        'color': Colors.indigo,
-        'benefits': [
-          'Appât naturel tsara indrindra',
-          'Trondro tia olitra velona',
-          'Mora fitahirizana',
-        ],
-        'dosage': 'Olitra velona na prepupa',
-        'insects': ['BSF', 'Ver de Farine'],
-      },
+      {'animal': 'Akoho', 'emoji': '🐔', 'color': Colors.orange, 'dosage': '10-15%', 'insects': ['BSF', 'Kankana', 'Sahobaka']},
+      {'animal': 'Trondro', 'emoji': '🐟', 'color': Colors.blue, 'dosage': '20-30%', 'insects': ['BSF', 'Kankana']},
+      {'animal': 'Kisoa', 'emoji': '🐷', 'color': Colors.pink, 'dosage': '5-10%', 'insects': ['BSF']},
+      {'animal': 'Gana', 'emoji': '🦆', 'color': Colors.teal, 'dosage': '15-20%', 'insects': ['BSF', 'Kankana']},
+      {'animal': 'Vorona', 'emoji': '🐦', 'color': Colors.purple, 'dosage': '20-30%', 'insects': ['Kankana', 'Sahobaka']},
+      {'animal': 'Appât', 'emoji': '🎣', 'color': Colors.indigo, 'dosage': 'Velona', 'insects': ['BSF', 'Kankana']},
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.teal.shade700, Colors.teal.shade500]),
-              borderRadius: BorderRadius.circular(16),
+      backgroundColor: const Color(0xFFF0F4F8),
+      body: CustomScrollView(
+        slivers: [
+          // Hero Header
+          SliverAppBar(
+            expandedHeight: 180,
+            pinned: true,
+            backgroundColor: Colors.teal.shade700,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
             ),
-            child: Row(
-              children: [
-                const Text('🍽️', style: TextStyle(fontSize: 40)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('FAMPIASANA OLITRA',
-                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('Sakafo biby sy vidiny',
-                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12)),
-                    ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.teal.shade700, Colors.cyan.shade600],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                 ),
-              ],
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Text('🍽️', style: TextStyle(fontSize: 42)),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('FAMPIASANA OLITRA',
+                                      style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                                  Text('Sakafo biby sy vidiny',
+                                      style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
 
-          const SizedBox(height: 20),
-
-          // Prix par espèce
-          const Text('💰 VIDINY ISAKY NY KILAO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
-
-          ...insectPrices.map((insect) => Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5)],
-            ),
-            child: Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                leading: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: (insect['color'] as Color).withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Center(child: Text(insect['emoji'] as String, style: const TextStyle(fontSize: 24))),
-                ),
-                title: Text(insect['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: Column(
-                      children: (insect['prices'] as List).map<Widget>((p) => Container(
-                        margin: const EdgeInsets.only(bottom: 6),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  // Section: Prices
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: (insect['color'] as Color).withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.amber.shade50,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(p['form'] as String, style: const TextStyle(fontSize: 12)),
-                            Text(p['price'] as String, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: insect['color'] as Color)),
-                          ],
-                        ),
-                      )).toList(),
-                    ),
+                        child: const Text('💰', style: TextStyle(fontSize: 24)),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('VIDINY ISAKY NY KILAO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.teal.shade800)),
+                          Text('Tsindrio hijery ny antsipirihany', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          )),
+                  const SizedBox(height: 16),
 
-          const SizedBox(height: 20),
-
-          // Sakafo Biby
-          const Text('🐾 SAKAFO HO AN\'NY BIBY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
-
-          ...animalFeeds.map((feed) => Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5)],
-            ),
-            child: Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                leading: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: (feed['color'] as Color).withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Center(child: Text(feed['emoji'] as String, style: const TextStyle(fontSize: 24))),
-                ),
-                title: Text(feed['animal'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                subtitle: Text('Olitra: ${(feed['insects'] as List).join(", ")}', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Tombotsoa
-                        Container(
-                          padding: const EdgeInsets.all(12),
+                  // Price Cubes (3x1)
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.75,
+                    children: insectPrices.map((insect) {
+                      final color = insect['color'] as Color;
+                      return GestureDetector(
+                        onTap: () => _showPriceDetails(context, insect),
+                        child: Container(
                           decoration: BoxDecoration(
-                            color: (feed['color'] as Color).withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(8),
+                            gradient: LinearGradient(
+                              colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 3))],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Stack(
                             children: [
-                              Text('Tombotsoa:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: feed['color'] as Color)),
-                              const SizedBox(height: 6),
-                              ...(feed['benefits'] as List).map((b) => Padding(
-                                padding: const EdgeInsets.only(bottom: 4),
-                                child: Row(
+                              Positioned(
+                                right: -5,
+                                bottom: -5,
+                                child: Text(insect['emoji'] as String, style: TextStyle(fontSize: 50, color: Colors.white.withValues(alpha: 0.2))),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('✓ ', style: TextStyle(color: feed['color'] as Color, fontWeight: FontWeight.bold)),
-                                    Expanded(child: Text(b as String, style: const TextStyle(fontSize: 11))),
+                                    Text(insect['emoji'] as String, style: const TextStyle(fontSize: 28)),
+                                    const Spacer(),
+                                    Text(insect['name'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Text('💰 Vidiny', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                                    ),
                                   ],
                                 ),
-                              )),
+                              ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        // Dosage
-                        Container(
-                          padding: const EdgeInsets.all(10),
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // Section: Animal Feeds
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text('🐾', style: TextStyle(fontSize: 24)),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('SAKAFO HO AN\'NY BIBY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.teal.shade800)),
+                          Text('Olitra ho an\'ny biby fiompy', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Animal Feed Cubes (3x2)
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.85,
+                    children: animalFeeds.map((feed) {
+                      final color = feed['color'] as Color;
+                      return GestureDetector(
+                        onTap: () => _showAnimalDetails(context, feed),
+                        child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
+                            gradient: LinearGradient(
+                              colors: [color.withValues(alpha: 0.85), color.withValues(alpha: 0.55)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3))],
                           ),
-                          child: Row(
+                          child: Stack(
                             children: [
-                              const Icon(Icons.info_outline, size: 16, color: Colors.grey),
-                              const SizedBox(width: 8),
-                              Expanded(child: Text('Fatran-danja: ${feed['dosage']}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500))),
+                              Positioned(
+                                right: -8,
+                                bottom: -8,
+                                child: Text(feed['emoji'] as String, style: TextStyle(fontSize: 50, color: Colors.white.withValues(alpha: 0.2))),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(feed['emoji'] as String, style: const TextStyle(fontSize: 26)),
+                                    const Spacer(),
+                                    Text(feed['animal'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                                    const SizedBox(height: 3),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(5),
+                                      ),
+                                      child: Text(feed['dosage'] as String, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Info Box
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [Colors.blue.shade100, Colors.cyan.shade100]),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('💡', style: TextStyle(fontSize: 28)),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Tombontsoa', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blue.shade800)),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Ny olitra dia manana protéine 40-60%, tsara noho ny soja sy vovo-trondro ary mora kokoa amin\'ny vidiny.',
+                                style: TextStyle(fontSize: 11, color: Colors.blue.shade700, height: 1.4),
+                              ),
                             ],
                           ),
                         ),
@@ -37600,10 +40183,120 @@ class OlitraUsesScreen extends StatelessWidget {
                 ],
               ),
             ),
-          )),
-
-          const SizedBox(height: 20),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _showPriceDetails(BuildContext context, Map<String, dynamic> insect) {
+    final color = insect['color'] as Color;
+    final prices = insect['prices'] as List<Map<String, String>>;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Text(insect['emoji'] as String, style: const TextStyle(fontSize: 40)),
+                const SizedBox(width: 14),
+                Text('Vidiny ${insect['name']}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: color)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...prices.map((p) => Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: color.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(p['form']!, style: const TextStyle(fontSize: 14)),
+                  Text(p['price']!, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
+                ],
+              ),
+            )),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAnimalDetails(BuildContext context, Map<String, dynamic> feed) {
+    final color = feed['color'] as Color;
+    final insects = feed['insects'] as List<String>;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Text(feed['emoji'] as String, style: const TextStyle(fontSize: 40)),
+                const SizedBox(width: 14),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(feed['animal'] as String, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: color)),
+                    Text('Fatran-danja: ${feed['dosage']}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Olitra azo ampiasaina:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: color)),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: insects.map((i) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(i, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: color)),
+                    )).toList(),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
@@ -37815,7 +40508,7 @@ class ZezikaTypesScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: (type['color'] as Color).withOpacity( 0.15),
+                      color: (type['color'] as Color).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(type['emoji'], style: const TextStyle(fontSize: 28)),
@@ -38228,7 +40921,7 @@ class ZezikaProductionScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity( 0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
@@ -38331,6 +41024,7 @@ class ZezikaUsageScreen extends StatelessWidget {
           // Dosage Table
           Container(
             decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey.shade300),
             ),
@@ -38339,7 +41033,7 @@ class ZezikaUsageScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade100,
+                    color: Colors.teal.shade100,
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                   ),
                   child: const Row(
@@ -38441,7 +41135,7 @@ class ZezikaUsageScreen extends StatelessWidget {
             width: 80,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: color.withOpacity( 0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(type, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color), textAlign: TextAlign.center),
@@ -38610,6 +41304,7 @@ class ZezikaResultsScreen extends StatelessWidget {
           // Comparison with chemical fertilizers
           Container(
             decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey.shade300),
             ),
@@ -38760,7 +41455,7 @@ class ZezikaResultsScreen extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity( 0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 24),
@@ -38800,7 +41495,7 @@ class ZezikaResultsScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: color.withOpacity( 0.15),
+                color: color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(increase, style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 14)),
@@ -38838,286 +41533,485 @@ class ZezikaResultsScreen extends StatelessWidget {
 
 // ==================== MODULE HOLATRATECH (CHAMPIGNONS) ====================
 
-class HolatraSpeciesScreen extends StatefulWidget {
-  const HolatraSpeciesScreen({super.key});
-
-  @override
-  State<HolatraSpeciesScreen> createState() => _HolatraSpeciesScreenState();
-}
-
-class _HolatraSpeciesScreenState extends State<HolatraSpeciesScreen> {
-  String _selectedSpecies = 'Pleurote';
-
-  final Map<String, Map<String, dynamic>> _speciesData = {
-    'Pleurote': {
-      'emoji': '🍄‍🟫',
-      'nom_sci': 'Pleurotus ostreatus',
-      'nom_mg': 'Holatra ravina (Pleurote)',
-      'description': 'Holatra mora ambolena indrindra. Tsara ho an\'ny mpanomboka.',
-      'hafanana': '20-28°C',
-      'hamandoana': '80-90%',
-      'fotoana': '3-4 herinandro',
-      'vokatra': '25-35% ny lanjan\'ny harena',
-      'sakafo': 'Mololo, bozaka maina, taim-bary',
-      'tombony': ['Mora ambolena', 'Tsy lafo ny harena', 'Mafy tsara', 'Vokatra haingana'],
-      'fady': ['Tsy tia hafanana ambony 30°C', 'Tsy tia rivotra maina'],
-    },
-    'Shiitake': {
-      'emoji': '🍄‍🟫',
-      'nom_sci': 'Lentinula edodes',
-      'nom_mg': 'Holatra Japoney (Shiitake)',
-      'description': 'Holatra malaza indrindra eran-tany. Tsiro sy fofona manokana.',
-      'hafanana': '15-25°C',
-      'hamandoana': '75-85%',
-      'fotoana': '6-12 volana (hazo)',
-      'vokatra': '20-30% ny lanjan\'ny harena',
-      'sakafo': 'Hazo oak, hazo mafy hafa, sciure',
-      'tombony': ['Vidiny lafo tsena', 'Maharitra ela', 'Tsiro tsara indrindra'],
-      'fady': ['Mila fotoana lava', 'Mila harena manokana'],
-    },
-    'Champignon de Paris': {
-      'emoji': '🍄‍🟫',
-      'nom_sci': 'Agaricus bisporus',
-      'nom_mg': 'Holatra Parisiana',
-      'description': 'Holatra be mpividy indrindra eran-tany. Fotsy na mavo.',
-      'hafanana': '14-18°C',
-      'hamandoana': '85-90%',
-      'fotoana': '6-8 herinandro',
-      'vokatra': '20-25% ny lanjan\'ny harena',
-      'sakafo': 'Taim-biby (soavaly), mololo voapoizina',
-      'tombony': ['Tsena lehibe', 'Mpividy betsaka', 'Maharitra ela'],
-      'fady': ['Mila hafanana ambany', 'Mila harena manokana'],
-    },
-    'Holatra Lovia (Volvariella)': {
-      'emoji': '🍄‍🟫',
-      'nom_sci': 'Volvariella volvacea',
-      'nom_mg': 'Holatra Lovia',
-      'description': 'Holatra tropikaly mora ambolena eto Madagasikara.',
-      'hafanana': '28-35°C',
-      'hamandoana': '80-90%',
-      'fotoana': '2-3 herinandro',
-      'vokatra': '10-15% ny lanjan\'ny harena',
-      'sakafo': 'Mololo vary, bozaka, ravim-boankazo',
-      'tombony': ['Tia hafanana (tsara ho an\'i Madagasikara)', 'Vokatra haingana indrindra', 'Harena mora hita'],
-      'fady': ['Tsy maharitra ela', 'Mila hamandoana avo'],
-    },
-    'Holatra Fanahy (Reishi)': {
-      'emoji': '🍄‍🟫',
-      'nom_sci': 'Ganoderma lucidum',
-      'nom_mg': 'Holatra Fanahy (Reishi)',
-      'description': 'Holatra fanafody malaza. Ampiasaina ho fanafody hatry ny ela.',
-      'hafanana': '24-28°C',
-      'hamandoana': '80-95%',
-      'fotoana': '3-6 volana',
-      'vokatra': '5-10% ny lanjan\'ny harena',
-      'sakafo': 'Hazo mafy, sciure',
-      'tombony': ['Vidiny ambony dia ambony', 'Fanafody malaza', 'Maharitra ela rehefa maina'],
-      'fady': ['Tsy fihinana mivantana', 'Mila fotoana lava'],
-    },
-    'Holatra Volamena (Golden Oyster)': {
-      'emoji': '🍄‍🟫',
-      'nom_sci': 'Pleurotus citrinopileatus',
-      'nom_mg': 'Holatra Volamena',
-      'description': 'Pleurote mavo tsara tarehy. Tsiro manokana.',
-      'hafanana': '22-30°C',
-      'hamandoana': '80-90%',
-      'fotoana': '3-4 herinandro',
-      'vokatra': '20-30% ny lanjan\'ny harena',
-      'sakafo': 'Mololo, bozaka maina, taim-bary',
-      'tombony': ['Tsara tarehy (mavo)', 'Tia hafanana', 'Tsiro manokana'],
-      'fady': ['Tsy maharitra ela', 'Mora simba'],
-    },
-  };
+class HolatraTechHomeScreen extends StatelessWidget {
+  const HolatraTechHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final species = _speciesData[_selectedSpecies]!;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final items = [
+      {'label': 'Foto-kevitra', 'icon': Icons.spa, 'color': const Color(0xFF4CAF50), 'screen': 'basics', 'title': 'Ny Fototra'},
+      {'label': 'Paikady', 'icon': Icons.trending_up, 'color': const Color(0xFF2196F3), 'screen': 'growth', 'title': 'Paikady Fitomboana'},
+      {'label': 'Fitaovana', 'icon': Icons.handyman, 'color': const Color(0xFFFF9800), 'screen': 'equipment', 'title': 'Fitaovana'},
+      {'label': 'Fanaovana', 'icon': Icons.checklist, 'color': const Color(0xFF9C27B0), 'screen': 'steps', 'title': 'Ny Fanaovana Azy'},
+      {'label': 'Fahadiovana', 'icon': Icons.cleaning_services, 'color': const Color(0xFF00BCD4), 'screen': 'hygiene', 'title': 'Fahadiovana'},
+      {'label': 'Fanodinana', 'icon': Icons.microwave, 'color': const Color(0xFF795548), 'screen': 'processing', 'title': 'Fanodinana'},
+      {'label': 'Fivarotana', 'icon': Icons.storefront, 'color': const Color(0xFFE91E63), 'screen': 'marketing', 'title': 'Fivarotana'},
+      {'label': 'Kajy Tombony', 'icon': Icons.calculate, 'color': const Color(0xFF607D8B), 'screen': 'calc', 'title': 'Kajy Vola'},
+    ];
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF2F5F8),
+      body: Stack(
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.brown.shade700, Colors.brown.shade500],
+          // Background Decoration
+          Positioned(
+            top: -100,
+            right: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
               ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Row(
-              children: [
-                Text('🍄‍🟫', style: TextStyle(fontSize: 40)),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('KARAZAN\'NY HOLATRA', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('Holatra azo hanina', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    ],
-                  ),
-                ),
-              ],
             ),
           ),
-          
-          const SizedBox(height: 16),
-          
-          // Species selector
-          SizedBox(
-            height: 45,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: _speciesData.keys.map((name) {
-                final isSelected = _selectedSpecies == name;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(name, style: TextStyle(fontSize: 11, color: isSelected ? Colors.white : Colors.brown)),
-                    selected: isSelected,
-                    selectedColor: Colors.brown.shade600,
-                    onSelected: (_) => setState(() => _selectedSpecies = name),
-                  ),
-                );
-              }).toList(),
+          Positioned(
+            top: 100,
+            left: -100,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+              ),
             ),
           ),
-          
-          const SizedBox(height: 16),
-          
-          // Species details card
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text(species['emoji'], style: const TextStyle(fontSize: 50)),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(_selectedSpecies, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                            Text(species['nom_sci'], style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey.shade600, fontSize: 12)),
-                          ],
-                        ),
+                  // Header (aligned with other modules)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF2E7D32), Color(0xFF66BB6A)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ],
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 14, offset: const Offset(0, 6)),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 3)),
+                            ],
+                          ),
+                          child: const Icon(Icons.spa_rounded, color: Colors.white, size: 22),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'HolatraTech',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Torolalana feno sy kajy tombony',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, 4)),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.auto_graph_rounded, color: Colors.green),
+                            onPressed: () => showDialog(
+                              context: context,
+                              builder: (_) => const ProfitabilityAnalyzerDialog(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const Divider(height: 24),
-                  Text(species['description'], style: const TextStyle(fontSize: 13)),
+
+                  const SizedBox(height: 32),
+
+                  // Hero Card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF2E7D32), Color(0xFF66BB6A)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(32),
+                      boxShadow: [
+                        BoxShadow(color: const Color(0xFF2E7D32).withValues(alpha: 0.4), blurRadius: 20, offset: const Offset(0, 10)),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  "Dadabe Agronome",
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                "Vonona hamboly holatra ve ianao?",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                "Araho ny torolalana mba hahazoana vokatra tsara.",
+                                style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Menu Grid
+                  const Text(
+                    "Lohahevitra",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                  ),
                   const SizedBox(height: 16),
+
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.85,
+                    ),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      return _buildMenuCard(context, item);
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
                   
-                  // Conditions
-                  _buildConditionRow('🌡️', 'Hafanana', species['hafanana']),
-                  _buildConditionRow('💧', 'Hamandoana', species['hamandoana']),
-                  _buildConditionRow('⏱️', 'Fotoana fitomboana', species['fotoana']),
-                  _buildConditionRow('📦', 'Vokatra azo', species['vokatra']),
-                  _buildConditionRow('🌾', 'Sakafo (Harena)', species['sakafo']),
+                  // Extra Cards
+                  _buildWideCard(
+                    context,
+                    'Dokotera Holatra',
+                    'Fantaro ny aretina sy ny vahaolana',
+                    Icons.medical_services_outlined,
+                    Colors.red,
+                    'doctor',
+                    'Dr. Holatra',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildWideCard(
+                    context,
+                    'Karazana Holatra',
+                    'Ireo karazana azo ambolena',
+                    Icons.category_outlined,
+                    Colors.pink,
+                    'types',
+                    'Karazana Holatra',
+                  ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
           ),
-          
-          const SizedBox(height: 16),
-          
-          // Advantages
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Text('✅', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('TOMBONY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ...((species['tombony'] as List).map((t) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    children: [
-                      const Text('• ', style: TextStyle(color: Colors.green)),
-                      Expanded(child: Text(t, style: const TextStyle(fontSize: 12))),
-                    ],
-                  ),
-                ))),
-              ],
-            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuCard(BuildContext context, Map<String, dynamic> item) {
+    final color = item['color'] as Color;
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => HolatraHomeScreen(initialScreen: item['screen'], initialTitle: item['title']),
           ),
-          
-          const SizedBox(height: 12),
-          
-          // Disadvantages
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.orange.shade200),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.9),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4)),
+                ],
+              ),
+              child: Icon(item['icon'], color: color, size: 28),
             ),
-            child: Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
-                  children: [
-                    Text('⚠️', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('FADY / OLANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ...((species['fady'] as List).map((t) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    children: [
-                      const Text('• ', style: TextStyle(color: Colors.orange)),
-                      Expanded(child: Text(t, style: const TextStyle(fontSize: 12))),
-                    ],
-                  ),
-                ))),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Recommended for Madagascar
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.teal.shade100, Colors.teal.shade50]),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text('🇲🇬', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('TSARA HO AN\'I MADAGASIKARA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  ],
-                ),
-                SizedBox(height: 8),
                 Text(
-                  '• Pleurote - Mora indrindra, tia hafanana\n'
-                  '• Holatra Lovia - Tia mafana (28-35°C)\n'
-                  '• Holatra Volamena - Tsara tarehy, tsena tsara',
-                  style: TextStyle(fontSize: 12),
+                  item['label'],
+                  style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  "Tsindrio eto",
+                  style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.black54),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWideCard(BuildContext context, String title, String subtitle, IconData icon, Color color, String screen, String pageTitle) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => HolatraHomeScreen(initialScreen: screen, initialTitle: pageTitle),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.9),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4)),
+                ],
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.black54)),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, color: color.withValues(alpha: 0.5), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class HolatraHomeScreen extends StatefulWidget {
+  const HolatraHomeScreen({super.key, this.initialScreen = 'home', this.initialTitle = 'HOLATRA', this.initialSubtitle = 'Dadabe Agronome'});
+
+  final String initialScreen;
+  final String initialTitle;
+  final String initialSubtitle;
+
+  @override
+  State<HolatraHomeScreen> createState() => _HolatraHomeScreenState();
+}
+
+class _HolatraHomeScreenState extends State<HolatraHomeScreen> {
+  final ScrollController _scrollCtrl = ScrollController();
+  late String _screen;
+  late String _title;
+  late String _subtitle;
+  int _bags = 20;
+
+  final List<String> _hygieneRules = const [
+    "Sasao savony ny tanana, ary fafao amin'ny Alikaola hatrany amin'ny kiho.",
+    "Ny trano fandrahoana sy ny trano famafazana dia tsy maintsy madio (tsy misy vovoka, tsy misy akoho mandehandeha).",
+    "Aza asiana sakafo na sigara ao anaty trano holatra.",
+    "Raha misy harona lasa MAITSO na MAINTY: Esory haingana dia ario lavitra na dory. Aza sokafana ao an-trano!",
+    "Asio 'Lame' (lamba) mando misy Javel eo am-baravarana hanitsahana alohan'ny hiditra.",
+    "Asio lay (moustiquaire) ny varavarankely rehetra mba tsy hidiran'ny lalitra.",
+    "Ny voalavo sy ny vitsika dia fahavalo. Asio lavenona (cendre) ny manodidina ny trano hisakanana ny vitsika.",
+    "Sasao matetika ny gorodona (amin'ny rano misy Javel kely).",
+    "Aza avela hipetraka ny rano mihandrona.",
+    "Ny fitaovana (sotro, koveta) dia tsy maintsy andrahoina na sasana amin'ny rano mangotraka alohan'ny hampiasana."
+  ];
+
+  final List<Map<String, String>> _doctorProblems = const [
+    {
+      'symp': 'Pentina Maitso (Trichoderma)',
+      'cause': "Loto! Mety tsy ampy ny fandrahoana ny bozaka, na maloto ny tanana namafy.",
+      'sol': "Tsy misy fanafody. Ario avy hatrany ilay harona mba tsy hamindra amin'ny namany. Diovy amin'ny Javel ny toerana nisy azy."
+    },
+    {
+      'symp': 'Holatra lava be ny tahony, kely ny satrony',
+      'cause': "Tsy ampy rivotra (Manque d'Oxygène). Be loatra ny CO2 ao an-trano.",
+      'sol': "Sokafy ny varavarankely. Mila rivotra madio ny holatra toy ny olombelona."
+    },
+    {
+      'symp': 'Holatra maina, malazo ny sisiny',
+      'cause': 'Maina loatra ny rivotra (Hafanana be).',
+      'sol': "Tondrahy matetika kokoa ny gorodona (fasika na tany) mba hiakatra ny etona rano. Aza tondrahana ny holatra."
+    },
+    {
+      'symp': 'Tsy mety mipoitra ny holatra nefa efa fotsy be',
+      'cause': 'Mitovy loatra ny hafanana andro sy alina.',
+      'sol': "Mila 'taitra' (Choc thermique) izy. Vohay ny varavarana amin'ny alina mba hiditra ny hatsiaka, na tondrahana rano mangatsiaka ny gorodona."
+    },
+    {
+      'symp': 'Misy olitra kely ao anaty holatra',
+      'cause': 'Lalitra no niditra dia nanatody.',
+      'sol': 'Tsy maintsy asiana "Moustiquaire" ny varavarankely rehetra. Tsy azo atao misokatra fotsiny.'
+    },
+    {
+      'symp': 'Lanin\'ny voalavo na vitsika',
+      'cause': 'Biby mpanimba.',
+      'sol': "Ho an'ny vitsika: Asio lavenona (cendre) manodidina ny tongotry ny latabatra. Ho an'ny voalavo: Asio fandrika."
+    },
+  ];
+
+  void _go(String screen, String title) {
+    setState(() {
+      _screen = screen;
+      _title = title;
+      _subtitle = '';
+    });
+    _scrollCtrl.jumpTo(0);
+  }
+
+  void _goHome() {
+    setState(() {
+      _screen = widget.initialScreen;
+      _title = widget.initialTitle;
+      _subtitle = widget.initialSubtitle;
+    });
+    _scrollCtrl.jumpTo(0);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _screen = widget.initialScreen;
+    _title = widget.initialTitle;
+    _subtitle = widget.initialSubtitle;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF1F8E9),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _scrollCtrl,
+                padding: const EdgeInsets.all(16),
+                child: _buildScreen(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      color: const Color(0xFFF2F5F8), // Match background
+      child: Row(
+        children: [
+          if (_screen != 'home')
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                margin: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+                ),
+                child: const Icon(Icons.arrow_back_ios_new, size: 18, color: Colors.black87),
+              ),
+            ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_title, style: TextStyle(fontFamily: 'Poppins', color: Colors.black87, fontSize: 22, fontWeight: FontWeight.w900)),
+                if (_subtitle.isNotEmpty)
+                  Text(_subtitle, style: TextStyle(fontFamily: 'Poppins', color: Colors.grey.shade500, fontSize: 13, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -39126,770 +42020,1055 @@ class _HolatraSpeciesScreenState extends State<HolatraSpeciesScreen> {
     );
   }
 
-  Widget _buildConditionRow(String emoji, String label, String value) {
+  Widget _buildScreen() {
+    switch (_screen) {
+      case 'basics':
+        return _buildBasics();
+      case 'growth':
+        return _buildGrowth();
+      case 'equipment':
+        return _buildEquipment();
+      case 'steps':
+        return _buildSteps();
+      case 'hygiene':
+        return _buildHygiene();
+      case 'processing':
+        return _buildProcessing();
+      case 'marketing':
+        return _buildMarketing();
+      case 'calc':
+        return _buildCalc();
+      case 'doctor':
+        return _buildDoctor();
+      case 'types':
+        return _buildTypes();
+      case 'home':
+      default:
+        return _buildHome();
+    }
+  }
+
+  // HOME
+  Widget _buildHome() {
+    // This is now handled by HolatraTechHomeScreen, but kept as fallback or internal nav
+    return Container(); 
+  }
+
+  // BASICS
+  Widget _buildBasics() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Inona ny Holatra?', style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF2E7D32))),
+              const SizedBox(height: 12),
+              Text(
+                'Ny holatra dia tsy zavamaniry. Tsy mila masoandro izy, ary tsy maniry amin\'ny tany. Izy dia "Fungus" (toy ny masirasira na ny bobongolo).',
+                style: TextStyle(fontFamily: 'Poppins', fontSize: 15, height: 1.6, color: Colors.black87),
+              ),
+            ],
+          ),
+        ),
+        _dadabeTip(
+          'Dadabe miteny: "Ny fahavalon\'ny holatra dia ny loto. Ny mpamboly holatra mahay dia mpilalao fahadiovana voalohany indrindra."',
+        ),
+        _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Tombotsoa (Avantages)', style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF2E7D32))),
+              const SizedBox(height: 16),
+              _Bullet('Haingana: 1 volana dia efa mamoaka vola.'),
+              _Bullet('Tsy mila tany be: efitra kely iray dia ampy.'),
+              _Bullet('Sakafo mahasalama: Be proteina (solon\'ny hena) ary fanafody.'),
+              _Bullet('Fako no ampiasaina: Bozaka, ravina, vovoka hazo izay ariana no lasa vola.'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // GROWTH STRATEGY
+  Widget _buildGrowth() {
+    return Column(
+      children: [
+        _card(
+          gradient: const LinearGradient(colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB)]),
+          borderColor: Colors.blue.shade200,
+          child: Column(
+            children: [
+              Text('Ahoana no hanombohana?', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: const Color(0xFF1565C0), fontSize: 16)),
+              const SizedBox(height: 4),
+              Text('Aza maika, mandehana tsikelikely.', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.black87)),
+            ],
+          ),
+        ),
+        _growthLevel(
+          step: 'Dingana 1',
+          color: Colors.green,
+          title: 'Ny Andrana (Test)',
+          bags: 'Harona 10 hatramin\'ny 20',
+          items: const [
+            'Tanjona: Mianatra ny teknika sy ny fahadiovana.',
+            'Fitaovana: Vilany be ao an-trano (tsy mila barika), zoro efitrano maizina.',
+            'Vola ilaina: Kely dia kely (vidy masomboly holatra sy plastika ihany).',
+            'Tsy azo atao: Mieritreritra tombony be. Fianarana no tanjona.',
+          ],
+        ),
+        _growthLevel(
+          step: 'Dingana 2',
+          color: Colors.amber,
+          title: 'Ny Fahazarana',
+          bags: 'Harona 50 hatramin\'ny 100',
+          items: const [
+            'Rahoviana: Rehefa nahomby ny Dingana 1.',
+            'Fitaovana: Mividy Barika Vy (hamonoana mikraoba betsaka). Manamboatra trano kely na manokana efitra iray manontolo.',
+            'Fitantanana: Mila kahie fitanisana ny daty (famafazana, fivoahana, vokatra).',
+            'Vola miditra: Ampiasaina hividianana fitaovana tsara kokoa (Reinvestissement).',
+          ],
+        ),
+        _growthLevel(
+          step: 'Dingana 3',
+          color: Colors.purple,
+          title: 'Fivelarana (Matihanina)',
+          bags: 'Harona 500 mahery',
+          items: const [
+            'Tanjona: Hamatsy hotely na tsena lehibe.',
+            'Fitaovana: Trano lehibe misy fifehezana hafanana sy hamandoana (système d\'arrosage).',
+            'Olona: Mety mila mpiasa manampy.',
+            'Marketing: Mila fonosana misy marika (Etiquette).',
+          ],
+        ),
+        _dadabeTip(
+          "Tsiambaratelo: \"Aza hanina avy hatrany ny vola azo amin'ny voalohany. Ampiasao hividianana masomboly holatra sy plastika betsaka kokoa. Izay no atao hoe manitatra.\""
+        ),
+      ],
+    );
+  }
+
+  Widget _growthLevel({required String step, required MaterialColor color, required String title, required String bags, required List<String> items}) {
+    return _card(
+      borderColor: color.withValues(alpha: 0.4),
+      child: Stack(
+        children: [
+          Positioned(
+            right: 0,
+            top: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(color: color, borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(16), topRight: Radius.circular(16))),
+              child: Text(step, style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16, color: color.shade800)),
+              const SizedBox(height: 4),
+              Text(bags, style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 12),
+              ...items.map((t) => _Bullet(t, color: Colors.black87)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // TYPES
+  Widget _buildTypes() {
+    return Column(
+      children: [
+        _card(
+          gradient: const LinearGradient(colors: [Color(0xFFFFF1F3), Color(0xFFFFEBEE)]),
+          borderColor: Colors.pink.shade100,
+          child: Column(
+            children: [
+              Text('Ireo Karazana Fihinana', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: const Color(0xFFD81B60), fontSize: 16)),
+              const SizedBox(height: 4),
+              Text('Tsy ny holatra rehetra no mora ambolena!', style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+            ],
+          ),
+        ),
+        _typeCard(
+          title: '1. Pleurotes (Holatra Sofina)',
+          badge: 'Tsara ho anao',
+          badgeColor: Colors.green,
+          desc1: 'Miendrika sofina na lay. Misy fotsy, volondavenona (gris) na mavokely.',
+          desc2: 'Nahoana no ity?',
+          bullets: const [
+            'Tena mora ambolena amin\'ny bozaka.',
+            'Haingana ny vokatra (1 volana).',
+            'Mahatanty hafanana (Sajor-caju).',
+          ],
+          color: Colors.green,
+        ),
+        _typeCard(
+          title: '2. Champignon de Paris',
+          badge: 'Sarotra',
+          badgeColor: Colors.orange,
+          desc1: 'Boribory fotsy kely, mitovitovy amin\'ny atody kely.',
+          desc2: 'Ny olana:',
+          bullets: const [
+            'Tsy maniry amin\'ny bozaka tsotra. Mila zezika (compost) efa masaka tsara.',
+            'Mila tany manokana manarona azy (terre de gobetage).',
+            'Saropady amin\'ny aretina.',
+          ],
+          color: Colors.orange,
+        ),
+        _typeCard(
+          title: '3. Shiitake (Holatra Aziatika)',
+          badge: 'Lafo Vidina',
+          badgeColor: Colors.purple,
+          desc1: 'Holatra volontsôkôlà, manitra be, fihinana maina matetika.',
+          desc2: 'Fanamarihana:',
+          bullets: const [
+            'Ela vao mioty (3-6 volana).',
+            'Matetika amin\'ny vatan-kazo na vovoka hazo manokana no ambolena.',
+          ],
+          color: Colors.purple,
+        ),
+        _typeCard(
+          title: '4. Reishi (Ganoderma)',
+          badge: 'Fanafody',
+          badgeColor: Colors.red,
+          desc1: 'Mena manjelanjelatra, mafy toy ny hazo. Tsy fihinana mivantana fa atao dite na vovoka fanafody.',
+          desc2: 'Tombony sy Olana:',
+          bullets: const [
+            'Tena lafo vidy (Sakafo ara-pahasalamana).',
+            'Ela be vao mioty (3-5 volana).',
+            'Mila vovoka hazo (Sciure) fa tsy bozaka tsotra.',
+          ],
+          color: Colors.red,
+        ),
+        _dadabeTip(
+          'Tandremo: "Aza mihinana na mamboly holatra tsy fantatrao anarana! Misy mahafaty. Mividiana masomboly holatra (semence) eny amin\'ny mpamokatra matihanina ihany."'
+        ),
+      ],
+    );
+  }
+
+  Widget _typeCard({required String title, required String badge, required MaterialColor badgeColor, required String desc1, required String desc2, required List<String> bullets, required MaterialColor color}) {
+    return _card(
+      borderColor: badgeColor.withValues(alpha: 0.4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(child: Text(title, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16, color: color.shade800))),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(color: badgeColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                child: Text(badge, style: TextStyle(fontFamily: 'Poppins', color: badgeColor, fontSize: 11, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(desc1, style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.black87)),
+          const SizedBox(height: 8),
+          Text(desc2, style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.black87, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          ...bullets.map((b) => _Bullet(b, color: Colors.black87)),
+        ],
+      ),
+    );
+  }
+
+  // EQUIPMENT
+  Widget _buildEquipment() {
+    return Column(
+      children: [
+        _card(
+          gradient: const LinearGradient(colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB)]),
+          borderColor: Colors.blue.shade200,
+          child: Column(
+            children: [
+              Text('Fitaovana Mora Hita', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: const Color(0xFF1565C0), fontSize: 16)),
+              const SizedBox(height: 6),
+              Text('Tsy voatery hividy lafo vao mahavita.', style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        _equipmentItem(Icons.water, Colors.grey, 'Barika Vy',
+          "Fandrahoana. Raha tsy misy, dia ampiasao ny vilany be (coca) fa saromana plastika sy lamba tsara mba tsy hivoaka ny etona."),
+        _equipmentItem(Icons.grass, Colors.yellow.shade700, 'Bozaka & Son',
+          'Ny Bozaka no "trano", ny Sisam-bary (Son) no "vitaminina" (sakafo). Ny Son dia 10% hatramin\'ny 20% ny lanjan\'ny bozaka.'),
+        _equipmentItem(Icons.crop_square, Colors.grey.shade600, 'Vatosokay (Chaux)',
+          'Tena ilaina! Ny chaux dia manala ny "asidra" amin\'ny bozaka. Tsy tian\'ny bibikely sy ny bobongolo ratsy ny tany misy chaux.'),
+        _equipmentItem(Icons.inventory, Colors.blue, 'Plastika PP',
+          'Harona mahazaka hafanana. Raha tsy misy PP, dia azo atao anaty gony madio (fa sarotra kokoa ny mitandrina ny loto).'),
+      ],
+    );
+  }
+
+  Widget _equipmentItem(IconData icon, Color color, String title, String desc) {
+    return _card(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 6),
+                Text(desc, style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.black87, height: 1.5)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // STEPS (TIMELINE)
+  Widget _buildSteps() {
+    final steps = [
+      {
+        'number': '1',
+        'color': Colors.blue,
+        'title': 'Fanomanana (Andro 1)',
+        'images': ['assets/images/m1.png'],
+        'blocks': [
+          _stepBlock('1. Fitetehana ny bozaka:', 'Tetehina ny bozaka ho 3-5 sm ny halavany.', info: 'Ny antony: Rehefa fohy ny bozaka, dia mora kokoa ho an\'ny "mycélium" (ny fakan\'ny holatra) ny mihinana azy sy miparitaka haingana.'),
+          _stepBlock('2. Fangaroana ny rano sy Chaux:', 'Afangaro tsara ny rano sy ny sokay (Chaux).', info: "Ny antony: Ny Chaux dia manova ny pH-n'ny rano (lasa basique), izay mamono ny ankamaroan'ny bobongolo ratsy (moisissures) sy bakteria, nefa ny Pleurote dia mahazaka an'io tontolo io."),
+          _stepBlock('3. Fandoarana:', 'Alona ao anatin\'ilay rano efa misy Chaux ny bozaka.', warning: 'Tandremo: Ataovy difotra rano tsara ny bozaka rehetra. Asio vato na zavatra mavesatra eo amboniny raha ilaina mba tsy hisy mitsingevana.'),
+          _centerInfo('Faharetany: 12 ora (mandritra ny alina).', Colors.blue),
+        ],
+        'tip': 'Secret: Raha 100 litatra ny rano, dia 1kg ny chaux.',
+      },
+      {
+        'number': '2',
+        'color': Colors.orange,
+        'title': 'Fitsihifana & Fandrahoana',
+        'images': ['assets/images/m2.png', 'assets/images/m2.1.png', 'assets/images/m3.png', 'assets/images/m4.png', 'assets/images/m4.1.png'],
+        'blocks': [
+          _stepBlock('1. Fitsihifana & Fangaroana:', 'Avoaka ny bozaka avy ao anaty rano misy chaux, avela hitsiaka kely. Zava-dehibe: Afangaro amin\'ny sisam-bary (Son) ny bozaka mbola manta.', info: 'Antony: Ny sisam-bary koa dia mitondra mikraoba, ka tsy maintsy miaraka andrahoina amin\'ny bozaka izy vao madio.'),
+          _stepBlock('2. Fandrahoana (Pasteurisation):', 'Ampidirina ao anaty barika ny fangaro (Bozaka + Son). Saromana tsara. Ampangotrahina amin\'ny etona (vapeur) mandritra ny 4-6 ora.'),
+        ],
+        'tip': 'Dadabe: "Aza atsoboka anaty rano mangotraka! Ny etona no ilaina. Asio \'grille\' hazo ao anaty barika hanasaraka ny rano sy ny bozaka."',
+      },
+      {
+        'number': '3',
+        'color': Colors.teal,
+        'title': 'Famafazana (Lardage)',
+        'images': ['assets/images/m5.png'],
+        'blocks': [
+          _centerInfo('DINGANA VOALOHANY: FAHADIOVANA', Colors.red),
+          _stepBlock('1. Fanomanana ny tenanao:', 'Sasao tsara amin\'ny savony ny tanana. Kobanina, ary fafao amin\'ny Alikaola hatrany amin\'ny kiho.'),
+          _stepBlock('2. Fitsapana Hafanana:', 'Hamarino fa efa mangatsiaka (matimaty) ny bozaka vao avy nandrahoina. Raha mbola mafana dia maty ny masomboly holatra.'),
+          _stepBlock('3. Famafazana:', 'Afafy amin\'izay ny masomboly holatra: Sosona bozaka -> Masomboly holatra -> Sosona bozaka.'),
+        ],
+        'tip': 'Secret: Aza mikikitika vola na finday intsony rehefa avy nanasa tanana. Ireo no tena mitondra loto.',
+      },
+      {
+        'number': '4',
+        'color': Colors.purple,
+        'title': 'Fanatodizana (20-25 Andro)',
+        'images': ['assets/images/m6.png'],
+        'blocks': [
+          _stepBlock('', 'Apetraka amin\'ny toerana MAIZINA. Tsy azo sokafana mihitsy. Miandry ho fotsy ny harona manontolo.'),
+          _infoBlock('Fa maninona no MAIZINA?', "Ny holatra dia tsy mba toy ny zavamaniry mila masoandro. Ny hazavana dia baiko (signal) ho azy hoe \"mamoaza amin'izay!\". Raha mahazo hazavana izy nefa mbola tsy feno fotsy ny harona, dia hijanona tsy haniry intsony ny fakany (mycélium) fa hiezaka hamoaka holatra kely izy. Vokany: Holatra kely sy osa."),
+          _infoBlock('Nahoana no TSY AZO SOKAFANA?', "Mila rivotra \"manempotra\" (CO2 avo) ny holatra mba hahafahany mampitombo ny fakany haingana. Raha sokafanao, dia hiditra ny rivotra madio (Oxygène), dia hihevitra izy fa efa tokony hamoaka holatra, nefa mbola tsy vonona ny vatany."),
+        ],
+        'tip': 'Dadabe: "Matory ny zazakely. Aza tairina amin\'ny hazavana na rivotra madio, fa avelao izy hanangona hery ao anaty haizina mba hahazoana vokatra be any aoriana."',
+      },
+      {
+        'number': '5',
+        'color': Colors.red,
+        'title': 'Famoazana & Fiotazana',
+        'images': ['assets/images/m7.png'],
+        'blocks': [
+          _stepBlock('1. Ny Hazavana (Choc Lumière):', 'Avoaka ny harona avy ao amin\'ny maizina, entina amin\'ny toerana mazava (fa tsy azon\'ny masoandro mivantana).', info: 'Antony: Ny hazavana no manome baiko azy hoe "Andao hamoaka holatra!".'),
+          _stepBlock('2. Didiana ny harona (Ouverture):', 'Didiana "X" na atao lavaka kely amin\'ny hareza (lame) madio ny harona.', info: 'Antony: Eo amin\'io lavaka io no hivoahan\'ny holatra satria mahazo rivotra madio (Oxygène) izy eo.'),
+          _stepBlock('3. Hamandoana:', 'Tondrahana ny gorodona sy ny rindrina in-3 isan\'andro.', warning: 'Tandremo: Aza tondrahana ny vatan\'ny holatra! Ny rivotra manodidina azy no atao mando (Zavona).'),
+          _timelineDays(),
+        ],
+        'tip': 'Secret: Raha tondrahana mivantana ny holatra dia lasa "Môlera" (bobongolo sy lo). Ny tany no tondrahana mba hiakatra ny etona.',
+      },
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.85,
+      ),
+      itemCount: steps.length,
+      itemBuilder: (context, index) {
+        final step = steps[index];
+        return GestureDetector(
+          onTap: () => _showStepDetail(context, step),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(color: (step['color'] as Color).withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4)),
+              ],
+              border: Border.all(color: (step['color'] as Color).withValues(alpha: 0.2)),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: (step['color'] as Color).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    step['number'] as String,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: step['color'] as Color,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  step['title'] as String,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Tsindrio raha hijery",
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 10,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showStepDetail(BuildContext context, Map<String, dynamic> step) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: (step['color'] as Color).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      step['number'] as String,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: step['color'] as Color,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      step['title'] as String,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ...(step['blocks'] as List<Widget>),
+                    
+                    if (step['images'] != null)
+                      ...(step['images'] as List<String>).map((img) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(img, width: double.infinity, fit: BoxFit.cover),
+                        ),
+                      )),
+
+                    const SizedBox(height: 20),
+                    _dadabeTip(step['tip'] as String),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+
+  Widget _stepBlock(String title, String text, {String? info, String? warning}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: Colors.blue.shade50.withValues(alpha: 0.5),
+          border: Border.all(color: Colors.blue.shade100.withValues(alpha: 0.5)),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (title.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(title, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blue.shade900)),
+              ),
+            Text(text, style: TextStyle(fontFamily: 'Poppins', fontSize: 13, height: 1.6, color: Colors.blue.shade900.withValues(alpha: 0.8))),
+            if (info != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: _infoChip(info, Colors.blue.shade600),
+              ),
+            if (warning != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: _infoChip(warning, Colors.red.shade400),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _centerInfo(String text, Color color) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(colors: [color.withValues(alpha: 0.12), color.withValues(alpha: 0.04)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 6))],
+      ),
+      alignment: Alignment.center,
+      child: Text(text, style: TextStyle(fontFamily: 'Poppins', color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+    );
+  }
+
+  Widget _infoBlock(String title, String text) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [Colors.grey.shade50, Colors.white], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(height: 8),
+          Text(text, style: TextStyle(fontFamily: 'Poppins', fontSize: 13, height: 1.5)),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoChip(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, size: 16, color: color),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: TextStyle(fontFamily: 'Poppins', color: color, fontSize: 12))),
+        ],
+      ),
+    );
+  }
+
+  Widget _timelineDays() {
+    final items = [
+      {'label': 'J 3-5', 'text': "Mipoitra ny lohany kely (Primordia)."},
+      {'label': 'J 6-9', 'text': "Fitomboana haingana: 3-4 andro dia vonona hojinjaina."},
+      {'label': 'J 10+', 'text': "Fiatoana: miato 7-10 andro vao andiany faharoa."},
+    ];
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [Colors.red.shade50, Colors.white], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.red.shade100),
+        boxShadow: [BoxShadow(color: Colors.red.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 6))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Tetiandro Fitomboana', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 14, color: Colors.red)),
+          const SizedBox(height: 12),
+          ...items.map((e) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [Colors.white, Colors.red.shade50], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade100),
+                      ),
+                      child: Text(e['label']!, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 12)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(e['text']!, style: TextStyle(fontFamily: 'Poppins', fontSize: 13, height: 1.5))),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+  // HYGIENE
+  Widget _buildHygiene() {
+    return Column(
+      children: [
+        _card(
+          gradient: const LinearGradient(colors: [Color(0xFFE0F2F1), Color(0xFFB2DFDB)]),
+          borderColor: Colors.teal.shade200,
+          child: Column(
+            children: [
+              Text("Ny Lalàn'ny Fahadiovana 10", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: const Color(0xFF00695C), fontSize: 16)),
+              const SizedBox(height: 4),
+              Text('"Raha misy bobongolo maitso mipoitra, dia ny fahadiovana no nisy diso."', style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        ..._hygieneRules.asMap().entries.map((e) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: const BoxDecoration(color: Color(0xFF00897B), shape: BoxShape.circle),
+                    alignment: Alignment.center,
+                    child: Text('${e.key + 1}', style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _card(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(e.value, style: TextStyle(fontFamily: 'Poppins', fontSize: 13, height: 1.5)),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+      ],
+    );
+  }
+
+  // PROCESSING (Séchage)
+  Widget _buildProcessing() {
+    return Column(
+      children: [
+        _card(
+          gradient: const LinearGradient(colors: [Color(0xFFF3E5F5), Color(0xFFE1BEE7)]),
+          borderColor: Colors.purple.shade200,
+          child: Column(
+            children: [
+              Text('Fanodinana (Séchage)', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: const Color(0xFF6A1B9A), fontSize: 16)),
+              const SizedBox(height: 4),
+              Text('Raha lavitra ny tsena ianao, dia aza avela ho lo ny vokatra. Hamainina!', style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+            ],
+          ),
+        ),
+        _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('1. Fanomanana', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              Text('Tetehina manify ny holatra vao avy nojinjaina. Aza sasana amin\'ny rano be sao mitroka rano.', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, height: 1.5)),
+            ],
+          ),
+        ),
+        _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('2. Séchoir Solaire (Mora atao)', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              Text('Aza ahiana mivantana amin\'ny tany na amin\'ny masoandro mivantana be raha tsy misy fiarovana.', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, height: 1.5)),
+              const SizedBox(height: 12),
+              _Bullet('Cadre hazo + Moustiquaire madio'),
+              _Bullet('Apetraho tsy hifanipetaka'),
+              _Bullet('Sarony plastika mangarahara ambony'),
+              _Bullet('Atao mitongilana kely ny tafo plastika'),
+            ],
+          ),
+        ),
+        _dadabeTip('Ny holatra maina tsara dia "misy feo" (craquant). 10kg lena = 1kg maina.'),
+        _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('3. Fitehirizana', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              Text('Rehefa maina dia atao anaty sachet plastique scellé. Maharitra 6 volana hatramin\'ny 1 taona.', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, height: 1.5)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // MARKETING
+  Widget _buildMarketing() {
+    return Column(
+      children: [
+        _card(
+          gradient: const LinearGradient(colors: [Color(0xFFE8EAF6), Color(0xFFC5CAE9)]),
+          borderColor: Colors.indigo.shade200,
+          child: Column(
+            children: [
+              Text('Fivarotana & Tsena', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: const Color(0xFF283593), fontSize: 16)),
+              const SizedBox(height: 4),
+              Text('Aza miandry ho masaka vao mitady mpividy!', style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+            ],
+          ),
+        ),
+        _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Iza no hividy?', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 12),
+              _Bullet('Olon-tsotra: eny amin\'ny tsena na manatitra isan-trano.'),
+              _Bullet('Trano Fisakafoanana (Hotely/Resto): Mila holatra vaovao isan\'andro izy ireo (indrindra ny Pizzeria sy Chinois). Manaova fifanarahana mialoha.'),
+              _Bullet('Mpamongady (Grossistes): Mividy betsaka fa amin\'ny vidiny ambany kokoa.'),
+            ],
+          ),
+        ),
+        _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Ny Fonosana (Packaging)', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              Text('Ny mason\'ny olona no mihinana voalohany. Aza atao anaty sachet maloto.', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, height: 1.5)),
+              const SizedBox(height: 12),
+              _Bullet('Barquette: Lovia plastika + Film (Manintona kokoa).'),
+              _Bullet('Etiquette: Anarana + Daty (Tena zava-dehibe).'),
+            ],
+          ),
+        ),
+        _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Vahaolana raha tsy lafo', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              Text('Raha be loatra ny vokatra ka tsy lafo, dia aza ariana:', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, height: 1.5)),
+              const SizedBox(height: 12),
+              _Bullet('Hamainina: azo tehirizina 1 taona'),
+              _Bullet('Atao Vovoka: afangaro amin\'ny sira sy zava-manitra (cube bio)'),
+              _Bullet('Achards: tavoahangy misy menaka sy vinaingitra'),
+            ],
+          ),
+        ),
+        _dadabeTip("Dadabe: \"Ny mpanjifa mahatoky dia sarobidy noho ny vola. Aza mamitaka (mivarotra holatra efa antitra), ary asio 'bonnes' kely foana.\""),
+      ],
+    );
+  }
+
+  // CALCULATOR
+  Widget _buildCalc() {
+    final costPerBag = 1500;
+    final yieldPerBag = 0.8;
+    final pricePerKg = 10000;
+
+    final totalCost = _bags * costPerBag;
+    final totalYield = _bags * yieldPerBag;
+    final revenue = totalYield * pricePerKg;
+    final profit = revenue - totalCost;
+
+    return Column(
+      children: [
+        _card(
+          gradient: const LinearGradient(colors: [Color(0xFFFFF8E1), Color(0xFFFFECB3)]),
+          borderColor: Colors.amber.shade200,
+          child: Column(
+            children: [
+              Text('Kajy Tombony Tsotra', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: const Color(0xFFEF6C00), fontSize: 16)),
+              const SizedBox(height: 4),
+              Text('Andrana ho an\'ny tantsaha', style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+            ],
+          ),
+        ),
+        _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Isan'ny Harona (Sachets)", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16)),
+              Slider(
+                value: _bags.toDouble(),
+                min: 5,
+                max: 100,
+                divisions: 95,
+                activeColor: Colors.green,
+                onChanged: (v) => setState(() => _bags = v.round()),
+              ),
+              Center(
+                child: Text('$_bags Harona', style: TextStyle(fontFamily: 'Poppins', fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green)),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(16)),
+                child: Column(
+                  children: [
+                    _calcRow('Fandaniana\n(Vidin\'ny masomboly holatra & plastika)', totalCost, color: Colors.red),
+                    _calcRow('Vokatra tombana (Kg)', totalYield, color: Colors.blue, isKg: true),
+                    _calcRow('Vola Miditra\n(Raha 10.000Ar/kg)', revenue, color: Colors.green),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('TOMBONY MADIO:', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text('${_fmt(profit)} Ar', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 22, color: Colors.green)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _calcRow(String label, num value, {required Color color, bool isKg = false}) {
+    final text = isKg ? '${value.toStringAsFixed(1)} Kg' : '${_fmt(value.toDouble())} Ar';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(child: Text(label, style: TextStyle(fontFamily: 'Poppins', color: color, fontSize: 13))),
+          Text(text, style: TextStyle(fontFamily: 'Poppins', color: color, fontWeight: FontWeight.bold, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
+  // DOCTOR
+  Widget _buildDoctor() {
+    return Column(
+      children: [
+        _card(
+          gradient: const LinearGradient(colors: [Color(0xFFFFEBEE), Color(0xFFFFCDD2)]),
+          borderColor: Colors.red.shade200,
+          child: Column(
+            children: [
+              Text('Inona no manjo ny holatro?', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: const Color(0xFFC62828), fontSize: 16)),
+              const SizedBox(height: 4),
+              Text('Tsindrio ny olana hitanao etsy ambany', style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        ..._doctorProblems.map((p) => _accordion(p['symp']!, p['cause']!, p['sol']!)),
+      ],
+    );
+  }
+
+  Widget _accordion(String title, String cause, String sol) {
+    return _card(
+      padding: EdgeInsets.zero,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_outlined, color: Colors.red),
+              const SizedBox(width: 12),
+              Expanded(child: Text(title, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 14, color: Colors.red))),
+            ],
+          ),
+          children: [
+            Text('Antony: $cause', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.grey.shade700, height: 1.5)),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(12)),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text('Vahaolana: $sol', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.bold, color: Colors.green, height: 1.5))),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // UTILS
+  Widget _card({required Widget child, EdgeInsets padding = const EdgeInsets.all(24), LinearGradient? gradient, Color? borderColor}) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: gradient == null ? Colors.white : null,
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: borderColor ?? Colors.white.withValues(alpha: 0.5), width: 1.5),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Padding(padding: padding, child: child),
+    );
+  }
+
+  Widget _dadabeTip(String text, {bool dense = false}) {
+    return Container(
+      width: double.infinity,
+      padding: dense ? const EdgeInsets.all(16) : const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFFFECB3), width: 1.5),
+        boxShadow: [
+          BoxShadow(color: Colors.orange.withValues(alpha: 0.08), blurRadius: 15, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.lightbulb, color: Colors.orange, size: 22),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Dadabe Tips", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: Colors.orange, fontSize: 12)),
+                const SizedBox(height: 4),
+                Text(text, style: TextStyle(fontFamily: 'Poppins', fontSize: 14, height: 1.6, color: Colors.black87)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _fmt(double v) => v.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+(?!\d))"), (m) => '${m[1]} ');
+}
+
+class _Bullet extends StatelessWidget {
+  final String text;
+  final Color color;
+  const _Bullet(this.text, {this.color = Colors.black87});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 18)),
-          const SizedBox(width: 8),
-          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 12))),
+          Text('• ', style: TextStyle(fontFamily: 'Poppins', color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+          Expanded(child: Text(text, style: TextStyle(fontFamily: 'Poppins', fontSize: 14, color: color, height: 1.5))),
         ],
-      ),
-    );
-  }
-}
-
-class HolatraGrowingScreen extends StatelessWidget {
-  const HolatraGrowingScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.teal.shade700, Colors.teal.shade500],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Row(
-              children: [
-                Text('🌡️', style: TextStyle(fontSize: 40)),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('FAMBOLENA HOLATRA', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('Dingana rehetra amin\'ny fambolena', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Step by step guide
-          const Text('📋 DINGANA FAMBOLENA PLEUROTE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
-          
-          _buildStep(1, 'Fanomanana Substrat', 
-            '• Mololo vary na bozaka maina\n'
-            '• Alefaso ao anaty rano 24 ora\n'
-            '• Faohina tsara mba tsy hisy rano be\n'
-            '• Pasteurisez @ 60-80°C mandritra 1 ora',
-            Colors.blue),
-          
-          _buildStep(2, 'Inoculation (Fanasitrihana)', 
-            '• Arahaba ny substrat ho 25-30°C\n'
-            '• Asio ny spawn (masomboly holatra) 5-10%\n'
-            '• Afangaro tsara\n'
-            '• Asio ao anaty kitapo plastika',
-            Colors.green),
-          
-          _buildStep(3, 'Incubation (Fitomboana masomboly)', 
-            '• Apetraho ao amin\'ny toerana maizina\n'
-            '• Hafanana: 24-28°C\n'
-            '• Andraso 2-3 herinandro\n'
-            '• Ny substrat dia ho fotsy tanteraka (mycelium)',
-            Colors.purple),
-          
-          _buildStep(4, 'Fructification (Famokarana)', 
-            '• Asio lavaka kely ny kitapo\n'
-            '• Apetraho ao amin\'ny toerana mazava (tsy masoandro mivantana)\n'
-            '• Hamandoana: 80-90%\n'
-            '• Rivotra madio (famoahana CO2)\n'
-            '• Hafanana: 18-25°C',
-            Colors.orange),
-          
-          _buildStep(5, 'Fijinjana', 
-            '• Rehefa lehibe ny satroka (5-10cm)\n'
-            '• Alohan\'ny hisokafan\'ny satroka tanteraka\n'
-            '• Tapaho amin\'ny antsipika maranitra\n'
-            '• Misy vokatra 2-3 isaky ny kitapo',
-            Colors.red),
-          
-          const SizedBox(height: 20),
-          
-          // Environment requirements
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Text('🏠', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('TRANO FAMBOLENA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _buildEnvRow('📐', 'Habe', '3x4m dia ampy ho an\'ny 100 kitapo'),
-                _buildEnvRow('💡', 'Hazavana', 'Mazava fa tsy masoandro mivantana'),
-                _buildEnvRow('💨', 'Rivotra', 'Misy varavarankely ho famoahana CO2'),
-                _buildEnvRow('💧', 'Rano', 'Misy robine na fitondrana rano'),
-                _buildEnvRow('🧱', 'Rindrina', 'Mety ho vy, hazo, na biriky'),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Humidity control
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.cyan.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.cyan.shade200),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text('💧', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('FITANTANANA HAMANDOANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                SizedBox(height: 12),
-                Text(
-                  '• Tondrahy rano 2-3 isan\'andro (sprayer)\n'
-                  '• Asio barika rano ao anaty trano\n'
-                  '• Humidificateur raha azo atao\n'
-                  '• Jereo ny kitapo mba tsy ho maina\n'
-                  '• 80-90% hamandoana no tsara indrindra',
-                  style: TextStyle(fontSize: 12, height: 1.5),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Common problems
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.red.shade200),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text('⚠️', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('OLANA MAHAZATRA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                SizedBox(height: 12),
-                Text(
-                  '• Holatra maitso/mainty = Contamination (ario ny kitapo)\n'
-                  '• Tsy mitsiry = Tsy ampy hamandoana na mafana loatra\n'
-                  '• Holatra kely = Tsy ampy hazavana na rivotra\n'
-                  '• Holatra malazo = Mafana loatra na maina\n'
-                  '• Biby kely (mouches) = Tsy madio ny trano',
-                  style: TextStyle(fontSize: 12, height: 1.5),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStep(int number, String title, String content, Color color) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text('$number', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: color)),
-                    const SizedBox(height: 8),
-                    Text(content, style: const TextStyle(fontSize: 12, height: 1.4)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEnvRow(String emoji, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 16)),
-          const SizedBox(width: 8),
-          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 12))),
-        ],
-      ),
-    );
-  }
-}
-
-class HolatraHarvestScreen extends StatelessWidget {
-  const HolatraHarvestScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.orange.shade700, Colors.orange.shade500],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Row(
-              children: [
-                Text('📦', style: TextStyle(fontSize: 40)),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('FIOTAZANA SY FITEHIRIZANA', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('Fomba fiotazana sy fitahirizana holatra', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // When to harvest
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.shade200),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text('⏰', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('FOTOANA FIOTAZANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                SizedBox(height: 12),
-                Text(
-                  '✅ TSARA OTAZANA:\n'
-                  '• Rehefa lehibe ny satroka (5-15cm araka ny karazana)\n'
-                  '• Alohan\'ny hisokafan\'ny satroka tanteraka\n'
-                  '• Mbola miondrika ny sisiny\n'
-                  '• Loko mazava sy madio\n\n'
-                  '❌ DISO FOTOANA:\n'
-                  '• Efa nisokatra tanteraka ny satroka = efa antitra\n'
-                  '• Efa mipoitra ny spores (vovoka) = lasa ny tsiro\n'
-                  '• Efa maina ny sisiny = tsy maharitra',
-                  style: TextStyle(fontSize: 12, height: 1.5),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // How to harvest
-          const Text('✂️ FOMBA FIOTAZANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 12),
-          
-          _buildHarvestCard('Pleurote', 
-            '• Tazonina ny fototra\n'
-            '• Tsoahina miaraka amin\'ny cluster\n'
-            '• Tsy tapahina (tsoahina)',
-            Colors.brown),
-          
-          _buildHarvestCard('Champignon de Paris', 
-            '• Hodidina kely ny holatra\n'
-            '• Tsoahina miaraka amin\'ny faka\n'
-            '• Azo tapahina ihany koa',
-            Colors.grey),
-          
-          _buildHarvestCard('Shiitake', 
-            '• Tapahina amin\'ny antsipika maranitra\n'
-            '• Avela kely ny fototra\n'
-            '• Tsy tsoahina (manimba ny hazo)',
-            Colors.amber),
-          
-          const SizedBox(height: 20),
-          
-          // Storage methods
-          const Text('🧊 FITAHIRIZANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 12),
-          
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: Column(
-              children: [
-                _buildStorageRow('Vaovao (frais)', '3-5 andro', 'Réfrigérateur 4°C, kitapo taratasy', Icons.ac_unit, Colors.blue),
-                const Divider(height: 1),
-                _buildStorageRow('Maina (séché)', '6-12 volana', 'Hafanana 40-50°C, 2-3 andro', Icons.wb_sunny, Colors.orange),
-                const Divider(height: 1),
-                _buildStorageRow('Voapoizina (congelé)', '6 volana', 'Andrahoy aloha, avy eo congelé', Icons.severe_cold, Colors.cyan),
-                const Divider(height: 1),
-                _buildStorageRow('Marinade', '3-6 volana', 'Ao anaty vinaigre na menaka', Icons.local_drink, Colors.green),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Drying instructions
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.amber.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.shade200),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text('☀️', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('FAMAINANA (SÉCHAGE)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                SizedBox(height: 12),
-                Text(
-                  '1. Tapaho kely ny holatra (3-5mm)\n'
-                  '2. Avelao ao amin\'ny masoandro na séchoir\n'
-                  '3. Hafanana: 40-50°C (tsy ambony 60°C)\n'
-                  '4. Fotoana: 24-48 ora\n'
-                  '5. Rehefa mafy toy ny taolana = vita\n'
-                  '6. Tehirizo ao anaty kaopy hermetika\n\n'
-                  '💡 Ny holatra maina dia 10x maivana kokoa!',
-                  style: TextStyle(fontSize: 12, height: 1.5),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Yield expectations
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.purple.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.purple.shade200),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text('📊', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('VOKATRA ANAMBARANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                SizedBox(height: 12),
-                Text(
-                  '📦 Kitapo 1kg substrat:\n'
-                  '• Pleurote: 250-350g holatra\n'
-                  '• Vokatra 2-3 isaky ny kitapo\n'
-                  '• Elanelana 7-14 andro isaky ny vokatra\n\n'
-                  '🏭 Orinasa kely (100 kitapo/herinandro):\n'
-                  '• Vokatra: 25-35kg holatra/herinandro\n'
-                  '• Isan-bolana: 100-140kg holatra',
-                  style: TextStyle(fontSize: 12, height: 1.5),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHarvestCard(String type, String instructions, Color color) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity( 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text('🍄‍🟫', style: TextStyle(fontSize: 24)),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(type, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: color)),
-                  const SizedBox(height: 4),
-                  Text(instructions, style: const TextStyle(fontSize: 11, height: 1.4)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStorageRow(String method, String duration, String details, IconData icon, Color color) {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity( 0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(method, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: color.withOpacity( 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(duration, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(details, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class HolatraMarketScreen extends StatelessWidget {
-  const HolatraMarketScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.green.shade700, Colors.green.shade500],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Row(
-              children: [
-                Text('🛒', style: TextStyle(fontSize: 40)),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('TSENA SY TOMBONY', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('Fivarotana sy kajy tombony', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Market prices
-          const Text('💰 VIDINY ETO MADAGASIKARA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 12),
-          
-          _buildPriceCard('Pleurote vaovao', '15,000 - 25,000 Ar/kg', 'Tsena be mpividy indrindra', Colors.brown),
-          _buildPriceCard('Shiitake vaovao', '30,000 - 50,000 Ar/kg', 'Restorant sy hotel', Colors.amber),
-          _buildPriceCard('Champignon Paris', '20,000 - 35,000 Ar/kg', 'Supermarché', Colors.grey),
-          _buildPriceCard('Holatra maina', '80,000 - 150,000 Ar/kg', 'Export sy pharmaceutique', Colors.orange),
-          
-          const SizedBox(height: 20),
-          
-          // Where to sell
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue.shade200),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text('🏪', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('TOERANA FIVAROTANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                SizedBox(height: 12),
-                Text(
-                  '🍽️ Restorant sy Hotel\n'
-                  '   • Mividy betsaka, vidiny tsara\n'
-                  '   • Mila kalitao sy fahazarana\n\n'
-                  '🛒 Supermarché (Jumbo, Leader Price...)\n'
-                  '   • Mila emballage tsara\n'
-                  '   • Mila faharetan\'ny vokatra\n\n'
-                  '🏠 Tsena tsotra sy mpivarotra\n'
-                  '   • Mora manomboka\n'
-                  '   • Mila mpividy mahatoky\n\n'
-                  '📱 Facebook / WhatsApp\n'
-                  '   • Livraison mivantana\n'
-                  '   • Tsy misy intermédiaire',
-                  style: TextStyle(fontSize: 12, height: 1.5),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Profitability calculator
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.shade200),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text('📊', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('KAJY TOMBONY (100 kitapo/volana)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                SizedBox(height: 12),
-                Text(
-                  '📥 FANDANIANA:\n'
-                  '   • Substrat (mololo): 50,000 Ar\n'
-                  '   • Spawn (masomboly): 100,000 Ar\n'
-                  '   • Kitapo plastika: 20,000 Ar\n'
-                  '   • Rano sy jiro: 30,000 Ar\n'
-                  '   • Hafa: 50,000 Ar\n'
-                  '   ➡️ TOTAL: 250,000 Ar\n\n'
-                  '📤 VOLA MIDITRA:\n'
-                  '   • Vokatra: 30kg x 20,000 Ar = 600,000 Ar\n\n'
-                  '💵 TOMBONY MADIO:\n'
-                  '   600,000 - 250,000 = 350,000 Ar/volana\n\n'
-                  '📈 Marge: ~58%',
-                  style: TextStyle(fontSize: 12, height: 1.5, fontFamily: 'monospace'),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Investment needed
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.purple.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.purple.shade200),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text('🏗️', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('VOLA ILAINA HANOMBOHANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                SizedBox(height: 12),
-                Text(
-                  '🏠 Trano fambolena kely (3x4m):\n'
-                  '   • 500,000 - 1,500,000 Ar\n\n'
-                  '🧰 Fitaovana:\n'
-                  '   • Sprayer: 30,000 Ar\n'
-                  '   • Thermomètre/Hygromètre: 20,000 Ar\n'
-                  '   • Fatra sy amboara: 50,000 Ar\n\n'
-                  '🌱 Fampandehanana voalohany:\n'
-                  '   • Spawn sy substrat: 250,000 Ar\n\n'
-                  '➡️ TOTAL: 800,000 - 1,800,000 Ar',
-                  style: TextStyle(fontSize: 12, height: 1.5),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Tips for success
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.teal.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.teal.shade200),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text('💡', style: TextStyle(fontSize: 20)),
-                    SizedBox(width: 8),
-                    Text('TOROHEVITRA FAHOMBIAZANA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                SizedBox(height: 12),
-                Text(
-                  '✅ Manomboha kely (20-50 kitapo)\n'
-                  '✅ Mianara tsara alohan\'ny hanalehibe\n'
-                  '✅ Mitazona kalitao tsara lalandava\n'
-                  '✅ Mampiasa spawn tsara kalitao\n'
-                  '✅ Manaraka ny fahadiovana (hygiène)\n'
-                  '✅ Mitady mpividy alohan\'ny hamokatra be\n'
-                  '✅ Manao sary sy video ho an\'ny Facebook\n'
-                  '✅ Manome holatra sample ho an\'ny mpividy',
-                  style: TextStyle(fontSize: 12, height: 1.5),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPriceCard(String name, String price, String market, Color color) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity( 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text('🍄‍🟫', style: TextStyle(fontSize: 24)),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  const SizedBox(height: 2),
-                  Text(market, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-                ],
-              ),
-            ),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 120),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(price, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.green.shade700), overflow: TextOverflow.ellipsis),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -41012,7 +44191,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                         '($price Ar/singa)',
                         style: TextStyle(
                           fontSize: 10,
-                          color: textColor.withOpacity( 0.7),
+                          color: textColor.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -41290,7 +44469,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                                 width: isTop3 ? 2 : 1,
                               ),
                               boxShadow: isTop3 ? [
-                                BoxShadow(color: Colors.amber.withOpacity( 0.2), blurRadius: 5),
+                                BoxShadow(color: Colors.amber.withValues(alpha: 0.2), blurRadius: 5),
                               ] : null,
                             ),
                             child: Column(
@@ -41346,7 +44525,7 @@ class _ProfitabilityAnalyzerDialogState extends State<ProfitabilityAnalyzerDialo
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                                 decoration: BoxDecoration(
-                                                  color: _getRiskColor(rec['riskLevel']).withOpacity( 0.1),
+                                                  color: _getRiskColor(rec['riskLevel']).withValues(alpha: 0.1),
                                                   borderRadius: BorderRadius.circular(6),
                                                 ),
                                                 child: Text(
@@ -42137,7 +45316,7 @@ class _ProjectManagementDialogState extends State<ProjectManagementDialog> with 
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: _getStatusColor(task['status']).withOpacity( 0.2),
+                        color: _getStatusColor(task['status']).withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -42162,7 +45341,7 @@ class _ProjectManagementDialogState extends State<ProjectManagementDialog> with 
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: _getPriorityColor(task['priority']).withOpacity( 0.2),
+                              color: _getPriorityColor(task['priority']).withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -42263,7 +45442,7 @@ class _ProjectManagementDialogState extends State<ProjectManagementDialog> with 
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -42311,7 +45490,7 @@ class _ProjectManagementDialogState extends State<ProjectManagementDialog> with 
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.05), blurRadius: 5)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -42335,9 +45514,9 @@ class _ProjectManagementDialogState extends State<ProjectManagementDialog> with 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity( 0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity( 0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -42544,6 +45723,48 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Vérification Statut Supabase
+                FutureBuilder<bool>(
+                  future: Supabase.instance.client.from('activation_codes').select().limit(1).then((_) => true).catchError((_) => false),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.only(bottom: 16.0),
+                        child: LinearProgressIndicator(),
+                      );
+                    }
+                    final isConnected = snapshot.data ?? false;
+                    return Container(
+                      padding: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: isConnected ? Colors.green.shade50 : Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: isConnected ? Colors.green : Colors.red),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(isConnected ? Icons.cloud_done : Icons.cloud_off, 
+                               color: isConnected ? Colors.green : Colors.red),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              isConnected 
+                                ? 'Base de données connectée (Sécurisé)' 
+                                : 'Non connecté (Table manquante ?)',
+                              style: TextStyle(
+                                color: isConnected ? Colors.green.shade900 : Colors.red.shade900,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
                 Row(
                   children: [
                     Expanded(
@@ -42701,7 +45922,7 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
                     
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: statusColor.withOpacity( 0.2),
+                        backgroundColor: statusColor.withValues(alpha: 0.2),
                         child: Icon(
                           isUsed ? Icons.check : (isExpired ? Icons.timer_off : Icons.key),
                           color: statusColor,
@@ -42724,7 +45945,7 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity( 0.2),
+                          color: statusColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -42763,7 +45984,7 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
                 border: Border.all(color: Colors.white, width: 4),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity( 0.4),
+                    color: Colors.black.withValues(alpha: 0.4),
                     blurRadius: 20,
                     offset: const Offset(0, 6),
                   ),
@@ -42792,9 +46013,9 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity( 0.2),
+                color: Colors.red.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.red.withOpacity(0.5)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
               ),
               child: const Text(
                 'Développeur, Créateur',
@@ -42816,7 +46037,7 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
                 border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity( 0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 4),
                   ),
@@ -42828,7 +46049,7 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      color: Colors.white.withOpacity( 0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       child: const Icon(
                         Icons.person,
                         size: 50,
@@ -42852,9 +46073,9 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity( 0.2),
+                color: Colors.orange.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
               ),
               child: const Text(
                 'Créateur',
@@ -42909,7 +46130,7 @@ class _AboutProfileDialogState extends State<AboutProfileDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity( 0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -43274,7 +46495,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: isSelected 
-                              ? (method['color'] as Color).withOpacity( 0.1)
+                              ? (method['color'] as Color).withValues(alpha: 0.1)
                               : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
@@ -43477,7 +46698,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
-                                color: AppColors.primary.withOpacity( 0.1),
+                                color: AppColors.primary.withValues(alpha: 0.1),
                                 child: const Icon(Icons.person, color: AppColors.primary),
                               );
                             },
