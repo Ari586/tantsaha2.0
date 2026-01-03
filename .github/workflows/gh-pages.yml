@@ -79,4 +79,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: build/web
-# (Paste the YAML content above here; or re-run the block to write it)
