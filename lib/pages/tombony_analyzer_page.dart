@@ -4,21 +4,37 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 // ==========================================
-// 1. DESIGN SYSTEM (V36.1 CRÈME DOUX)
-// ==========================================ter
+// 1. DESIGN SYSTEM (V37 MODERNE VIBRANT)
+// ==========================================
 class AppColors {
-  static const Color bgTop = Color(0xFFFFF8DC); // Crème
-  static const Color bgBottom = Color(0xFFF5F5DC); // Beige clair
-  static const Color surface = Color.fromRGBO(245, 235, 220, 0.90); // Beige rosé
-  static const Color glass = Color.fromRGBO(250, 240, 230, 0.75);
-  static const Color primaryGreen = Color(0xFF2E7D32); // Vert foncé
-  static const Color primaryOrange = Color(0xFFE65100); // Orange foncé
-  static const Color accentBlue = Color(0xFF0277BD); // Bleu foncé
-  static const Color accentPurple = Color(0xFF7B1FA2); // Violet foncé
-  static const Color textMain = Color(0xFF3E2723); // Marron foncé
-  static const Color textMuted = Color(0xFF6D4C41); // Marron moyen
-  static const Color glassBorder = Color.fromRGBO(139, 110, 99, 0.3);
-  static const Color border = Color.fromRGBO(139, 110, 99, 0.2);
+  // Fond moderne avec gradient subtil
+  static const Color bgTop = Color(0xFF0A1929); // Bleu nuit profond
+  static const Color bgBottom = Color(0xFF1A2332); // Bleu nuit
+  
+  // Surface et verre
+  static const Color surface = Color(0xFF1E293B); // Slate foncé
+  static const Color glass = Color.fromRGBO(30, 41, 59, 0.85); // Verre moderne
+  
+  // Couleurs primaires vibrantes
+  static const Color primaryGreen = Color(0xFF10B981); // Vert émeraude
+  static const Color primaryOrange = Color(0xFFF59E0B); // Ambre doré
+  static const Color accentBlue = Color(0xFF3B82F6); // Bleu électrique
+  static const Color accentPurple = Color(0xFFA855F7); // Violet vif
+  static const Color accentPink = Color(0xFFEC4899); // Rose vif
+  static const Color accentCyan = Color(0xFF06B6D4); // Cyan
+  
+  // Texte
+  static const Color textMain = Color(0xFFF1F5F9); // Blanc cassé
+  static const Color textMuted = Color(0xFF94A3B8); // Gris bleuté
+  
+  // Bordures
+  static const Color glassBorder = Color.fromRGBO(71, 85, 105, 0.5);
+  static const Color border = Color.fromRGBO(71, 85, 105, 0.3);
+  
+  // Accents pour graphiques
+  static const Color chartRed = Color(0xFFEF4444);
+  static const Color chartYellow = Color(0xFFFBBF24);
+  static const Color chartTeal = Color(0xFF14B8A6);
 }
 
 // ==========================================
@@ -443,40 +459,61 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
   Widget _buildHeader() {
     return Column(
       children: [
-        const Text(
-          "MADA AGRI",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
-            color: Color(0xFF000000),
-            shadows: [Shadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 2))],
+        ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [AppColors.accentCyan, AppColors.accentPurple],
+          ).createShader(bounds),
+          child: const Text(
+            "MADA AGRI",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1,
+              color: Colors.white,
+            ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFF000000).withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              colors: [AppColors.primaryOrange, AppColors.accentPink],
+            ),
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryOrange.withValues(alpha: 0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: const Text(
             "TOMBONY ANALYZER",
             style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF000000),
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: 1.2,
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
         Container(
-          padding: const EdgeInsets.all(5),
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.glassBorder, width: 1),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(color: AppColors.glassBorder, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
           child: Row(children: [_tabItem('fambolena', "FAMBOLENA"), _tabItem('fiompiana', "FIOMPIANA")]),
         ),
@@ -710,7 +747,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
           style: TextStyle(
             fontSize: 13, 
             fontWeight: FontWeight.w700, 
-            color: active ? const Color(0xFF0C4A6E) : const Color(0xFF000000),
+            color: active ? const Color(0xFF0C4A6E) : Colors.white,
           ),
         ),
       ),
@@ -858,7 +895,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.accentBlue,
+                    color: Colors.black,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -879,7 +916,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                   style: const TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.accentBlue,
+                    color: Colors.black,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1016,15 +1053,16 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF87CEEB), Color(0xFF00BFFF)],
+          colors: [AppColors.accentCyan, AppColors.accentPurple, AppColors.accentPink],
+          stops: [0.0, 0.5, 1.0],
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF00BFFF).withValues(alpha: 0.3),
-            blurRadius: 25,
+            color: AppColors.accentPurple.withValues(alpha: 0.5),
+            blurRadius: 30,
             spreadRadius: -5,
-            offset: const Offset(0, 10),
+            offset: const Offset(0, 15),
           ),
         ],
       ),
@@ -1034,18 +1072,35 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
           onTap: () {
             if (_strat == 'random') _generateRandomMix(); else _runCalculation(true);
           },
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 20),
+            padding: const EdgeInsets.symmetric(vertical: 22),
             alignment: Alignment.center,
-            child: Text(
-              label, 
-              style: const TextStyle(
-                fontSize: 16, 
-                fontWeight: FontWeight.w800, 
-                letterSpacing: 1.5,
-                color: Color(0xFF0F172A),
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  _strat == 'random' ? "🎲" : "⚡",
+                  style: const TextStyle(fontSize: 24),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  label, 
+                  style: const TextStyle(
+                    fontSize: 17, 
+                    fontWeight: FontWeight.w900, 
+                    letterSpacing: 1.5,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black26,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -1059,11 +1114,22 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     return Container(
       margin: const EdgeInsets.only(top: 30),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
-          BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.08), blurRadius: 28, offset: Offset(0, 12)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.surface,
+            AppColors.surface.withValues(alpha: 0.8),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.glassBorder, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accentPurple.withValues(alpha: 0.2),
+            blurRadius: 40,
+            offset: const Offset(0, 20),
+          ),
         ],
       ),
       child: Column(
@@ -1071,60 +1137,92 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
           // Header
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(30),
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [AppColors.glass.withValues(alpha: 0.7), Colors.white],
+                colors: [AppColors.primaryGreen, AppColors.accentCyan],
               ),
-              border: Border(
-                bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.8)),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(26),
+                topRight: Radius.circular(26),
               ),
             ),
             child: Column(
               children: [
-                const Text(
-                  "TOMBONY MADIO (NET PROFIT)",
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textMuted,
-                    letterSpacing: 1,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    "TOMBONY MADIO (NET PROFIT)",
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 1.5,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  fmt.format(_resProfit),
-                  style: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primaryGreen,
+                const SizedBox(height: 16),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    fmt.format(_resProfit),
+                    style: const TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black26,
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 if (_mixTitle.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    _mixTitle,
-                    style: const TextStyle(fontSize: 12, color: AppColors.textMain),
-                    textAlign: TextAlign.center,
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      _mixTitle,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ],
-                const SizedBox(height: 25),
+                const SizedBox(height: 24),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      width: 2,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Expanded(child: _kpi("ROI", "+${_resROI.toStringAsFixed(0)}%", AppColors.primaryGreen)),
+                      Expanded(child: _kpi("ROI", "+${_resROI.toStringAsFixed(0)}%", Colors.white)),
                       const SizedBox(width: 12),
-                      Expanded(child: _kpi("VOLA NIVOAKA", fmt.format(_resInvest), AppColors.accentBlue)),
+                      Expanded(child: _kpi("VOLA NIVOAKA", fmt.format(_resInvest), Colors.white)),
                       const SizedBox(width: 12),
-                      Expanded(child: _kpi("HABE / ISA", _resQty, AppColors.primaryOrange)),
+                      Expanded(child: _kpi("HABE / ISA", _resQty, Colors.white)),
                     ],
                   ),
                 ),
@@ -1133,13 +1231,16 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
           ),
           // Tip
           Padding(
-            padding: const EdgeInsets.all(15),
+            padding: const EdgeInsets.all(20),
             child: Container(
-              padding: const EdgeInsets.all(15),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: AppColors.glass,
-                border: Border(left: BorderSide(color: AppColors.accentBlue.withValues(alpha: 0.7), width: 3)),
-                borderRadius: BorderRadius.circular(10),
+                color: AppColors.accentBlue.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.accentBlue.withValues(alpha: 0.3),
+                  width: 2,
+                ),
               ),
               child: Text(
                 _tipText.isNotEmpty 
@@ -1171,23 +1272,31 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
         Text(
           label,
           style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textMuted,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            letterSpacing: 0.5,
           ),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(
             value,
             style: TextStyle(
-              fontSize: 18, 
-              fontWeight: FontWeight.w800, 
+              fontSize: 20, 
+              fontWeight: FontWeight.w900, 
               color: color,
+              shadows: const [
+                Shadow(
+                  color: Colors.black26,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
             textAlign: TextAlign.center,
             maxLines: 1,
@@ -1202,57 +1311,98 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     bool isMix = _strat != 'std';
     
     if (isMix) {
-      // Mix item style (from HTML)
+      // Mix item style moderne avec gradient
       return Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.fromLTRB(15, 12, 15, 12),
+        margin: const EdgeInsets.only(bottom: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border(
-            left: BorderSide(
-              color: item.color,
-              width: 3,
-            ),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              item.color.withValues(alpha: 0.15),
+              item.color.withValues(alpha: 0.05),
+            ],
           ),
-          boxShadow: const [BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.05), blurRadius: 12, offset: Offset(0, 6))],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.label,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textMain,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    item.icon, // In mix mode, icon contains the quantity string
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              "+${fmt.format(item.val)}",
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: item.color,
-              ),
-              textAlign: TextAlign.right,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: item.color.withValues(alpha: 0.4),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: item.color.withValues(alpha: 0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: item.color,
+                  width: 5,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.label,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textMain,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        item.icon,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textMuted.withValues(alpha: 0.8),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [item.color, item.color.withValues(alpha: 0.7)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: item.color.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    "+${fmt.format(item.val)}",
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }

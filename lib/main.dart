@@ -51,27 +51,26 @@ class _FloatingOrbsPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..style = PaintingStyle.fill
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 25);
 
     Color tint(Color c, double alpha) => c.withValues(alpha: alpha);
 
     final orbs = [
-      _Orb(0.15, 0.25, 200, 0.55, Colors.redAccent),
-      _Orb(0.8, 0.2, 240, 0.5, Colors.blueAccent),
-      _Orb(0.4, 0.8, 300, 0.42, AppColors.accent),
-      _Orb(0.7, 0.75, 220, 0.38, AppColors.info),
+      _Orb(0.15, 0.25, 150, 0.4, Colors.redAccent),
+      _Orb(0.8, 0.2, 180, 0.35, Colors.blueAccent),
+      _Orb(0.4, 0.8, 200, 0.3, AppColors.accent),
     ];
 
     for (final orb in orbs) {
-      final dx = (orb.x + 0.1 * sin(2 * pi * (t + orb.phase))).clamp(0.0, 1.0);
-      final dy = (orb.y + 0.1 * cos(2 * pi * (t + orb.phase))).clamp(0.0, 1.0);
+      final dx = (orb.x + 0.08 * sin(2 * pi * (t + orb.phase))).clamp(0.0, 1.0);
+      final dy = (orb.y + 0.08 * cos(2 * pi * (t + orb.phase))).clamp(0.0, 1.0);
       paint.color = tint(orb.color, orb.alpha);
       canvas.drawCircle(Offset(dx * size.width, dy * size.height), orb.radius, paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _FloatingOrbsPainter oldDelegate) => oldDelegate.t != t;
+  bool shouldRepaint(covariant _FloatingOrbsPainter oldDelegate) => (oldDelegate.t - t).abs() > 0.02;
 }
 
 class _Orb {
@@ -2093,7 +2092,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                           subtitle: 'Voly sy Fambolena',
                           description: 'Vary • Katsaka • Legioma • Voankazo',
                           stats: '48+ Karazana',
-                          gradientColors: const [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                          gradientColors: const [Color(0xFF66BB6A), Color(0xFFFFEB3B)],
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const HomeScreen(category: 'fambolena')),
@@ -2109,7 +2108,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                           subtitle: 'Akoho sy Vorona hafa',
                           description: 'Akoho • Vorontsiloza • Akanga • Papelika',
                           stats: 'Gestion Complète',
-                          gradientColors: const [Color(0xFFFF9800), Color(0xFFE65100)],
+                          gradientColors: const [Color(0xFFFF9800), Color(0xFFEC407A)],
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const HomeScreen(category: 'akoho')),
@@ -2125,7 +2124,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                           subtitle: 'Gana sy Gisa',
                           description: 'Gana • Dokotra • Gisa • Sarindokotra',
                           stats: 'Aquaculture',
-                          gradientColors: const [Color(0xFF26C6DA), Color(0xFF00838F)],
+                          gradientColors: const [Color(0xFF26C6DA), Color(0xFF5C6BC0)],
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const HomeScreen(category: 'vorona')),
@@ -2141,7 +2140,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                           subtitle: 'Bitro sy Bitro Voalavo',
                           description: 'Lapin • Cochon d\'Inde • Biby kely',
                           stats: 'Hors Sol',
-                          gradientColors: const [Color(0xFFAB47BC), Color(0xFF7B1FA2)],
+                          gradientColors: const [Color(0xFFBA68C8), Color(0xFFFFB74D)],
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const HomeScreen(category: 'bitro')),
@@ -2157,7 +2156,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                           subtitle: 'Kisoa sy ny manodidina',
                           description: 'Fiompiana • Sakafo • Fahasalamana',
                           stats: 'Productif',
-                          gradientColors: const [Color(0xFFEC407A), Color(0xFFC2185B)],
+                          gradientColors: const [Color(0xFFFF4081), Color(0xFF26A69A)],
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const HomeScreen(category: 'kisoa')),
@@ -2173,7 +2172,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                           subtitle: 'Pisciculture',
                           description: 'Tilapia • Carpe • Dobo • Farihy',
                           stats: 'Aquaculture',
-                          gradientColors: const [Color(0xFF039BE5), Color(0xFF0277BD)],
+                          gradientColors: const [Color(0xFF29B6F6), Color(0xFF66BB6A)],
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const HomeScreen(category: 'trondro')),
@@ -2189,7 +2188,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                           subtitle: 'Apiculture',
                           description: 'Toho-tantely • Tantely • Savoka • Vokatra',
                           stats: 'Production Miel',
-                          gradientColors: const [Color(0xFFFFC107), Color(0xFFF57C00)],
+                          gradientColors: const [Color(0xFFFFCA28), Color(0xFFFF7043)],
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const HomeScreen(category: 'tantely')),
@@ -2205,7 +2204,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                           subtitle: 'Insectes',
                           description: 'BSF • Vers de farine • Protéines biby',
                           stats: 'Biofactory',
-                          gradientColors: const [Color(0xFF8D6E63), Color(0xFF5D4037)],
+                          gradientColors: const [Color(0xFFF9A825), Color(0xFF9E9E9E)],
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const HomeScreen(category: 'olitra')),
@@ -2221,7 +2220,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                           subtitle: 'Engrais Organika',
                           description: 'Composte • Zezimaitso • Ranonjezika',
                           stats: 'Écologique',
-                          gradientColors: const [Color(0xFF7CB342), Color(0xFF558B2F)],
+                          gradientColors: const [Color(0xFF9CCC65), Color(0xFFA1887F)],
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const HomeScreen(category: 'zezika')),
@@ -2237,7 +2236,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                           subtitle: 'Champignons comestibles',
                           description: 'Pleurotes • Shiitake • Paris',
                           stats: 'Indoor',
-                          gradientColors: const [Color(0xCC8D6E63), Color(0xCC6D4C41)],
+                          gradientColors: const [Color(0xFFA1887F), Color(0xFF9575CD)],
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const HolatraTechHomeScreen()),
@@ -2631,7 +2630,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _bgCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 22))..repeat();
+    _bgCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 30))..repeat();
   }
 
   @override
@@ -3151,7 +3150,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         );
       case 'olitra':
         return LinearGradient(
-          colors: [Colors.lime.shade100, Colors.lime.shade50],
+          colors: [Colors.yellow.shade100, Colors.grey.shade100],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
@@ -3178,6 +3177,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final items = _navItems;
     return GridView.builder(
       padding: const EdgeInsets.all(16),
+      physics: const BouncingScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 1.1,
@@ -3185,6 +3185,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         mainAxisSpacing: 16,
       ),
       itemCount: items.length,
+      cacheExtent: 500,
       itemBuilder: (context, index) {
         final item = items[index];
         return GestureDetector(
@@ -3261,13 +3262,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
           Positioned.fill(
             child: IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _bgCtrl,
-                builder: (context, _) {
-                  return CustomPaint(
-                    painter: _FloatingOrbsPainter(_bgCtrl.value),
-                  );
-                },
+              child: RepaintBoundary(
+                child: AnimatedBuilder(
+                  animation: _bgCtrl,
+                  builder: (context, _) {
+                    return CustomPaint(
+                      painter: _FloatingOrbsPainter(_bgCtrl.value),
+                      willChange: false,
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -3364,35 +3368,43 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               
               // Content Area
               Expanded(
-                child: Container(
-                  margin: const EdgeInsets.fromLTRB(4, 0, 4, 0),
-                  decoration: BoxDecoration(
-                    // Effet 3D Transparent (Glassmorphism)
-                    color: Colors.white.withValues(alpha: 0.25),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 30,
-                        spreadRadius: 5,
-                        offset: const Offset(0, -5),
+                child: ((widget.category == 'kisoa' || widget.category == 'fambolena') && _currentIndex == 1 && !_showGrid) 
+                  ? AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Container(
+                        key: ValueKey<int>(_currentIndex),
+                        child: _pages[_currentIndex],
                       ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                    child: _showGrid
-                        ? _buildGridMenu()
-                        : AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            child: Container(
-                              key: ValueKey<int>(_currentIndex),
-                              child: _pages[_currentIndex],
-                            ),
+                    )
+                  : Container(
+                      margin: const EdgeInsets.fromLTRB(4, 0, 4, 0),
+                      decoration: BoxDecoration(
+                        // Effet 3D Transparent (Glassmorphism)
+                        color: Colors.white.withValues(alpha: 0.25),
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 30,
+                            spreadRadius: 5,
+                            offset: const Offset(0, -5),
                           ),
-                  ),
-                ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                        child: _showGrid
+                            ? _buildGridMenu()
+                            : AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                child: Container(
+                                  key: ValueKey<int>(_currentIndex),
+                                  child: _pages[_currentIndex],
+                                ),
+                              ),
+                      ),
+                    ),
               ),
               ],
             ),
@@ -18955,7 +18967,8 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
     final data = _feedData[_stage]!;
     final feed = _computePigFeed();
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.zero,
+      physics: const BouncingScrollPhysics(),
       child: Column(
         children: [
           _buildCard(
@@ -28022,7 +28035,8 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
 
   Widget _buildCalendarTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.zero,
+      physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -28285,7 +28299,8 @@ class _FambolenaCalendarScreenState extends State<FambolenaCalendarScreen> with 
     String yieldVal = (calc['yield_ha'] * ratio).toStringAsFixed(2);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.zero,
+      physics: const BouncingScrollPhysics(),
       child: Column(
         children: [
           Container(
