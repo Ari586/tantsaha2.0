@@ -1,1 +1,6 @@
-{"app_name":"tantsaha","version":"2.5.7","build_number":"29","package_name":"tantsaha"}
+{
+  "version": "2.5.7-build30",
+  "date": "2026-01-21-18:38",
+  "commit": "f6d8dd3",
+  "changes": "Corrections langue malgache + bouton téléchargement APK"
+}
