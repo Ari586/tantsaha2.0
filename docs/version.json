@@ -1,6 +1,10 @@
 {
-  "version": "2.5.7-build30",
-  "date": "2026-01-21-18:38",
-  "commit": "f6d8dd3",
-  "changes": "Corrections langue malgache + bouton téléchargement APK"
+  "version": "2.5.7-build31",
+  "buildNumber": 31,
+  "releaseDate": "2026-01-21",
+  "changelog": [
+    "Suppression du bouton de téléchargement APK de l'application",
+    "Les téléchargements sont disponibles sur https://tantsaha-app.web.app",
+    "Corrections langue malgache (build 30)"
+  ]
 }

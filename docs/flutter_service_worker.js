@@ -3,11 +3,11 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"flutter_bootstrap.js": "40629a491885409ea979f255de812344",
+const RESOURCES = {"flutter_bootstrap.js": "71749617a51337119ea9f62a6c12f320",
 "version.json": "e8844de0795cfcda80248589b8582336",
 "index.html": "ee5ef169f4a9022fe9445b2d2f000cbd",
 "/": "ee5ef169f4a9022fe9445b2d2f000cbd",
-"main.dart.js": "d4690f94c5d8135369e5c71b7f534212",
+"main.dart.js": "7246d115de95442bd30c425ed32b7576",
 "flutter.js": "24bc71911b75b5f8135c949e27a2984e",
 "favicon.png": "fcb33570005720feab19cf5adcdd1295",
 "icons/Icon-192.png": "5cd5490273f74890c8771c44c4094a9c",
@@ -21,7 +21,7 @@ const RESOURCES = {"flutter_bootstrap.js": "40629a491885409ea979f255de812344",
 "assets/shaders/ink_sparkle.frag": "ecc85a2e95f5e9f53123dcaf8cb9b6ce",
 "assets/shaders/stretch_effect.frag": "40d68efbbf360632f614c731219e95f0",
 "assets/AssetManifest.bin": "13fae5ff231f9754dac0c0ff88dfbd5b",
-"assets/fonts/MaterialIcons-Regular.otf": "b5e3190a06ff241a0ff4d9cdfbaf3b94",
+"assets/fonts/MaterialIcons-Regular.otf": "e9b9e0c220330a0a37b537c5448338ce",
 "assets/assets/icon.png": "9013ee7054f40611cc19ba8254519da4",
 "assets/assets/voly/petit_pois.jpg": "1ea66f5da0bf5ea478bf511bcc1e240d",
 "assets/assets/voly/lentille.jpg": "0cffd2172e9d0b6fa80ead608f924c9c",
