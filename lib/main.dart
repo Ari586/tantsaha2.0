@@ -1847,6 +1847,280 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }
 }
 
+// Page de téléchargement APK
+class DownloadApkPage extends StatelessWidget {
+  const DownloadApkPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Télécharger Tantsaha'),
+        backgroundColor: const Color(0xFF2E7D32),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.green.shade50,
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Titre
+              const Text(
+                'Télécharger l\'application',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1B5E20),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Version 2.5.7 - Build 30',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // APK Universel (recommandé)
+              _buildDownloadCard(
+                context,
+                title: 'APK Universel (Recommandé)',
+                subtitle: 'Compatible avec tous les appareils Android',
+                size: '107 MB',
+                url: 'https://github.com/Ari586/tantsaha2.0/releases/download/v2.5.7-build30/tantsaha-v2.5.7-build30-universal-20260121.apk',
+                icon: Icons.android,
+                color: Colors.green,
+                recommended: true,
+              ),
+              
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 8),
+              Text(
+                'Versions optimisées par architecture:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // ARM64
+              _buildDownloadCard(
+                context,
+                title: 'APK ARM64',
+                subtitle: 'Pour téléphones modernes (2016+)',
+                size: '66 MB',
+                url: 'https://github.com/Ari586/tantsaha2.0/releases/download/v2.5.7-build30/tantsaha-v2.5.7-build30-arm64-v8a-20260121.apk',
+                icon: Icons.smartphone,
+                color: Colors.blue,
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // ARMv7
+              _buildDownloadCard(
+                context,
+                title: 'APK ARMv7',
+                subtitle: 'Pour anciens téléphones (avant 2016)',
+                size: '64 MB',
+                url: 'https://github.com/Ari586/tantsaha2.0/releases/download/v2.5.7-build30/tantsaha-v2.5.7-build30-armeabi-v7a-20260121.apk',
+                icon: Icons.phone_android,
+                color: Colors.orange,
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // x86_64
+              _buildDownloadCard(
+                context,
+                title: 'APK x86_64',
+                subtitle: 'Pour émulateurs et tablettes Intel',
+                size: '67 MB',
+                url: 'https://github.com/Ari586/tantsaha2.0/releases/download/v2.5.7-build30/tantsaha-v2.5.7-build30-x86_64-20260121.apk',
+                icon: Icons.tablet_android,
+                color: Colors.purple,
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Nouveautés
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.new_releases, color: Colors.green.shade700),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Nouveautés de cette version',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade900,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ...[
+                      'Corrections de la langue malgache',
+                      'Amélioration des descriptions de maladies',
+                      'Mise à jour des recettes d\'aliments',
+                      'Optimisation des performances',
+                    ].map((text) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle, size: 16, color: Colors.green.shade700),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(text)),
+                        ],
+                      ),
+                    )),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildDownloadCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required String size,
+    required String url,
+    required IconData icon,
+    required Color color,
+    bool recommended = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: recommended
+            ? Border.all(color: Colors.green, width: 2)
+            : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            // Sur le web, ouvrir directement le lien
+            if (kIsWeb) {
+              // ignore: avoid_print
+              print('Téléchargement: $url');
+              // Dans un vrai contexte web, utiliser url_launcher ou window.open
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 28),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (recommended) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'RECOMMANDÉ',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Taille: $size',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.download, color: color),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // Écran de sélection de catégorie
 class CategorySelectionScreen extends StatefulWidget {
   const CategorySelectionScreen({super.key});
@@ -2243,6 +2517,90 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> with 
                           ),
                         ),
                       
+                        const SizedBox(height: 14),
+
+                        // Bouton Télécharger APK Android
+                        if (kIsWeb)
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Color(0xFF1976D2), Color(0xFF1565C0)],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.blue.withValues(alpha: 0.4),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const DownloadApkPage()),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 56,
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(14),
+                                        ),
+                                        child: const Icon(
+                                          Icons.android,
+                                          color: Colors.white,
+                                          size: 32,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Télécharger APK Android',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Version 2.5.7 • Installer sur téléphone',
+                                              style: TextStyle(
+                                                color: Colors.white.withValues(alpha: 0.9),
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const Icon(
+                                        Icons.download,
+                                        color: Colors.white,
+                                        size: 28,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
                         const SizedBox(height: 20),
 
                         const SizedBox(height: 20),
@@ -18242,8 +18600,8 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
               'label': 'Mora (Village)',
               'lines': [
                 'Mangahazo maina 35% + Apombo 25%',
-                'Katsaka rovitra 20%',
-                'Voanjo/tsaramaso toto 10%',
+                'Katsaka voatoto 20%',
+                'Voanjo/tsaramaso voatoto 10%',
                 'Lela-masaka (ranom-bary) 5%',
                 'CMV sy sira 5%'
               ],
@@ -18334,7 +18692,7 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
                 'Mangahazo maina 40%',
                 'Apombo 25%',
                 'Katsaka 15%',
-                'Voanjo/tsaramaso toto 15%',
+                'Voanjo/tsaramaso voatoto 15%',
                 'CMV 5%'
               ],
             },
@@ -18603,8 +18961,8 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
           {'name': 'Mangahazo maina', 'pct': 35},
           {'name': 'Apombo', 'pct': 25},
           {'name': 'Katsaka', 'pct': 20},
-          {'name': 'Voanjo/Tsaramaso toto', 'pct': 10},
-          {'name': 'Lela-masaka (ranom-bary)', 'pct': 5},
+          {'name': 'Voanjo/Tsaramaso voatoto', 'pct': 10},
+          {'name': 'vary masaka (ranom-bary)', 'pct': 5},
           {'name': 'CMV + sira', 'pct': 5},
         ],
       },
@@ -19059,7 +19417,7 @@ class _KisoaFeedScreenState extends State<KisoaFeedScreen> {
                       const SizedBox(height: 6),
                       Text('Total: ${feed['total']!.toStringAsFixed(2)} kg/andro'),
                       Text('Isaky ny kisoa: ${feed['perPig']!.toStringAsFixed(2)} kg/andro'),
-                      Text('Isaky ny sakafon\'andro: ${feed['perMeal']!.toStringAsFixed(2)} kg'),
+                      Text('Isaky ny mamahana: ${feed['perMeal']!.toStringAsFixed(2)} kg'),
                     ],
                   ),
                 ),
@@ -19487,11 +19845,11 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
     {
       'name': 'Pneumonie (Aretitratra)',
       'description': 'Fivontosana ny havokavoka, matetika vokatry ny hatsiaka na vovoka.',
-      'symptoms': '• Mikohaka, mikorina\n• Miaina mafy (Sempo)\n• Fanaviana\n• Tsy te-homana\n• Mitombo miadana',
+      'symptoms': '• Mikohaka, maheno rehoka \n• Miaina mafy (Sempotra)\n• Fanaviana\n• Tsy te-homana\n• Mitombo miadana',
       'treatment': '• Antibiotique (Tylosine, Florfénicol, Tilmicosine)\n• Anti-inflammatoire',
       'naturalRemedy': '• Tantely sy tongolo gasy\n• Inhalation: fampanehana etona kininina',
       'actions': '• Hafanaina ny trano\n• Ahena ny vovoka',
-      'prophylaxis': '• Ventilation tsara (tsy miditra rivotra mivantana)\n• Tsy atao mifanizina loatra',
+      'prophylaxis': '• atao mahazo rivotra tsara \n• Tsy atao mifanizina loatra',
     },
     {
       'name': 'Mange (Gale - Lagaly)',
@@ -19513,7 +19871,7 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
     },
     {
       'name': 'Anémie (Hatsatra)',
-      'description': 'Tsy fahampian-dry (Fer) amin\'ny kisoa vao teraka ka mahatonga hatsatra sy fahalemena.',
+      'description': 'Tsy fahampiana Ra (Fer) amin\'ny kisoa vao teraka ka mahatonga hatsatra sy fahalemena.',
       'symptoms': '• Hatsatra (Pâle) ny hoditra sy sofina\n• Reraka, tsy mazoto\n• Miaina mafy\n• Mitombo miadana',
       'treatment': '• Tsindrona Fer-Dextran 200mg (J-3)\n• Azo averina J-10 raha ilaina',
       'naturalRemedy': '• Tsy misy tena mahomby. Ny vy no ilaina.',
@@ -19523,11 +19881,11 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
     {
       'name': 'Parvovirose (SMEDI)',
       'description': 'Aretina virus manimba ny vohoka. Tsy misy soritra amin\'ny reniny fa very ny zaza.',
-      'symptoms': '• Tsy miteraka (Infertilité)\n• Misitrika ny zaza (Momification)\n• Teraka kisoa maty\n• Zaza kely marefo',
+      'symptoms': '• Tsy miteraka (Infertilité)\n• Zaza maty ao ankibo\n• Teraka kisoa maty\n• Zaza kely marefo',
       'treatment': 'Tsy misy fanafody.',
       'naturalRemedy': 'Tsy misy.',
-      'actions': '• Atokana ny marary\n• Andrasana 3 herinandro vao ampakarina indray',
-      'prophylaxis': '• Vaksiny Parvovirose alohan\'ny fampakaram-bady voalohany\n• Rappel isan-taona',
+      'actions': '• Atokana ny marary\n• Andrasana 3 herinandro vao mampanaraka indray',
+      'prophylaxis': '• Vaksiny Parvovirose alohan\'ny fampanarahana voalohany\n• Rappel isan-taona',
     },
     {
       'name': 'Syndrome MMA',
@@ -19948,7 +20306,7 @@ class _KisoaHealthScreenState extends State<KisoaHealthScreen> with SingleTicker
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildCareStep('1', 'Fanalana ny dity tavela (mucus)', 'Esory amin\'ny lamba madio na poire à mucus ny dity tavela ao am-bava sy orona alohan\'ny hitsentsenany ronono.', Colors.red),
+                _buildCareStep('1', 'Fanalana ny dity tavela (mucus)', 'Esory amin\'ny lamba madio na poire à mucus ny dity tavela ao am-bava sy orona alohan\'ny hitsetsefany ronono.', Colors.red),
                 _buildCareStep('2', 'Fanapahana tadim-poitra', 'Tapaho 3-4 sm amin\'ny kibo. Ahosotra Betadine na Iodine.', Colors.orange),
                 _buildCareStep('3', 'Famahanana Colostrum', 'Tena ilaina ao anatin\'ny 6 ora voalohany! Misy Anticorps fiarovana.', Colors.green),
                 _buildCareStep('4', 'Hafanana', 'Lampe chauffante 35°C. Ahena 2°C isaky ny herinandro.', Colors.blue),
